@@ -1,0 +1,7 @@
+﻿services:
+  osiedle-booking.webapi:
+    image: osiedle-booking.webapi
+    build:
+      context: .
+      dockerfile: osiedle-booking.WebApi/Dockerfile
+

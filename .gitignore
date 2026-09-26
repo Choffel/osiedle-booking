@@ -1,0 +1,7 @@
+.DS_Store
+/osiedle-backend/src/osiedle-booking/.idea
+/osiedle-backend/src/osiedle-booking/BuildingBlocks/osiedle-booking.BuildingBlocks/obj
+/osiedle-backend/src/osiedle-booking/Modules/Users/Users.Appliation/obj
+/osiedle-backend/src/osiedle-booking/Modules/Users/Users.Domain/obj
+/osiedle-backend/src/osiedle-booking/Modules/Users/Users.Infrastructure/obj
+/osiedle-backend/src/osiedle-booking/osiedle-booking.WebApi/obj
