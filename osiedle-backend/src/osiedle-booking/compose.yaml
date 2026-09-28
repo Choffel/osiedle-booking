@@ -1,7 +1,40 @@
-﻿services:
-  osiedle-booking.webapi:
-    image: osiedle-booking.webapi
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: osiedle-booking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: osiedle_booking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d osiedle_booking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  osiedle-booking-webapi:
+    image: osiedle-booking-webapi:latest
+    container_name: osiedle-booking-webapi
     build:
       context: .
       dockerfile: osiedle-booking.WebApi/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=osiedle_booking;Username=postgres;Password=postgres
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
 
