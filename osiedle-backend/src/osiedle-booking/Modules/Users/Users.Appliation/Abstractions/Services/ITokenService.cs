@@ -1,0 +1,13 @@
+using osiedle_booking.BuildingBlocks;
+using Users.Appliation.DTOs;
+
+namespace Users.Appliation.Abstractions;
+
+public interface ITokenService
+{
+    Task<TokenResponseDto> GetTokens(UserDto userDto, CancellationToken cancellationToken = default);
+    Task<Result<bool>> RevokeRefreshTokenAsync(CancellationToken cancellationToken = default);
+    Task<Result<TokenResponseDto>> GetNewAccessTokenAsync(CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<ActiveSessionDto>>> GetActiveSessionsAsync(CancellationToken ct = default);
+    Task<Result<string>> RevokeSessionAsync(Guid tokenId, CancellationToken ct = default);
+}
