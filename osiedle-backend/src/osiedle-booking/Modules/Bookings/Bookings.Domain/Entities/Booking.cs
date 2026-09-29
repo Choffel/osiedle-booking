@@ -1,0 +1,50 @@
+using Bookings.Domain.Entities.Value_objects;
+using Bookings.Domain.Exceptions;
+using osiedle_booking.BuildingBlocks.Domain;
+
+namespace Bookings.Domain.Entities;
+
+public class Booking : AggregateRoot<BookingId>
+{
+    public StaffId StaffId { get; private set; }
+    public BusinessId BusinessId { get; private set; } 
+    public ClientId ClientId { get; private set; }
+    public ServiceId ServiceId { get; private set; }
+    public TimeSlot Slot { get; private set; }
+    public BookingStatus Status { get; private set; }
+    public Money Price { get; private set; } 
+    public CancellationInfo? Cancellation { get; private set; }
+    
+    private Booking() { } // EF
+    
+    public static Booking Create(
+        BusinessId businessId,
+        StaffId staffId,
+        ClientId clientId,
+        ServiceId serviceId,
+        TimeSlot slot,
+        Money price,
+        DateTime now)
+    {
+        if (slot.Start <= now)
+            throw new BookingInPastException(slot.Start);
+
+        var booking = new Booking
+        {
+            Id = BookingId.New(),
+            BusinessId = businessId,
+            StaffId = staffId,
+            ClientId = clientId,
+            ServiceId = serviceId,
+            Slot = slot,
+            Price = price,
+            Status = BookingStatus.Confirmed,
+            CreatedAt = DateOnly.FromDateTime(now),
+        };
+
+        /*booking.RaiseDomainEvent(new BookingCreatedDomainEvent(
+            booking.Id, businessId, staffId, clientId, slot));*/
+
+        return booking;
+    }
+}
