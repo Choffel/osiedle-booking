@@ -5,3 +5,4 @@
 /osiedle-backend/src/osiedle-booking/Modules/Users/Users.Domain/obj
 /osiedle-backend/src/osiedle-booking/Modules/Users/Users.Infrastructure/obj
 /osiedle-backend/src/osiedle-booking/osiedle-booking.WebApi/obj
+osiedle-backend/src/osiedle-booking/.env
