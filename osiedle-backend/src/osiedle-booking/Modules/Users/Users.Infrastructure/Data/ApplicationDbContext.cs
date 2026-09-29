@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.User;
+using Users.Domain.Entity.User.Value_objects;
 using Users.Infrastructure.Identity;
 
 namespace Users.Infrastructure.Data;
@@ -23,6 +24,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        
+        
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasConversion<Guid>(
+                    id => id.Value,
+                    value => new UserId(value))
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.DisplayName)
+                .IsRequired();
+        });
 
         modelBuilder.Entity<IdentityUserRole<Guid>>(ur =>
         {

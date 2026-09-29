@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks;
 using Users.Appliation.Abstractions;
 using Users.Appliation.DTOs.Identity;
@@ -9,9 +10,13 @@ namespace Users.Infrastructure.Identity;
 public sealed class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<IdentityService> _logger;
 
-    public IdentityService(UserManager<ApplicationUser> userManager)
-        => _userManager = userManager;
+    public IdentityService(UserManager<ApplicationUser> userManager, ILogger<IdentityService> logger)
+    {
+        _userManager = userManager;
+        _logger = logger;
+    }
 
     public async Task<Result<Guid>> CreateIdentityAsync(string email, string password, CancellationToken ct)
     {
@@ -95,6 +100,37 @@ public sealed class IdentityService : IIdentityService
             );
 
         var result = await _userManager.AddToRoleAsync(user, roleName);
+        if (!result.Succeeded)
+            return new IdentityUserDto(
+                Id: Guid.Empty, 
+                UserName: null,
+                Email: null,
+                EmailConfirmed: false,
+                Succeeded: false
+            );
+
+        return new IdentityUserDto(
+            Id: user.Id,
+            UserName: user.UserName,
+            Email: user.Email,
+            EmailConfirmed: user.EmailConfirmed,
+            Succeeded: true
+        );
+    }
+    
+    public async Task<IdentityUserDto> ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken ct)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null)
+            return new IdentityUserDto(
+                Id: Guid.Empty, 
+                UserName: null,
+                Email: null,
+                EmailConfirmed: false,
+                Succeeded: false
+            );
+
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
         if (!result.Succeeded)
             return new IdentityUserDto(
                 Id: Guid.Empty, 
