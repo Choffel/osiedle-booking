@@ -26,16 +26,14 @@ public class UserService : IUserService
     public async Task<Result<TokenResponseDto>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
     {
         //await using var transaction = await _unitOfWork.BeginTransactionAsync(ct);
-    
-        // 1. Создаём Identity (auth-часть)
+        
         var identityResult = await _identityService.CreateIdentityAsync(
             request.Email, request.Password, ct);
 
         if (identityResult.IsSuccess == false)
             return Result<TokenResponseDto>.Failure(identityResult.Error);
 
-
-        // 2. Создаём доменный агрегат с тем же Id
+        
         var userId = new UserId(identityResult.Value);
         var user = User.Create(userId, request.FirstName);
 
@@ -43,6 +41,7 @@ public class UserService : IUserService
         //await _unitOfWork.SaveChangesAsync(ct);
         //await transaction.CommitAsync(ct); // если ваш IUnitOfWork это поддерживает
         var token = await _identityService.GenerateEmailConfirmationTokenAsync(identityResult.Value, ct);
+        
         _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token);
 
         var response = new TokenResponseDto
