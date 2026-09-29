@@ -95,6 +95,24 @@ public class UserService : IUserService
         return Result<string>.Success("If this email address exists in the system, instructions have been sent to the email.");
     }
     
+    public async Task<Result<string>> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken = default)
+    {
+        var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
+        if (user == null)
+        {
+            return Result<string>.Failure($"{request.Email} - this email address is not registered");
+        }
+
+        var resetPassResult = await _identityService.ResetPasswordAsync(user.Id, request.Token, request.NewPassword!, cancellationToken);
+
+        if (!resetPassResult.Succeeded)
+        {
+            return Result<string>.Failure("Failed to reset password");
+        }
+
+        return Result<string>.Success("Password reset successfully");
+    }
+    
     public async Task<Result<string>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
@@ -127,10 +145,7 @@ public class UserService : IUserService
         {
             return Result<string>.Failure("User not found");
         }
-
-        user.UserName = userDto.UserName;
-        user.Email = userDto.Email;
-        user.LastModified = DateTime.UtcNow;
+        
         
         var userId = new UserId(userDto.Id);
 
@@ -146,13 +161,7 @@ public class UserService : IUserService
         domainUser.Update(userDto.UserName);
 
         _userRepository.Update(domainUser);
-
-        var result = await _identityService.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result<string>.Failure($"Error updating user: {errors}");
-        }
+        
 
         return Result<string>.Success("User updated successfully");
     }
