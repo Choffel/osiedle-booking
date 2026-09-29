@@ -8,3 +8,6 @@
 osiedle-backend/src/osiedle-booking/.env
 /osiedle-backend/src/osiedle-booking/BuildingBlocks/osiedle-booking.BuildingBlocks/bin
 /osiedle-backend/src/osiedle-booking/Modules/Users/Users.Appliation/bin
+/osiedle-backend/src/osiedle-booking/osiedle-booking.WebApi/bin
+/osiedle-backend/src/osiedle-booking/Modules/Users/Users.Infrastructure/bin
+/osiedle-backend/src/osiedle-booking/Modules/Users/Users.Domain/bin
