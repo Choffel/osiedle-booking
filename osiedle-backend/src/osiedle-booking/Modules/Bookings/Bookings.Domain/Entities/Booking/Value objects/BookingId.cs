@@ -1,4 +1,4 @@
-namespace Bookings.Domain.Entities.Value_objects;
+namespace Bookings.Domain.Entities.Booking.Value_objects;
 
 public sealed record BookingId(Guid Value)
 {

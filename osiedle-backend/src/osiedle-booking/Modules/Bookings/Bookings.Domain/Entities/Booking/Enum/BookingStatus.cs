@@ -1,4 +1,4 @@
-namespace Bookings.Domain.Entities.Value_objects;
+namespace Bookings.Domain.Entities.Booking.Enum;
 
 public enum BookingStatus
 {

@@ -1,8 +1,9 @@
-using Bookings.Domain.Entities.Value_objects;
+using Bookings.Domain.Entities.Booking.Enum;
+using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Domain.Exceptions;
 using osiedle_booking.BuildingBlocks.Domain;
 
-namespace Bookings.Domain.Entities;
+namespace Bookings.Domain.Entities.Booking;
 
 public class Booking : AggregateRoot<BookingId>
 {

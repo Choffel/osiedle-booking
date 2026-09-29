@@ -1,6 +1,6 @@
 using Bookings.Domain.Exceptions;
 
-namespace Bookings.Domain.Entities.Value_objects;
+namespace Bookings.Domain.Entities.Booking.Value_objects;
 
 public sealed record TimeSlot
 {
