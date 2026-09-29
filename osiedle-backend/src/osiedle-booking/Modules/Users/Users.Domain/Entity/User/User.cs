@@ -13,6 +13,7 @@ public class User : AggregateRoot<UserId>
         Id = id;
         DisplayName = displayName;
     }
+    private User() { }
 
     public static User Create(UserId id, string displayName)
     {
