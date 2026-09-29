@@ -8,6 +8,11 @@
   <Folder Name="/Modules/">
     <File Path="compose.yaml" />
   </Folder>
+  <Folder Name="/Modules/Bookings/">
+    <Project Path="Modules/Bookings/Bookings.Appliation/Bookings.Appliation.csproj" />
+    <Project Path="Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj" />
+    <Project Path="Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Users/">
     <Project Path="Modules/Users/Users.Appliation/Users.Appliation.csproj" />
     <Project Path="Modules/Users/Users.Domain/Users.Domain.csproj" />
