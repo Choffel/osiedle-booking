@@ -1,10 +1,12 @@
-﻿namespace Notifications.Application.DTOs.Booking;
+﻿using System;
 
+namespace Notifications.Application.DTOs.Booking;
+
+//TODO:Time slot
 public record BookingConfirmationDto(
-    string ClientName,
-    string BusinessName,
-    string ServiceName,
-    DateTime AppointmentTime,
-    string Address,
+    string? ClientPhoneNumber,
+    string? ClientEmail,
+    TimeSpan ServiceDuration,
+    string ServiceDescription,
     decimal Price
     );

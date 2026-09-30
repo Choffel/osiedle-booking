@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
 using Notifications.Domain.Enums;
 
 namespace Notifications.Domain.ValueObjects;

@@ -80,6 +80,7 @@ public class UserService : IUserService
         return Result<TokenResponseDto>.Success(new TokenResponseDto(tokens.AccessToken, tokens.RefreshToken));
     }
     
+    //TODO: Remove this mthod
     public async Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
