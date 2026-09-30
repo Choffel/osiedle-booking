@@ -1,4 +1,6 @@
-﻿namespace Notifications.Infrastructure.Templates;
+﻿using System;
+
+namespace Notifications.Infrastructure.Templates;
 
 public static class EmailTemplates
 {
@@ -109,6 +111,56 @@ public static class EmailTemplates
             """;
 
         return WrapInBaseLayout("Anulowanie rezerwacji", content);
+    }
+
+    public static string GetPasswordResetTemplate(string email, string token, string newPassword)
+    {
+        var resetLink = $"https://twojeosiedle.pl/reset?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        var content = $"""
+            <h2 style="color: #805ad5; margin-top: 0;">Reset hasła 🔐</h2>
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.5;">
+                Otrzymaliśmy prośbę o zresetowanie hasła dla konta: <strong>{email}</strong>.
+            </p>
+            <p style="color: #4a5568; font-size: 16px;">
+                Aby ustawić nowe hasło, kliknij przycisk poniżej. Link jest ważny przez krótki czas.
+            </p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{resetLink}" style="background-color: #805ad5; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Zresetuj hasło</a>
+            </div>
+            <p style="color: #718096; font-size: 14px;">Jeśli przycisk nie działa, skopiuj i wklej ten adres do przeglądarki:<br><a href="{resetLink}" style="color: #805ad5;">{resetLink}</a></p>
+            <hr />
+            <p style="color: #4a5568; font-size: 14px;">Jeżeli nie prosiłeś(-aś) o zmianę hasła, zignoruj tę wiadomość. Dla bezpieczeństwa możesz rozważyć zmianę hasła jeśli podejrzewasz nieautoryzowany dostęp.</p>
+            """;
+
+        return WrapInBaseLayout("Reset hasła — TwojeOsiedle", content);
+    }
+
+    public static string GetBookingConfirmationTemplate(
+        string? clientEmail,
+        string? clientPhoneNumber,
+        TimeSpan serviceDuration,
+        string serviceDescription,
+        decimal price)
+    {
+        var durationText = serviceDuration.TotalMinutes >= 60
+            ? $"{(int)serviceDuration.TotalHours}h {serviceDuration.Minutes}m"
+            : $"{(int)serviceDuration.TotalMinutes} min";
+
+        var content = $"""
+            <h2 style="color: #2b6cb0; margin-top: 0;">Potwierdzenie rezerwacji ✨</h2>
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.5;">
+                Dziękujemy! Otrzymaliśmy Twoją rezerwację.
+            </p>
+            <div style="background-color: #edf2f7; border-left: 4px solid #3182ce; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <p style="margin: 5px 0; color: #2d3748;"><strong>Usługa:</strong> {serviceDescription}</p>
+                <p style="margin: 5px 0; color: #2d3748;"><strong>Czas trwania:</strong> {durationText}</p>
+                <p style="margin: 5px 0; color: #2d3748;"><strong>Cena:</strong> {price} PLN</p>
+                <p style="margin: 5px 0; color: #2d3748;"><strong>Kontakt:</strong> {clientEmail ?? "-"} { (string.IsNullOrWhiteSpace(clientPhoneNumber) ? "" : $"| {clientPhoneNumber}") }</p>
+            </div>
+            <p style="color: #4a5568; font-size: 14px;">W razie potrzeby zmiany terminu lub odwołania wizyty, skorzystaj z panelu klienta lub skontaktuj się bezpośrednio z usługodawcą.</p>
+            """;
+
+        return WrapInBaseLayout("Potwierdzenie rezerwacji", content);
     }
     
     private static string WrapInBaseLayout(string title, string bodyContent)
