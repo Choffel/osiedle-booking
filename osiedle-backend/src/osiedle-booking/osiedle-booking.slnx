@@ -8,6 +8,11 @@
   <Folder Name="/Modules/">
     <File Path="compose.yaml" />
   </Folder>
+  <Folder Name="/Modules/Business/">
+    <Project Path="Modules/Business/Business.Application/Business.Application.csproj" />
+    <Project Path="Modules/Business/Business.Domain/Business.Domain.csproj" />
+    <Project Path="Modules/Business/Business.Infrastructure/Business.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Notifications/">
     <Project Path="Modules/Notifications/Notifications.Application/Notifications.Application.csproj" />
     <Project Path="Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
