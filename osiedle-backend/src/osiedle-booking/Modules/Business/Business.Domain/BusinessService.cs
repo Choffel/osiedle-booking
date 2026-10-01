@@ -1,8 +1,9 @@
 ﻿using Business.Domain.ValueObject;
+using osiedle_booking.BuildingBlocks.Domain;
 
 namespace Business.Domain;
 
-public class BusinessService
+public class BusinessService : AggregateRoot<BusinessId>
 {
     public BusinessServiceId Id { get; private set; }
     

@@ -1,10 +1,10 @@
 ﻿using Business.Domain.ValueObject;
-using osiedle_booking.BuildingBlocks.Domain.Entity;
+using osiedle_booking.BuildingBlocks.Domain;
 using Users.Domain.Entity.User.Value_objects;
 
 namespace Business.Domain;
 
-public class Employee : Entity<EmployeeId>
+public class Employee : AggregateRoot<EmployeeId>
 {
     public BusinessId BusinessId { get; private set; }
     
