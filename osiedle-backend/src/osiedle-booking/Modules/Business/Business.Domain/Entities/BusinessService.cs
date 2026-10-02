@@ -46,10 +46,22 @@ public class BusinessService : Entity<BusinessServiceId>
         UpdatedAt = DateTime.UtcNow;
     }
     
+    public void AddToEmployee(EmployeeId employeeId)
+    {
+        EmployeeId = employeeId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
+    public void RemoveFromEmployee(EmployeeId employeeId)
+    {
+        EmployeeId = employeeId;
+        Status = ServiceStatus.Inactive;
+        UpdatedAt = DateTime.UtcNow;
+    }
+    
     public void ArchiveService()
     {
         Status = ServiceStatus.Archived;
         UpdatedAt = DateTime.UtcNow;
     }
-    
 }

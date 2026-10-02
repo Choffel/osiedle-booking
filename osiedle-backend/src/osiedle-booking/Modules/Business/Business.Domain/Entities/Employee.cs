@@ -1,11 +1,11 @@
-﻿using Business.Domain.ValueObject;
+﻿using Business.Domain.Enums;
+using Business.Domain.ValueObject;
 using osiedle_booking.BuildingBlocks.Domain.Entity;
 
 namespace Business.Domain.Entities;
 
 public class Employee : Entity<EmployeeId>
 {
-    
     public string FirstName { get; private set; }
     
     public string LastName { get; private set; }
@@ -29,7 +29,6 @@ public class Employee : Entity<EmployeeId>
         BusinessId = businessId;
         ValidateAndAssign(firstName, lastName, position, review);
     }
-    
     
     public void Update(string firstName, string lastName, string position, string review)
     {
