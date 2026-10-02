@@ -15,8 +15,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
 
         Id = id;
     }
-
-    // Защищенный конструктор для EF Core
+    
     protected Entity() { }
 
     public bool Equals(Entity<TId>? other)
