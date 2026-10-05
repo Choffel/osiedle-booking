@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
-using Users.Appliation.Abstractions;
-using Users.Appliation.DTOs;
+using Users.Application.Abstractions;
+using Users.Application.DTOs;
 
 namespace osiedle_booking.WebApi.Controllers;
 

@@ -21,7 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Modules\Users\Users.Appliation\Users.Appliation.csproj" />
         <ProjectReference Include="..\Modules\Users\Users.Domain\Users.Domain.csproj" />
         <ProjectReference Include="..\Modules\Users\Users.Infrastructure\Users.Infrastructure.csproj" />
         <ProjectReference Include="..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />

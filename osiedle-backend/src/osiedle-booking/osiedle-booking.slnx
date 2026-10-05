@@ -14,8 +14,8 @@
     <Project Path="Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/Users/">
-    <Project Path="Modules/Users/Users.Appliation/Users.Appliation.csproj" />
     <Project Path="Modules/Users/Users.Domain/Users.Domain.csproj" />
     <Project Path="Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj" />
+    <Project Path="Modules\Users\Users.Application\Users.Application.csproj" />
   </Folder>
 </Solution>

@@ -1,4 +1,4 @@
-namespace Users.Appliation.DTOs.Identity;
+namespace Users.Application.DTOs.Identity;
 
 public sealed record IdentityUserDto(
     Guid Id,

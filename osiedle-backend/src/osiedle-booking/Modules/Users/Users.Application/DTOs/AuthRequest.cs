@@ -1,4 +1,4 @@
-namespace Users.Appliation.DTOs;
+namespace Users.Application.DTOs;
 
 public record AuthRequest(
     string Email,

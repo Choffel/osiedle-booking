@@ -1,6 +1,6 @@
 using Users.Domain.Entity.RefreshToken;
 
-namespace Users.Appliation.Abstractions;
+namespace Users.Application.Abstractions.Repositories;
 
 public interface ITokenRepository
 {

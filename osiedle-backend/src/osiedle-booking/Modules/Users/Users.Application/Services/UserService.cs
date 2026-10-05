@@ -1,11 +1,13 @@
 using osiedle_booking.BuildingBlocks;
-using Users.Appliation.Abstractions;
-using Users.Appliation.DTOs;
+using Users.Application.Abstractions;
+
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.Value_objects;
 using Microsoft.Extensions.Logging;
+using Users.Application.Abstractions;
+using Users.Application.DTOs;
 
-namespace Users.Appliation.Services;
+namespace Users.Application.Services;
 
 public class UserService : IUserService
 {

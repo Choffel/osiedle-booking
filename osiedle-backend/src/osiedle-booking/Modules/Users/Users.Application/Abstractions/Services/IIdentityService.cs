@@ -1,7 +1,7 @@
 using osiedle_booking.BuildingBlocks;
-using Users.Appliation.DTOs.Identity;
+using Users.Application.DTOs.Identity;
 
-namespace Users.Appliation.Abstractions;
+namespace Users.Application.Abstractions;
 
 public interface IIdentityService
 {

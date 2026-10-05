@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Appliation.Abstractions;
-using Users.Appliation.DTOs;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories;
+using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Infrastructure.Identity;
 

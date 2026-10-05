@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Users.Appliation.Abstractions;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories;
 using Users.Domain.Entity.RefreshToken;
 using Users.Infrastructure.Data;
 

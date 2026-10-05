@@ -1,7 +1,7 @@
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.Value_objects;
 
-namespace Users.Appliation.Abstractions;
+namespace Users.Application.Abstractions;
 
 public interface IUserRepository
 {
