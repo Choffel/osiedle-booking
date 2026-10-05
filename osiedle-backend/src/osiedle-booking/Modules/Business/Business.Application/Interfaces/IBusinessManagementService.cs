@@ -1,6 +1,15 @@
-﻿namespace Business.Application.Interfaces;
+﻿using Business.Application.DTOs;
+using osiedle_booking.BuildingBlocks;
+
+namespace Business.Application.Interfaces;
 
 public interface IBusinessManagementService
 {
+    Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken = default);
     
+    Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default);
+    
+    Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default);
+    
+    Task ArchiveBusinessAsync(Guid businessId, CancellationToken cancellationToken = default);
 }

@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
+      <ProjectReference Include="..\Business.Domain\Business.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
