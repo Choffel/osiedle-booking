@@ -8,13 +8,15 @@ public class BusinessService : Entity<BusinessServiceId>
 {
     public EmployeeId EmployeeId { get; private set; }
     
+    public Employee Employee { get; private set; }
+    
     public string ServiceName { get; private set; }
     
     public string Description { get; private set; }
     
     public decimal Price { get; private set; }
     
-    public TimeSpan Date { get; private set; }
+    public TimeSpan Duration { get; private set; }
     
     public ServiceStatus Status { get; private set; }
     
@@ -26,23 +28,22 @@ public class BusinessService : Entity<BusinessServiceId>
         ServiceName = serviceName;
         Description = description;
         Price = price;
-        Date = date;
+        Duration = date;
         Status = ServiceStatus.Active;
     }
     
-    public static BusinessService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan date)
+    public static BusinessService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
     {
         var id = BusinessServiceId.New();
-        var businessService = new BusinessService(id, employeeId, serviceName, description, price, date);
-        return businessService;
+        return new BusinessService(id, employeeId, serviceName, description, price, duration);
     }
     
-    public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan date)
+    public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan duration)
     {
         ServiceName = serviceName;
         Description = description;
         Price = price;
-        Date = date;
+        Duration = duration;
         UpdatedAt = DateTime.UtcNow;
     }
     

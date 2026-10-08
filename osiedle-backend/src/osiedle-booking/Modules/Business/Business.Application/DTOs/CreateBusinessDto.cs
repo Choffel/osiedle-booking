@@ -3,5 +3,6 @@
 public record CreateBusinessDto(
     string Name,
     Guid OwnerId,
-    string Description
+    string Description,
+    string Location
     );

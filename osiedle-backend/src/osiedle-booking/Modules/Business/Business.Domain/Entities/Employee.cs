@@ -16,6 +16,10 @@ public class Employee : Entity<EmployeeId>
     
     public BusinessId BusinessId { get; private set; }
     
+    
+    private readonly List<BusinessService> _businessServices = new();
+    public IReadOnlyCollection<BusinessService> BusinessServices => _businessServices;
+    
     private Employee(){}
     
     
