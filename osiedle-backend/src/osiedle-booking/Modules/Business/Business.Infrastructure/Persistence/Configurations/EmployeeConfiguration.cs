@@ -24,5 +24,15 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Domain.Entities.Em
             .IsRequired();
         
         builder.HasQueryFilter(e => e.DeletedAt == null);
+        
+        builder.HasMany(e => e.BusinessServices)
+            .WithOne(s => s.Employee) 
+            .HasForeignKey(s => s.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade); 
+
+        
+        builder.Navigation(e => e.BusinessServices)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
+    
 }

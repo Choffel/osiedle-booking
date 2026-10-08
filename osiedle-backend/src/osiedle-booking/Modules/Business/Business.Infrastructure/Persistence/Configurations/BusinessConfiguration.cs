@@ -11,6 +11,8 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
         
         builder.HasKey(b => b.Id);
         
+        builder.HasIndex(b => b.OwnerId).IsUnique();
+        
         builder.Property(b => b.Id)
             .HasConversion(
                 id => id.Value,
@@ -32,6 +34,9 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
             .HasConversion<string>() 
             .IsRequired();
 
+        builder.Property(b => b.Location)
+            .HasMaxLength(500)
+            .IsRequired();
         
         builder.HasQueryFilter(b => b.DeletedAt == null);
     }
