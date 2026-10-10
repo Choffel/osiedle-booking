@@ -2,9 +2,9 @@
 
 namespace Business.Infrastructure.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class BusinessDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public BusinessDbContext(DbContextOptions<BusinessDbContext> options) : base(options)
     {
 
     }
