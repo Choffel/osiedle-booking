@@ -3,5 +3,6 @@
 public record UpdateBusinessInfoDto(
     Guid BusinessId,
     string NewName,
-    string NewDescription
+    string NewDescription,
+    string NewLocation
     );
