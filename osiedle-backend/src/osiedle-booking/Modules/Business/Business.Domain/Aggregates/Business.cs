@@ -52,7 +52,7 @@ public class Business : AggregateRoot<BusinessId>
         return new Business(businessId, name, location, ownerId, description);
     }
 
-    public void AddService(EmployeeId employeeId, string name, string description, decimal price, int durationMinutes)
+    public void AddService(EmployeeId employeeId, string name, string description, decimal price, TimeSpan durationMinutes)
     {
         if (Status == BusinessStatus.Archived)
             throw new InvalidOperationException("Cannot modify an archived business.");
@@ -60,9 +60,11 @@ public class Business : AggregateRoot<BusinessId>
         if (_services.Any(s => s.ServiceName == name))
             throw new InvalidOperationException("Service with this name already exists.");
         
-        var duration = TimeSpan.FromMinutes(durationMinutes);
+        //TODO: fix ANY method to check if employee is associated with this business
+        if(!_services.Any(s => s.EmployeeId == employeeId))
+            throw new InvalidOperationException("Employee is not associated with this business.");
 
-        var service = BusinessService.Create(employeeId, name, description, price, duration);
+        var service = BusinessService.Create(employeeId, name, description, price, durationMinutes);
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;

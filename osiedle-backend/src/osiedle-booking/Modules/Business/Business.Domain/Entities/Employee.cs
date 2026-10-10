@@ -34,7 +34,7 @@ public class Employee : Entity<EmployeeId>
         ValidateAndAssign(firstName, lastName, position, review);
     }
     
-    public void Update(string firstName, string lastName, string position, string review)
+    public void UpdateInfo(string firstName, string lastName, string position, string review)
     {
         ValidateAndAssign(firstName, lastName, position, review);
         UpdatedAt = DateTime.UtcNow; 
@@ -60,18 +60,10 @@ public class Employee : Entity<EmployeeId>
         Review = review;
     }
     
-    public static Employee Create(EmployeeId id, BusinessId businessId, string firstName, string lastName, string position, string review)
+    public static Employee Create(BusinessId businessId, string firstName, string lastName, string position, string review)
     {
         var employeeId = EmployeeId.New();
-        return new Employee()
-        {
-            Id = employeeId,
-            FirstName = firstName,
-            LastName = lastName,
-            Position = position,
-            BusinessId = businessId,
-            Review = review
-        };
+        return new Employee(employeeId, businessId, firstName, lastName, position, review);
     }
     
 }
