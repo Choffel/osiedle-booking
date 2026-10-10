@@ -1,34 +1,39 @@
-﻿using Business.Application.Interfaces;
+﻿using Business.Application.DTOs;
+using Business.Application.Interfaces;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using osiedle_booking.BuildingBlocks.Interfaces;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
 namespace Business.Infrastructure.Repositories;
 
 public class BusinessRepository : IBusinessRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly BusinessDbContext _context;
+    
 
-    public BusinessRepository(ApplicationDbContext context)
+    public BusinessRepository(BusinessDbContext context)
     {
         _context = context;
     }
 
-    public async Task<BusinessAggregate> AddBusinessAsync(
+    public Task<BusinessAggregate> AddBusinessAsync(
         BusinessAggregate business, CancellationToken cancellationToken = default)
     {
-        await _context.Businesses.AddAsync(business, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return business;
+         var add =  _context.Businesses.Add(business);
+
+         return Task.FromResult(add.Entity);
     }
 
     public async Task<BusinessAggregate> GetBusinessByIdAsync(
         Guid businessId, CancellationToken cancellationToken = default)
     {
         var business = await _context.Businesses
+            .Include(b => b.OwnerId)
+            .Include(e => e.Employees)
+            .Include(s => s.Services)
             .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken);
         
-        await _context.SaveChangesAsync(cancellationToken);
         
         return business;
     }
@@ -42,8 +47,18 @@ public class BusinessRepository : IBusinessRepository
         var business = await _context.Businesses
             .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken);
         
-        await _context.SaveChangesAsync(cancellationToken);
         
         return business;
+    }
+
+    public async Task UpdateBusinessInfoAsync(BusinessAggregate business, CancellationToken ct = default)
+    {
+        var entry = _context.Entry(business);
+        
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Businesses.Update(business);
+        }
+        
     }
 }
