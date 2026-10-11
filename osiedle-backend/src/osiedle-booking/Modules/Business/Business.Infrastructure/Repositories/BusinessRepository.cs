@@ -1,8 +1,6 @@
-﻿using Business.Application.DTOs;
-using Business.Application.Interfaces;
+﻿using Business.Application.Interfaces;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using osiedle_booking.BuildingBlocks.Interfaces;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
 namespace Business.Infrastructure.Repositories;
