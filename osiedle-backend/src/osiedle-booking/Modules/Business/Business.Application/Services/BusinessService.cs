@@ -1,6 +1,7 @@
 ﻿using Business.Application.DTOs;
 using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
+using Business.Application.Interfaces.Business;
 using Business.Domain.Errors;
 using Business.Domain.ValueObject;
 using osiedle_booking.BuildingBlocks;
@@ -25,6 +26,7 @@ public class BusinessService : IBusinessManagementService
             createBusinessDto.OwnerId, 
             cancellationToken);
 
+        //TODO:FIX(return failure)
         if (existingBusiness)
             return BusinessErrors.AlreadyExists;
         
