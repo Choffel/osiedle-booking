@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-
-namespace Business.Domain.ValueObject;
+﻿namespace Business.Domain.ValueObject;
 
 public readonly record struct BusinessId
 {
