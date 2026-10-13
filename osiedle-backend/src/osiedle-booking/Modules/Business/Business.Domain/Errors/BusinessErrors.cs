@@ -2,7 +2,7 @@
 
 namespace Business.Domain.Errors;
 
-public static  class BusinessErrors
+public static class BusinessErrors
 {
     public static readonly Error NotFound =
         Error.NotFound("Business.NotFound", "Business not found");
