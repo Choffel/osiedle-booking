@@ -1,6 +1,4 @@
-﻿using Business.Application.DTOs;
-
-namespace Business.Application.Interfaces;
+﻿namespace Business.Application.Interfaces.Business;
 
 public interface IBusinessRepository
 {

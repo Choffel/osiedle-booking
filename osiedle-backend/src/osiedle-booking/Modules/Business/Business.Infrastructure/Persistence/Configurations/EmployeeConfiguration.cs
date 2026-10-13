@@ -1,18 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Business.Domain.Aggregates;
+using Business.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Business.Infrastructure.Persistence.Configurations;
 
-public class EmployeeConfiguration : IEntityTypeConfiguration<Domain.Entities.Employee>
+public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Employee> builder)
+    public void Configure(EntityTypeBuilder<Employee> builder)
     {
         builder.HasKey(e => e.Id);
+        
+        builder.HasIndex(e => e.Email).IsUnique();
 
         builder.Property(e => e.Id)
             .HasConversion(
                 id => id.Value,
-                value => Domain.ValueObject.EmployeeId.From(value))
+                value => EmployeeId.From(value))
             .IsRequired();
 
         builder.Property(e => e.FirstName)
@@ -22,6 +26,10 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Domain.Entities.Em
         builder.Property(e => e.LastName)
             .HasMaxLength(40)
             .IsRequired();
+        
+        builder.Property(e => e.Email)
+            .IsRequired()
+            .HasMaxLength(256);
         
         builder.HasQueryFilter(e => e.DeletedAt == null);
         

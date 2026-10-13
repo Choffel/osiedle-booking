@@ -1,6 +1,10 @@
-using Business.Application.DTOs.EmployeeDTOs;
-using Business.Application.Intarfaces;
+using Business.Application.Interfaces.Employee;
+using Business.Domain.Aggregates;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Business.Infrastructure.Repositories;
 
@@ -12,24 +16,42 @@ public class EmployeeRepository : IEmployeeRepository
     {
         _context = context;
     }
-    
-    public Task<EmployeeCreateDto> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
+
+
+    public Task<Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
-        
+        return _context.Employees
+            .AsNoTracking()
+            .Include(e => e.BusinessServices)
+            .SingleOrDefaultAsync(e => e.Id == employeeId, ct);
     }
 
-    public Task<EmployeeResponseDto> UpdateEmployeeAsync(EmployeeUpdateDto dto, CancellationToken ct = default)
+    public Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _context.Employees
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == employeeId, ct);
     }
 
-    public Task<EmployeeResponseDto> GetEmployeeByIdAsync(Guid employeeId, CancellationToken ct = default)
+    public Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _context.Employees
+            .AsNoTracking()
+            .AnyAsync(e => e.Email == email.ToLower().Trim(), ct);
     }
 
-    public Task ArchiveEmployeeAsync(Guid employeeId, CancellationToken ct = default)
+    public void AddEmployee(Employee employee)
     {
-        throw new NotImplementedException();
+        _context.Employees.Add(employee);
+    }
+
+    public void UpdateEmployee(Employee employee)
+    {
+        _context.Employees.Update(employee);
+    }
+
+    public void DeleteEmployee(Employee employee)
+    {
+        _context.Employees.Remove(employee);
     }
 }

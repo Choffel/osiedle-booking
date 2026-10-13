@@ -1,15 +1,18 @@
-using Business.Application.DTOs.EmployeeDTOs;
-using Business.Domain.Entities;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 
-namespace Business.Application.Intarfaces;
+namespace Business.Application.Interfaces.Employee;
 
 public interface IEmployeeRepository
 {
-    Task<Employee> CreateEmployeeAsync(Employee employee, CancellationToken ct = default);
-
-    Task<Employee> UpdateEmployeeAsync(Employee employee, CancellationToken ct = default);
-
-    Task<Employee> GetEmployeeByIdAsync(Employee employee, CancellationToken ct = default);
+    Task<Domain.Aggregates.Employee> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default);
     
-    Task<>
+    Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default);
+    
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);
+    
+    
+    void AddEmployee(Domain.Aggregates.Employee employee);
+    void UpdateEmployee(Domain.Aggregates.Employee employee);
+    void DeleteEmployee(Domain.Aggregates.Employee employee);
 }
