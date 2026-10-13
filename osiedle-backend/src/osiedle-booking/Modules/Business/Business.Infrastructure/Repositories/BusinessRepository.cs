@@ -1,4 +1,5 @@
 ﻿using Business.Application.Interfaces;
+using Business.Application.Interfaces.Business;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
@@ -28,7 +29,6 @@ public class BusinessRepository : IBusinessRepository
     {
         var business = await _context.Businesses
             .Include(b => b.OwnerId)
-            .Include(e => e.Employees)
             .Include(s => s.Services)
             .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken);
         
@@ -36,8 +36,13 @@ public class BusinessRepository : IBusinessRepository
         return business;
     }
 
-    public Task<bool> ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
-        => _context.Businesses.AnyAsync(b => b.OwnerId == ownerId, ct);
+    public async Task<bool> ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        var exist = await _context.Businesses.AnyAsync(b => b.OwnerId == ownerId, ct);
+        
+        return exist;
+    }
+         
 
     public async Task<BusinessAggregate> ArchiveBusinessByIdAsync(
         Guid businessId, CancellationToken cancellationToken = default)

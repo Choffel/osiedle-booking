@@ -1,4 +1,5 @@
 ﻿using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Business.Infrastructure.Persistence.Configurations;
