@@ -1,4 +1,5 @@
  using Business.Application.DTOs.EmployeeDTOs;
+ using Business.Domain.Aggregates;
  using Business.Domain.Entities;
 
  namespace Business.Application.ExtensionMethods;
@@ -13,7 +14,8 @@
              employee.FirstName,
              employee.LastName,
              employee.Position,
-             employee.Review
+             employee.Review,
+             employee.Email
          );
      }
  }

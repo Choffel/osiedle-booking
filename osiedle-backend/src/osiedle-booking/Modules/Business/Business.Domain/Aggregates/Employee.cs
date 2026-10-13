@@ -1,0 +1,92 @@
+﻿using Business.Domain.Entities;
+using Business.Domain.Enums;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.Domain;
+
+namespace Business.Domain.Aggregates;
+
+public class Employee : AggregateRoot<EmployeeId>
+{
+    public string FirstName { get; private set; }
+    
+    public string LastName { get; private set; }
+    
+    public string Position { get; private set; }
+    
+    public string? Review { get; private set; }
+    
+    public string Email { get; private set; }
+
+    public BusinessId? BusinessId { get; private set; } = null;
+    
+    public EmploymentStatus Status { get; private set; } = EmploymentStatus.Active;
+    
+    private readonly List<BusinessService> _businessServices = new();
+    public IReadOnlyCollection<BusinessService> BusinessServices => _businessServices;
+    
+    private Employee(){}
+    
+    
+    private Employee(
+        EmployeeId id, BusinessId? businessId,
+        string firstName, 
+        string lastName, 
+        string position, 
+        string review,
+        string email
+        ) : base(id)
+    {
+        BusinessId = businessId;
+        ValidateAndAssign(firstName, lastName, position, review, email);
+    }
+    
+    public void UpdateInfo(string firstName, string lastName, string position, string review, string email)
+    {
+        ValidateAndAssign(firstName, lastName, position, review, email);
+        UpdatedAt = DateTime.UtcNow; 
+    }
+    
+    public void ChangeStatus(EmploymentStatus newStatus)
+    {
+        if (Status == newStatus)
+            return;
+        
+        if (Status == EmploymentStatus.Terminated)
+        {
+            throw new InvalidOperationException("employee is terminated.");
+        }
+
+        Status = newStatus;
+    }
+
+    private void ValidateAndAssign(string firstName, string lastName, string position, string review, string email)
+    {
+        if(string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email cannot be empty.", nameof(email));
+        
+        if (string.IsNullOrWhiteSpace(firstName))
+            throw new ArgumentException("First name cannot be empty.", nameof(firstName));
+
+        if (string.IsNullOrWhiteSpace(lastName))
+            throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
+
+        if (string.IsNullOrWhiteSpace(position))
+            throw new ArgumentException("Position cannot be empty.", nameof(position));
+
+        if (string.IsNullOrWhiteSpace(review))
+            throw new ArgumentException("Review cannot be empty.", nameof(review));
+
+        FirstName = firstName;
+        LastName = lastName;
+        Position = position;
+        Review = review;
+    }
+    
+    public static Employee Create(BusinessId? businessId, string firstName, string lastName, string position, string review, string email)
+    {
+        var employeeId = EmployeeId.New();
+        return new Employee(employeeId, businessId, firstName, lastName, position, review, email);
+    }
+
+}

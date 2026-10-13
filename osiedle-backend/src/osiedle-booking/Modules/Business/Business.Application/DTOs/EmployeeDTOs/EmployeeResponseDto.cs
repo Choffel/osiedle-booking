@@ -2,9 +2,10 @@
 
 public record EmployeeResponseDto(
     Guid Id,
-    Guid BusinessId,
+    Guid? BusinessId,
     string FirstName,
     string LastName,
     string Position,
-    string? Review
+    string? Review,
+    string Email
     );

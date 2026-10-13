@@ -1,9 +1,12 @@
-﻿namespace Business.Application.DTOs.EmployeeDTOs;
+﻿using Business.Domain.ValueObject;
+
+namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record EmployeeCreateDto(
-    Guid BusinessId,
+    BusinessId? BusinessId,
     string FirstName,
     string LastName,
     string Position,
-    string? Review
+    string? Review,
+    string Email
     );
