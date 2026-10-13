@@ -1,6 +1,7 @@
 ﻿using Business.Domain.Entities;
 using Business.Domain.Enums;
 using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.Domain;
 
 namespace Business.Domain.Aggregates;
@@ -14,10 +15,11 @@ public class Business : AggregateRoot<BusinessId>
     public string Location { get; private set; } 
     
     private readonly List<BusinessService> _services = new();
-    private readonly List<Employee> _employees = new();
-
     public IReadOnlyList<BusinessService> Services => _services;
-    public IReadOnlyList<Employee> Employees => _employees;
+    
+    private readonly List<EmployeeId> _employeeIds = new();
+    public IReadOnlyList<EmployeeId> EmployeeIds => _employeeIds.AsReadOnly();
+   
     
     
     public BusinessStatus Status { get; private set; }
@@ -68,6 +70,14 @@ public class Business : AggregateRoot<BusinessId>
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AddEmployee(EmployeeId employeeId)
+    {
+        if (_employeeIds.Contains(employeeId))
+            return;
+
+        _employeeIds.Add(employeeId);
     }
     
     public void UpdateInfo(string newName, string newDescription, string newLocation)
