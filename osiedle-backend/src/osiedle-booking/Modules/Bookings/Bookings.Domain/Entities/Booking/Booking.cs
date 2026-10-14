@@ -24,11 +24,10 @@ public class Booking : AggregateRoot<BookingId>
         ClientId clientId,
         ServiceId serviceId,
         TimeSlot slot,
-        Money price,
-        DateTime now)
+        Money price
+        )
     {
-        if (slot.Start <= now)
-            throw new BookingInPastException(slot.Start);
+        
 
         var booking = new Booking
         {
@@ -40,7 +39,7 @@ public class Booking : AggregateRoot<BookingId>
             Slot = slot,
             Price = price,
             Status = BookingStatus.Confirmed,
-            CreatedAt = DateOnly.FromDateTime(now),
+            CreatedAt = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day)
         };
 
         /*booking.RaiseDomainEvent(new BookingCreatedDomainEvent(
