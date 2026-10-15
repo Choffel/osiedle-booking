@@ -1,5 +1,4 @@
-﻿using Business.Domain.Aggregates;
-using Business.Domain.Enums;
+﻿using Business.Domain.Enums;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.Domain.Entity;
@@ -9,8 +8,6 @@ namespace Business.Domain.Entities;
 public class BusinessService : Entity<BusinessServiceId>
 {
     public EmployeeId EmployeeId { get; private set; }
-    
-    public Employee Employee { get; private set; }
     
     public string ServiceName { get; private set; }
     

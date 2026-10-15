@@ -8,23 +8,16 @@ public class BusinessServiceConfiguration : IEntityTypeConfiguration<Business.Do
 {
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Business.Domain.Entities.BusinessService> builder)
     {
+        builder.ToTable("BusinessServices");
+
+
         builder.HasKey(x => x.Id);
         
         builder.Property(s => s.Id)
             .HasConversion(
                 id => id.Value,                     
                 value => BusinessServiceId.From(value) 
-            )
-            .IsRequired();
-        
-        
-        
-        builder.Property(x => x.ServiceName).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Price).IsRequired().HasColumnType("numeric(18,2)");
-        builder.Property(x => x.Description).HasMaxLength(500);
-        builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(50);
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt).IsRequired();
+            );
         
         builder.Property(s => s.EmployeeId)
             .HasConversion(
@@ -33,11 +26,14 @@ public class BusinessServiceConfiguration : IEntityTypeConfiguration<Business.Do
             )
             .IsRequired();
         
-        builder.HasOne(s => s.Employee)
-            .WithMany(e => e.BusinessServices)
-            .HasForeignKey(s => s.EmployeeId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
         builder.HasIndex(s => s.EmployeeId);
+        
+        builder.Property(x => x.ServiceName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.Price).IsRequired().HasColumnType("numeric(18,2)");
+        builder.Property(x => x.Description).HasMaxLength(500);
+        builder.Property(x => x.Duration).IsRequired();
+        builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(50);
+        builder.Property(x => x.CreatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt).IsRequired();
     }
 }
