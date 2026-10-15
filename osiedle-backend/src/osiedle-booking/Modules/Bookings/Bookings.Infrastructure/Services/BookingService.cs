@@ -42,7 +42,16 @@ public class BookingService : IBookingService
     public async Task<Result<bool>> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
     {
         var slot = TimeSlot.Create(request.StartTime, request.EndTime);
-        if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct))
+        
+        var day = request.StartTime.Date;
+
+        var barberWorkHours = TimeSlot.Create(
+            day.AddHours(9),
+            day.AddHours(18)
+        );
+        
+        if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct) ||
+           !await _slotCalculator.RelevantSlot(slot, barberWorkHours, ct))
         {
             return Result<bool>.Failure("Overlapping booking found.");
         }
