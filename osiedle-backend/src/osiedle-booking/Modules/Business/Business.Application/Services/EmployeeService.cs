@@ -1,6 +1,80 @@
-﻿namespace Business.Application.Services;
+﻿using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.Interfaces.Employee;
+using Business.Domain.Aggregates;
+using Business.Domain.Enums;
+using Business.Domain.Errors;
+using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.Interfaces;
 
-public class EmployeeService
+namespace Business.Application.Services;
+
+public class EmployeeService : IEmployeeManagementService
 {
+    private readonly IEmployeeRepository _employeeRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public EmployeeService(IEmployeeRepository employeeRepository, IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+        _employeeRepository = employeeRepository;
+    }
     
+    public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
+    {
+        var normalizedEmail = dto.Email.ToLower().Trim();
+        
+        var existing = await _employeeRepository.ExistsByEmailAsync(normalizedEmail, ct);
+
+        if (existing)
+        {
+            return Result.Failure<EmployeeId>(EmployeeErrors.AlreadyExists);
+        }
+        
+        var businessId = BusinessId.FromNullable(dto.BusinessId);
+        
+        var employee =  Employee.Create(businessId,dto.FirstName,dto.LastName, dto.Position, dto.Review, normalizedEmail );
+
+         _employeeRepository.AddEmployee(employee);
+
+         await _unitOfWork.SaveChangesAsync(ct);
+         
+         return Result.Success(employee.Id);
+    }
+
+    //change employment status method  for example from active to terminated,
+    public async Task<Result> ChangeEmploymentStatusAsync(ChangeEmploymentStatusDto dto, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Result> UpdateProfileAsync(UpdateEmployeeProfileDto dto, CancellationToken ct = default)
+    {
+        var employeeId = EmployeeId.From(dto.EmployeeId);
+        
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        
+        if (employee == null)
+        {
+            return Result.Failure(EmployeeErrors.NotFound);
+        }
+        
+        employee.UpdateInfo(dto.FirstName, dto.LastName, dto.Position, dto.Review, dto.Email);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> DeactivateEmployeeAsync(EmployeeId id, CancellationToken ct = default)
+    {
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(id, ct);
+        
+        if (employee == null)
+        {
+            return Result.Failure(EmployeeErrors.NotFound);
+        }
+        
+        employee.ChangeStatus(EmploymentStatus.Terminated);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
 }
