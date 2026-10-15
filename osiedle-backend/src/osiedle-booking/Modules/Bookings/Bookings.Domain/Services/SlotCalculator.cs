@@ -36,4 +36,14 @@ public sealed class SlotCalculator : ISlotCalculator
                 result.Add(TimeSlot.Create(start, start + serviceDuration));
         }
     }
+    
+    public async Task<bool> RelevantSlot(TimeSlot timeSlot, TimeSlot workingHours, CancellationToken ct)
+    {
+        if (timeSlot == null) throw new ArgumentNullException(nameof(timeSlot));
+        if (workingHours == null) throw new ArgumentNullException(nameof(workingHours));
+
+        if (timeSlot.Start < workingHours.Start || timeSlot.End > workingHours.End)
+            return false;
+        return true;
+    }
 }

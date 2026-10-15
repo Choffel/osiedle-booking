@@ -8,4 +8,6 @@ public interface ISlotCalculator
         IReadOnlyList<TimeSlot> occupiedSlots,
         TimeSpan serviceDuration,
         TimeSpan step);
-}
+
+    Task<bool> RelevantSlot(TimeSlot timeSlot, TimeSlot workingHours, CancellationToken ct);
+}   
