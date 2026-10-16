@@ -40,4 +40,17 @@ public class BookingRepository : IBookingRepository
          
          return result.Entity;
     }
+
+    public async Task<IReadOnlyCollection<Booking>> GetBookingsByIdAsync(ClientId id, CancellationToken ct, bool trackChanges = false)
+    {
+        IQueryable<Booking> query = _dbContext.Bookings;
+
+        if (!trackChanges)
+        {
+            query = query.AsNoTracking();
+        }
+        
+        var result = await query.Where(b => b.ClientId == id).ToListAsync(ct);
+        return result;
+    }
 }
