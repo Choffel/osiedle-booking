@@ -32,4 +32,11 @@ public class BookingsController
         var result = await _bookingService.CreateBookingAsync(request, ct);
         return result;
     }
+    
+    [HttpGet("reservations")]
+    public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
+    {
+        var result = await _bookingService.GetMyReservationsAsync(ct);
+        return result;
+    }
 }
