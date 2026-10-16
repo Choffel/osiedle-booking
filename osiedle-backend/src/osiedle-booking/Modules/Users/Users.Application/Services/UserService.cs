@@ -17,12 +17,13 @@ public class UserService : IUserService
     private readonly IRoleService _roleManager;
     private readonly ITokenService _tokenService;
 
-    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger, IRoleService roleManager)
+    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger, IRoleService roleManager, ITokenService tokenService)
     {
         _identityService = identityService; 
         _userRepository = userRepository;
         _logger = logger;
         _roleManager = roleManager;
+        _tokenService = tokenService;
     }
     
     public async Task<Result<TokenResponseDto>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)

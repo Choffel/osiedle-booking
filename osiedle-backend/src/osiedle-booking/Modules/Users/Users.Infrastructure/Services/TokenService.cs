@@ -39,7 +39,7 @@ public class TokenService : ITokenService
         _userContext = userContext;
     }
 
-    public async Task<TokenResponseDto> GetTokens(UserDto user, CancellationToken cancellationToken = default)
+    public async Task<TokenResponseDto> GetTokens(UserDto user, CancellationToken ct)
     {
         var accessToken = await CreateTokenAsync(user);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
@@ -140,7 +140,7 @@ public class TokenService : ITokenService
 
     private async Task<string> CreateTokenAsync(UserDto user)
     {
-        int expirationMinutes = int.Parse(_configuration["JWT_TOKEN_SETTINGS:EXPIRATION_MINUTES"]);
+        int expirationMinutes = 60;
         var expiration = DateTime.UtcNow.AddMinutes(expirationMinutes);
         var token = CreateJwtToken(
             await CreateClaimsAsync(user),
@@ -188,6 +188,7 @@ public class TokenService : ITokenService
     private SigningCredentials CreateSigningCredentials()
     {
         var symmetricSecurityKey = _configuration["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"];
+        Console.WriteLine(symmetricSecurityKey);
 
         return new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(symmetricSecurityKey)),

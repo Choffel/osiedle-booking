@@ -5,7 +5,7 @@ namespace Users.Application.Abstractions;
 
 public interface ITokenService
 {
-    Task<TokenResponseDto> GetTokens(UserDto userDto, CancellationToken cancellationToken = default);
+    Task<TokenResponseDto> GetTokens(UserDto userDto, CancellationToken ct);
     Task<Result<bool>> RevokeRefreshTokenAsync(CancellationToken cancellationToken = default);
     Task<Result<TokenResponseDto>> GetNewAccessTokenAsync(CancellationToken cancellationToken = default);
     Task<Result<IEnumerable<ActiveSessionDto>>> GetActiveSessionsAsync(CancellationToken ct = default);
