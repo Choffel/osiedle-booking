@@ -1,6 +1,7 @@
 using Bookings.Appliation.Abstractions.Services;
 using Bookings.Appliation.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
 
@@ -33,6 +34,7 @@ public class BookingsController
         return result;
     }
     
+    [Authorize]
     [HttpGet("reservations")]
     public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
     {
