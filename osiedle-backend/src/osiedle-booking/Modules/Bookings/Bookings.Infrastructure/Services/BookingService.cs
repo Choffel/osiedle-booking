@@ -5,6 +5,7 @@ using Bookings.Appliation.Abstractions.Repositories;
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.Interfaces;
 
 namespace Bookings.Infrastructure.Services;
 
@@ -12,11 +13,13 @@ public class BookingService : IBookingService
 {
     private readonly IBookingRepository _bookingRepository;
     private readonly ISlotCalculator _slotCalculator;
+    private readonly IUserContext _userContext;
     
-    public BookingService(IBookingRepository bookingRepository, ISlotCalculator slotCalculator)
+    public BookingService(IBookingRepository bookingRepository, ISlotCalculator slotCalculator, IUserContext userContext)
     {
         _bookingRepository = bookingRepository;
         _slotCalculator = slotCalculator;
+        _userContext = userContext;
     }
 
     public async Task<Result<IReadOnlyList<TimeSlot>>> GetAvailableSlotsAsync(GetAvailableSlotsRequest request, CancellationToken ct)
@@ -70,5 +73,25 @@ public class BookingService : IBookingService
         await _bookingRepository.CreateBookingAsync(booking, ct);
 
         return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
+    {
+        var userId = new ClientId(_userContext.UserId);
+        var reservations = await _bookingRepository.GetBookingsByIdAsync(userId, ct);
+        if (reservations == null)
+        {
+            return Result<IReadOnlyCollection<MyReservationDTO>>.Failure("You don't have any reservations yet.");
+        }
+
+        var response = new List<MyReservationDTO>(
+            reservations.Select( r => new MyReservationDTO(
+                r.Id.ToString(),
+                r.BusinessId.ToString(),
+                r.StaffId.ToString(),
+                r.Slot.Start
+            )));
+
+        return Result<IReadOnlyCollection<MyReservationDTO>>.Success(response);
     }
 }
