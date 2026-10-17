@@ -41,4 +41,12 @@ public class BookingsController
         var result = await _bookingService.GetMyReservationsAsync(ct);
         return result;
     }
+
+    [Authorize]
+    [HttpDelete("reservations")]
+    public async Task<Result<bool>> CancelBookingByIdAsync(CancelBookingRequest request, CancellationToken ct)
+    {
+        var result = await _bookingService.CancelBookingAsync(request, ct);
+        return result;
+    }
 }
