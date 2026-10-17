@@ -28,7 +28,6 @@ public class Booking : AggregateRoot<BookingId>
         )
     {
         
-
         var booking = new Booking
         {
             Id = BookingId.New(),
