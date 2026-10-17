@@ -7,7 +7,7 @@ using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
 
-namespace Bookings.Infrastructure.Services;
+namespace Bookings.Appliation.Services;
 
 public class BookingService : IBookingService
 {

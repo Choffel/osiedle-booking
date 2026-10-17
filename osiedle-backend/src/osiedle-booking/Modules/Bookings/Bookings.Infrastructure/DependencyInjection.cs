@@ -1,10 +1,10 @@
 using System.Text;
 using Bookings.Appliation.Abstractions.Repositories;
 using Bookings.Appliation.Abstractions.Services;
+using Bookings.Appliation.Services;
 using Bookings.Domain.Services;
 using Bookings.Infrastructure.Data;
 using Bookings.Infrastructure.Repositories;
-using Bookings.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
