@@ -78,12 +78,8 @@ public class BookingService : IBookingService
     public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
     {
         var userId = new ClientId(_userContext.UserId);
-        var reservations = await _bookingRepository.GetBookingsByIdAsync(userId, ct);
-        if (reservations == null)
-        {
-            return Result<IReadOnlyCollection<MyReservationDTO>>.Failure("You don't have any reservations yet.");
-        }
-
+        var reservations = await _bookingRepository.GetBookingsByClientIdIdAsync(userId, ct);
+        
         var response = new List<MyReservationDTO>(
             reservations.Select( r => new MyReservationDTO(
                 r.Id.ToString(),
@@ -93,5 +89,23 @@ public class BookingService : IBookingService
             )));
 
         return Result<IReadOnlyCollection<MyReservationDTO>>.Success(response);
+    }
+
+    public async Task<Result<bool>> CancelBookingAsync(CancelBookingRequest request, CancellationToken ct)
+    {
+        var booking = await _bookingRepository.GetBookingByIdAsync(new BookingId(request.BookingId), ct, true);
+        if(booking == null)
+        {
+            return Result<bool>.Failure("Booking not found.");
+        }
+        if(!booking.IsOwnedBy(new ClientId(_userContext.UserId)))
+        {
+            return Result<bool>.Failure("You cannot delete a reservation that isn't yours.");
+        }
+        
+        booking.Delete();
+        await _bookingRepository.Update(booking, ct);
+        
+        return Result<bool>.Success(true);
     }
 }
