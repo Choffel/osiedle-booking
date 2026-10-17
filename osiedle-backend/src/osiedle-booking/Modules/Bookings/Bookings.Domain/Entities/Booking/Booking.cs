@@ -47,4 +47,15 @@ public class Booking : AggregateRoot<BookingId>
 
         return booking;
     }
+
+    public void Delete()
+    {
+        Status = BookingStatus.Cancelled;
+        Cancellation = new CancellationInfo(CancelledBy.Client,"cancel", DateTime.UtcNow);
+    }
+
+    public bool IsOwnedBy(ClientId clientId)
+    {
+        return ClientId == clientId;
+    }
 }
