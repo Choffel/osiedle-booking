@@ -22,7 +22,7 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return _context.Employees
             .AsNoTracking()
-            .Include(e => e.BusinessServices)
+            .Include(e => e.BookableServices)
             .SingleOrDefaultAsync(e => e.Id == employeeId, ct);
     }
 

@@ -13,6 +13,6 @@ public class BusinessDbContext : DbContext
     
     public DbSet<Employee> Employees { get; set; }
     
-    public DbSet<Business.Domain.Entities.BusinessService> BusinessServices { get; set; }
+    public DbSet<Business.Domain.Entities.BookableService> BookableServices { get; set; }
 }
         

@@ -1,6 +1,5 @@
 ﻿using Business.Domain.Entities;
 using Business.Domain.Enums;
-using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.Domain;
 
@@ -22,8 +21,8 @@ public class Employee : AggregateRoot<EmployeeId>
     
     public EmploymentStatus Status { get; private set; } = EmploymentStatus.Active;
     
-    private readonly List<BusinessService> _businessServices = new();
-    public IReadOnlyCollection<BusinessService> BusinessServices => _businessServices;
+    private readonly List<BookableService> _bookableServices = new();
+    public IReadOnlyCollection<BookableService> BookableServices => _bookableServices;
     
     private Employee(){}
     
@@ -43,7 +42,9 @@ public class Employee : AggregateRoot<EmployeeId>
     
     public void UpdateInfo(string firstName, string lastName, string position, string review, string email)
     {
-        ValidateAndAssign(firstName, lastName, position, review, email);
+        var normalizedEmail = email.ToLower().Trim();
+        
+        ValidateAndAssign(firstName, lastName, position, review, normalizedEmail);
         UpdatedAt = DateTime.UtcNow; 
     }
     

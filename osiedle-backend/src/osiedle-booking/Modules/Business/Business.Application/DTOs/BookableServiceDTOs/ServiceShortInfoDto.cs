@@ -1,7 +1,7 @@
-namespace Business.Application.DTOs.BusinessServiceDTOs;
+namespace Business.Application.DTOs.BookableServiceDTOs;
 
 public record ServiceShortInfoDto(
-    Guid BusinessServiceId,
+    Guid BookableServiceId,
     Guid EmployeeId,
     string ServiceName,
     decimal Price,

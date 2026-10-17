@@ -1,6 +1,6 @@
-namespace Business.Application.DTOs.BusinessServiceDTOs;
+namespace Business.Application.DTOs.BookableServiceDTOs;
 
-public record BusinessServiceResponseDto(
+public record UpdateBookableServiceDto(
     Guid EmployeeId,
     string ServiceName,
     string ServiceDescription,

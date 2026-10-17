@@ -14,8 +14,8 @@ public class Business : AggregateRoot<BusinessId>
     public string Description { get; private set; }
     public string Location { get; private set; } 
     
-    private readonly List<BusinessService> _services = new();
-    public IReadOnlyList<BusinessService> Services => _services;
+    private readonly List<BookableService> _services = new();
+    public IReadOnlyList<BookableService> Services => _services;
     
     private readonly List<EmployeeId> _employeeIds = new();
     public IReadOnlyList<EmployeeId> EmployeeIds => _employeeIds.AsReadOnly();
@@ -66,7 +66,7 @@ public class Business : AggregateRoot<BusinessId>
         if(!_services.Any(s => s.EmployeeId == employeeId))
             throw new InvalidOperationException("Employee is not associated with this business.");
 
-        var service = BusinessService.Create(employeeId, name, description, price, durationMinutes);
+        var service = BookableService.Create(employeeId, name, description, price, durationMinutes);
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;

@@ -5,7 +5,7 @@ using osiedle_booking.BuildingBlocks.Domain.Entity;
 
 namespace Business.Domain.Entities;
 
-public class BusinessService : Entity<BusinessServiceId>
+public class BookableService : Entity<BookableServiceId>
 {
     public EmployeeId EmployeeId { get; private set; }
     
@@ -19,9 +19,9 @@ public class BusinessService : Entity<BusinessServiceId>
     
     public ServiceStatus Status { get; private set; }
     
-    private BusinessService() { }
+    private BookableService() { }
     
-    private BusinessService(BusinessServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan date) : base(id)   
+    private BookableService(BookableServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan date) : base(id)   
     {
         EmployeeId = employeeId;
         ServiceName = serviceName;
@@ -31,10 +31,10 @@ public class BusinessService : Entity<BusinessServiceId>
         Status = ServiceStatus.Active;
     }
     
-    public static BusinessService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
+    public static BookableService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
     {
-        var id = BusinessServiceId.New();
-        return new BusinessService(id, employeeId, serviceName, description, price, duration);
+        var id = BookableServiceId.New();
+        return new BookableService(id, employeeId, serviceName, description, price, duration);
     }
     
     public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan duration)

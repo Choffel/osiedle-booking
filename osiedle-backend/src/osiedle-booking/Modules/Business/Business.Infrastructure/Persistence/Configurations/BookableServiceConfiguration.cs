@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Business.Infrastructure.Persistence.Configurations;
 
-public class BusinessServiceConfiguration : IEntityTypeConfiguration<Business.Domain.Entities.BusinessService>
+public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Domain.Entities.BookableService>
 {
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Business.Domain.Entities.BusinessService> builder)
+    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Business.Domain.Entities.BookableService> builder)
     {
-        builder.ToTable("BusinessServices");
+        builder.ToTable("BookableServices");
 
 
         builder.HasKey(x => x.Id);
@@ -16,7 +16,7 @@ public class BusinessServiceConfiguration : IEntityTypeConfiguration<Business.Do
         builder.Property(s => s.Id)
             .HasConversion(
                 id => id.Value,                     
-                value => BusinessServiceId.From(value) 
+                value => BookableServiceId.From(value) 
             );
         
         builder.Property(s => s.EmployeeId)
