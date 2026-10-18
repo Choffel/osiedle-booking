@@ -25,34 +25,24 @@ public class UserService : IUserService
         _tokenService = tokenService;
     }
     
-    public async Task<Result<TokenResponseDto>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
+    public async Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
     {
-        //await using var transaction = await _unitOfWork.BeginTransactionAsync(ct);
-        
         var identityResult = await _identityService.CreateIdentityAsync(
             request.Email, request.Password, ct);
 
-        if (identityResult.IsSuccess == false)
-            return Result<TokenResponseDto>.Failure(identityResult.Error);
-
+        if (!identityResult.IsSuccess)
+            return Result<UserId>.Failure(identityResult.Error);
         
         var userId = new UserId(identityResult.Value);
         var user = User.Create(userId, request.FirstName);
 
         await _userRepository.AddAsync(user, ct);
-        //await _unitOfWork.SaveChangesAsync(ct);
-        //await transaction.CommitAsync(ct); // если ваш IUnitOfWork это поддерживает
+        
         var token = await _identityService.GenerateEmailConfirmationTokenAsync(identityResult.Value, ct);
         
-        _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token);
+        _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token); // TODO: Fix this when the notification service becomes available 
 
-        var response = new TokenResponseDto
-        (
-            AccessToken: string.Empty,
-            RefreshToken: string.Empty
-        );
-
-        return Result<TokenResponseDto>.Success(response);
+        return Result<UserId>.Success(userId);
     }
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default)

@@ -18,7 +18,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<Result<TokenResponseDto>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
+    public async Task<Result<UserId>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
     {
         var result = await _userService.RegisterAsync(createUserDto, cancellationToken);
         return result;

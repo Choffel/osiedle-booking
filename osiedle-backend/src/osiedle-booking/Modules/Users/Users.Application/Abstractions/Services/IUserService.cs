@@ -6,7 +6,7 @@ namespace Users.Application.Abstractions.Services;
 
 public interface IUserService
 {
-    Task<Result<TokenResponseDto>> RegisterAsync(RegisterUserRequest request, CancellationToken ct);
+    Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct);
 
     Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default);
     Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);
