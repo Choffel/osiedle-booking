@@ -8,9 +8,11 @@ public interface IEmployeeManagementService
 {
     Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default);
     
-    Task<Result> ChangeEmploymentStatusAsync(ChangeEmploymentStatusDto dto, CancellationToken ct = default);
-    
     Task<Result> UpdateProfileAsync(UpdateEmployeeProfileDto dto, CancellationToken ct = default);
     
     Task<Result> DeactivateEmployeeAsync(EmployeeId id, CancellationToken ct = default);
+    
+    Task<Result> SetWorkingHoursAsync(SetWorkingHoursDto dto, CancellationToken ct = default);
+    
+    Task<Result> ClearWorkingHoursAsync(Guid employeeId, DateOnly date, CancellationToken ct = default);
 }

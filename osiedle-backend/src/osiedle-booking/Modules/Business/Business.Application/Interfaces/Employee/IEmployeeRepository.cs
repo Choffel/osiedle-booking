@@ -1,3 +1,4 @@
+using Business.Application.DTOs.EmployeeDTOs;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 
@@ -11,8 +12,18 @@ public interface IEmployeeRepository
     
     Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);
     
+    Task<EmployeeStatusDto?> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default);
+    
+    Task<EmployeeShortInfoDto?> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default);
+    
+    Task<Domain.Entities.WorkingHours?> GetWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default);
+    
     
     void AddEmployee(Domain.Aggregates.Employee employee);
     void UpdateEmployee(Domain.Aggregates.Employee employee);
     void DeleteEmployee(Domain.Aggregates.Employee employee);
+    
+    void AddWorkingHours(Domain.Entities.WorkingHours workingHours);
+    void UpdateWorkingHours(Domain.Entities.WorkingHours workingHours);
+    void RemoveWorkingHours(Domain.Entities.WorkingHours workingHours);
 }
