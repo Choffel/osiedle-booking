@@ -23,8 +23,9 @@ public class UserRepository : IUserRepository
         throw new NotImplementedException();
     }
 
-    public void Update(Domain.Entity.User.User user)
+    public async Task Update(Domain.Entity.User.User user)
     {
-        throw new NotImplementedException();
+        _dbContext.Users.Update(user);
+        await _dbContext.SaveChangesAsync();
     }
 }
