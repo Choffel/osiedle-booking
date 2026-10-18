@@ -14,5 +14,7 @@ public class BusinessDbContext : DbContext
     public DbSet<Employee> Employees { get; set; }
     
     public DbSet<Business.Domain.Entities.BookableService> BookableServices { get; set; }
+    
+    public DbSet<Business.Domain.Entities.WorkingHours> WorkingHours { get; set; }
 }
         
