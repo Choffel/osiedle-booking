@@ -3,6 +3,7 @@ using Users.Appliation.Abstractions;
 using Users.Appliation.DTOs;
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.Value_objects;
+using Users.Domain.Errors;
 using Microsoft.Extensions.Logging;
 
 namespace Users.Appliation.Services;
@@ -59,18 +60,18 @@ public class UserService : IUserService
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
+            return Result<TokenResponseDto>.Failure(UserErrors.InvalidCredentials);
         }
 
         if (!user.EmailConfirmed)
         {
-            return Result<TokenResponseDto>.Failure("Email not confirmed");
+            return Result<TokenResponseDto>.Failure(UserErrors.EmailNotConfirmed);
         }
 
         var isPasswordCorrect = await _identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken);
         if (!isPasswordCorrect)
         {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
+            return Result<TokenResponseDto>.Failure(UserErrors.InvalidCredentials);
         }
 
         var userDto = new UserDto(user.Id, user.UserName ?? string.Empty, user.Email ?? string.Empty);
@@ -101,14 +102,14 @@ public class UserService : IUserService
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            return Result<string>.Failure($"{request.Email} - this email address is not registered");
+            return Result<string>.Failure(UserErrors.EmailNotRegistered);
         }
 
         var resetPassResult = await _identityService.ResetPasswordAsync(user.Id, request.Token, request.NewPassword!, cancellationToken);
 
         if (!resetPassResult.Succeeded)
         {
-            return Result<string>.Failure("Failed to reset password");
+            return Result<string>.Failure(UserErrors.PasswordResetFailed);
         }
 
         return Result<string>.Success("Password reset successfully");
@@ -119,19 +120,19 @@ public class UserService : IUserService
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            return Result<string>.Failure("Invalid email address");
+            return Result<string>.Failure(UserErrors.NotFound);
         }
 
         var result = await _identityService.ConfirmEmailAsync(user.Id, request.Token, cancellationToken);
         if (!result)
         {
-            return Result<string>.Failure("Invalid or expired confirmation token");
+            return Result<string>.Failure(UserErrors.EmailConfirmationFailed);
         }
 
         var roleExists = await _roleManager.RoleExistsAsync("User", cancellationToken);
         if (!roleExists)
         {
-            return Result<string>.Failure("Role 'User' does not exist");
+            return Result<string>.Failure(UserErrors.RoleNotFound);
         }
 
         await _identityService.AddToRoleAsync(user.Id, "User", cancellationToken);
@@ -144,7 +145,7 @@ public class UserService : IUserService
         var user = await _identityService.FindByEmailAsync(userDto.Email, cancellationToken);
         if (user == null)
         {
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
         }
         
         
@@ -156,7 +157,7 @@ public class UserService : IUserService
 
         if (domainUser is null)
         {
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
         }
 
         domainUser.Update(userDto.UserName);

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks;
 using Users.Appliation.Abstractions;
 using Users.Appliation.DTOs.Identity;
+using Users.Domain.Errors;
 
 namespace Users.Infrastructure.Identity;
 
@@ -29,9 +30,12 @@ public sealed class IdentityService : IIdentityService
 
         var result = await _userManager.CreateAsync(identityUser, password);
 
-        return result.Succeeded
-            ? osiedle_booking.BuildingBlocks.Result<Guid>.Success(identityUser.Id)
-            : osiedle_booking.BuildingBlocks.Result<Guid>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
+        if (result.Succeeded)
+            return osiedle_booking.BuildingBlocks.Result<Guid>.Success(identityUser.Id);
+
+        var details = string.Join("; ", result.Errors.Select(e => e.Description));
+        return osiedle_booking.BuildingBlocks.Result<Guid>.Failure(
+            UserErrors.RegistrationFailed with { Description = details });
     }
     
     public async Task<string> GenerateEmailConfirmationTokenAsync(Guid userId, CancellationToken ct)
