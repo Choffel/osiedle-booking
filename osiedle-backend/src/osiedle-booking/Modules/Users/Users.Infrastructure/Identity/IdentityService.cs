@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks;
-using Users.Application.Abstractions;
+using Users.Application.Abstractions.Services;
 using Users.Application.DTOs.Identity;
 
 namespace Users.Infrastructure.Identity;

@@ -1,10 +1,9 @@
 using osiedle_booking.BuildingBlocks;
-using Users.Application.Abstractions;
-
+using Users.Application.Abstractions.Services;
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.Value_objects;
 using Microsoft.Extensions.Logging;
-using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories;
 using Users.Application.DTOs;
 
 namespace Users.Application.Services;

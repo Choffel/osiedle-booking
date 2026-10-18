@@ -1,7 +1,8 @@
 using osiedle_booking.BuildingBlocks;
 using Users.Application.DTOs;
+using Users.Domain.Entity.User.Value_objects;
 
-namespace Users.Application.Abstractions;
+namespace Users.Application.Abstractions.Services;
 
 public interface IUserService
 {

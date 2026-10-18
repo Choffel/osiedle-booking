@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Users.Application.Abstractions;
+using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.Services;
 using Users.Infrastructure.Data;

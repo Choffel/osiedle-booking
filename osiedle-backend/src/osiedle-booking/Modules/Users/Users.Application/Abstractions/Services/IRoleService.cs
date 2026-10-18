@@ -1,4 +1,4 @@
-namespace Users.Application.Abstractions;
+namespace Users.Application.Abstractions.Services;
 
 public interface IRoleService
 {

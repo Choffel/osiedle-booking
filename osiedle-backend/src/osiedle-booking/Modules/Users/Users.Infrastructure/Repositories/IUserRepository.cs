@@ -1,4 +1,4 @@
-using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories;
 using Users.Infrastructure.Data;
 
 namespace Users.Infrastructure.Repositories;

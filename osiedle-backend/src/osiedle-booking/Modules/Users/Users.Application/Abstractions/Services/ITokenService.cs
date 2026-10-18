@@ -1,7 +1,7 @@
 using osiedle_booking.BuildingBlocks;
 using Users.Application.DTOs;
 
-namespace Users.Application.Abstractions;
+namespace Users.Application.Abstractions.Services;
 
 public interface ITokenService
 {
