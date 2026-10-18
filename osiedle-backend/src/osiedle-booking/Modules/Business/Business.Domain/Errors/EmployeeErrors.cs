@@ -21,4 +21,7 @@ public static class EmployeeErrors
 
     public static readonly Error PositionEmpty =
         Error.Validation("Employee.PositionEmpty", "Position cannot be empty");
+
+    public static readonly Error WorkingHoursInvalid =
+        Error.Validation("Employee.WorkingHoursInvalid", "End time must be after start time");
 }
