@@ -1,4 +1,5 @@
 ﻿
+using Business.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,7 +17,7 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
         builder.Property(b => b.Id)
             .HasConversion(
                 id => id.Value,
-                value => Business.Domain.ValueObject.BusinessId.From(value))
+                value => BusinessId.From(value))
             .IsRequired();
         
         builder.Property(b => b.Name)

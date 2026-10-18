@@ -1,11 +1,11 @@
 ﻿using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.Interfaces;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Aggregates;
 using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Interfaces;
 
 namespace Business.Application.Services;
 

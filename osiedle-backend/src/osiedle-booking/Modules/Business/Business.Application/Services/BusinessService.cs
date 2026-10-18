@@ -3,9 +3,8 @@ using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
 using Business.Domain.Errors;
-using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Interfaces;
 
 namespace Business.Application.Services;
 
@@ -25,10 +24,11 @@ public class BusinessService : IBusinessManagementService
         var existingBusiness = await _businessRepository.ExistsByOwnerIdAsync(
             createBusinessDto.OwnerId, 
             cancellationToken);
-
-        //TODO:FIX(return failure)
+        
         if (existingBusiness)
-            return BusinessErrors.AlreadyExists;
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
+        }
         
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
@@ -37,7 +37,7 @@ public class BusinessService : IBusinessManagementService
             createBusinessDto.Location);
         
         await _businessRepository.AddBusinessAsync(business, cancellationToken);
-        await _unitOfWork.SaveChangeAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         return business.ToResponseDto();
     }
@@ -56,14 +56,16 @@ public class BusinessService : IBusinessManagementService
     {
         var businessId = BusinessId.From(updateBusinessInfoDto.BusinessId);
         var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
-        
+
         if (business is null)
-            return BusinessErrors.NotFound;
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.NotFound);
+        }
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
         await _businessRepository.UpdateBusinessInfoAsync(business, cancellationToken);
-        await _unitOfWork.SaveChangeAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
     }
@@ -81,7 +83,7 @@ public class BusinessService : IBusinessManagementService
         business.ArchiveBusiness();
         
         await _businessRepository.UpdateBusinessInfoAsync(business, cancellationToken);
-        await _unitOfWork.SaveChangeAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return  business.ToResponseDto();
     }
 }
