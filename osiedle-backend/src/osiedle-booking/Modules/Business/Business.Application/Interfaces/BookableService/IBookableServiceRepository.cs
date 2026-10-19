@@ -13,6 +13,7 @@ public interface IBookableServiceRepository
     
     Task<bool> ExistsAsync(BookableServiceId id, CancellationToken ct);
     Task<bool> BelongsToEmployeeAsync(BookableServiceId id, EmployeeId employeeId, CancellationToken ct);
+    Task<bool> ExistsByNameForEmployeeAsync(string serviceName, EmployeeId employeeId, CancellationToken ct);
     
     void Add(Domain.Entities.BookableService service, CancellationToken ct);
     void Update(Domain.Entities.BookableService service, CancellationToken ct);

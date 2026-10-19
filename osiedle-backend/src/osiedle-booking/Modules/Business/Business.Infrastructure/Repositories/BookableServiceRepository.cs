@@ -69,6 +69,12 @@ public class BookableServiceRepository : IBookableServiceRepository
             .AnyAsync(s => s.Id == id && s.EmployeeId == employeeId, ct);
     }
 
+    public Task<bool> ExistsByNameForEmployeeAsync(string serviceName, EmployeeId employeeId, CancellationToken ct)
+    {
+        return _dbContext.BookableServices
+            .AnyAsync(s => s.ServiceName == serviceName && s.EmployeeId == employeeId, ct);
+    }
+
     public void Add(BookableService service, CancellationToken ct)
     {
         _dbContext.BookableServices.Add(service);
