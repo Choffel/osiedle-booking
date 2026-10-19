@@ -1,4 +1,4 @@
-namespace Bookings.Appliation.DTOs;
+namespace Bookings.Application.DTOs;
 
 public sealed record MyReservationDTO(
     string Title,

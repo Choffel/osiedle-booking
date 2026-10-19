@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Bookings.Appliation\Bookings.Appliation.csproj" />
+        <ProjectReference Include="..\Bookings.Application\Bookings.Application.csproj" />
         <ProjectReference Include="..\Bookings.Domain\Bookings.Domain.csproj" />
         <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>

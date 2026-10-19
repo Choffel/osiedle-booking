@@ -1,13 +1,13 @@
-using Bookings.Appliation.Abstractions.Services;
-using Bookings.Appliation.DTOs;
+using Bookings.Application.Abstractions.Services;
+using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
-using Bookings.Appliation.Abstractions.Repositories;
+using Bookings.Application.Abstractions.Repositories;
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
 
-namespace Bookings.Appliation.Services;
+namespace Bookings.Application.Services;
 
 public class BookingService : IBookingService
 {

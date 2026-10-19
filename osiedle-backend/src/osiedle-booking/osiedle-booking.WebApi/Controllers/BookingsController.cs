@@ -1,5 +1,5 @@
-using Bookings.Appliation.Abstractions.Services;
-using Bookings.Appliation.DTOs;
+using Bookings.Application.Abstractions.Services;
+using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

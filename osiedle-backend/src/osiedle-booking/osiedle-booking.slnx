@@ -9,7 +9,7 @@
     <File Path="compose.yaml" />
   </Folder>
   <Folder Name="/Modules/Bookings/">
-    <Project Path="Modules/Bookings/Bookings.Appliation/Bookings.Appliation.csproj" />
+    <Project Path="Modules/Bookings/Bookings.Application/Bookings.Application.csproj" />
     <Project Path="Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj" />
     <Project Path="Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj" />
   </Folder>
@@ -19,6 +19,6 @@
     <Project Path="Modules\Users\Users.Application\Users.Application.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
+    <Project Path="../tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
   </Folder>
 </Solution>
