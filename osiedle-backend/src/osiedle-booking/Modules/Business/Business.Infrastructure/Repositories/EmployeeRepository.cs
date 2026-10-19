@@ -78,12 +78,7 @@ public class EmployeeRepository : IEmployeeRepository
     {
         _context.Employees.Add(employee);
     }
-
-    public void UpdateEmployee(Employee employee)
-    {
-        _context.Employees.Update(employee);
-    }
-
+    
     public void DeleteEmployee(Employee employee)
     {
         _context.Employees.Remove(employee);

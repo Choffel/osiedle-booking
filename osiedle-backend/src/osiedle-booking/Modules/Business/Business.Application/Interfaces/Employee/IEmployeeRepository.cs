@@ -1,5 +1,4 @@
 using Business.Application.DTOs.EmployeeDTOs;
-using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 
 namespace Business.Application.Interfaces.Employee;
@@ -20,7 +19,7 @@ public interface IEmployeeRepository
     
     
     void AddEmployee(Domain.Aggregates.Employee employee);
-    void UpdateEmployee(Domain.Aggregates.Employee employee);
+    
     void DeleteEmployee(Domain.Aggregates.Employee employee);
     
     void AddWorkingHours(Domain.Entities.WorkingHours workingHours);
