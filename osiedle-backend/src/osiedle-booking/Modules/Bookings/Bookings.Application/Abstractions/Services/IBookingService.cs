@@ -1,8 +1,8 @@
-using Bookings.Appliation.DTOs;
+using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
 using osiedle_booking.BuildingBlocks;
 
-namespace Bookings.Appliation.Abstractions.Services;
+namespace Bookings.Application.Abstractions.Services;
 
 public interface IBookingService
 {

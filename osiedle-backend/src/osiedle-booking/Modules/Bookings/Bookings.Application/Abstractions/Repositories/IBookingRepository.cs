@@ -1,7 +1,7 @@
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Value_objects;
 
-namespace Bookings.Appliation.Abstractions.Repositories;
+namespace Bookings.Application.Abstractions.Repositories;
 
 public interface IBookingRepository
 {

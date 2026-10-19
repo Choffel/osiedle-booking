@@ -1,7 +1,7 @@
 using System.Text;
-using Bookings.Appliation.Abstractions.Repositories;
-using Bookings.Appliation.Abstractions.Services;
-using Bookings.Appliation.Services;
+using Bookings.Application.Abstractions.Repositories;
+using Bookings.Application.Abstractions.Services;
+using Bookings.Application.Services;
 using Bookings.Domain.Services;
 using Bookings.Infrastructure.Data;
 using Bookings.Infrastructure.Repositories;

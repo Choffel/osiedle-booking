@@ -1,3 +1,3 @@
-namespace Bookings.Appliation.DTOs;
+namespace Bookings.Application.DTOs;
 
 public record CancelBookingRequest(Guid BookingId);

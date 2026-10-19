@@ -1,4 +1,4 @@
-namespace Bookings.Appliation.DTOs;
+namespace Bookings.Application.DTOs;
 
 public record GetAvailableSlotsRequest(
     Guid StaffId,
