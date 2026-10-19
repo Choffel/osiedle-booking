@@ -19,6 +19,6 @@
     <Project Path="Modules\Users\Users.Application\Users.Application.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
+    <Project Path="../tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
   </Folder>
 </Solution>
