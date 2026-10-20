@@ -1,5 +1,7 @@
-﻿using Business.Application.Interfaces;
+﻿using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
@@ -9,59 +11,67 @@ namespace Business.Infrastructure.Repositories;
 public class BusinessRepository : IBusinessRepository
 {
     private readonly BusinessDbContext _context;
-    
-
     public BusinessRepository(BusinessDbContext context)
     {
         _context = context;
     }
-
-    public Task<BusinessAggregate> AddBusinessAsync(
-        BusinessAggregate business, CancellationToken cancellationToken = default)
-    {
-         var add =  _context.Businesses.Add(business);
-
-         return Task.FromResult(add.Entity);
-    }
-
-    public async Task<BusinessAggregate> GetBusinessByIdAsync(
-        Guid businessId, CancellationToken cancellationToken = default)
-    {
-        var business = await _context.Businesses
-            .Include(b => b.OwnerId)
-            .Include(s => s.Services)
-            .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken);
-        
-        
-        return business;
-    }
-
+    
+    
     public async Task<bool> ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
     {
         var exist = await _context.Businesses.AnyAsync(b => b.OwnerId == ownerId, ct);
         
         return exist;
     }
-         
 
-    public async Task<BusinessAggregate> ArchiveBusinessByIdAsync(
-        Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct)
     {
         var business = await _context.Businesses
-            .FirstOrDefaultAsync(b => b.Id == businessId, cancellationToken);
-        
-        
+            .Include(b => b.OwnerId)
+            .Include(s => s.Services)
+            .FirstOrDefaultAsync(b => b.Id == businessId, ct);
         return business;
     }
 
-    public async Task UpdateBusinessInfoAsync(BusinessAggregate business, CancellationToken ct = default)
+    public Task<bool> EmployeeBelongsToBusinessAsync(
+        EmployeeId employeeId, 
+        BusinessId businessId, 
+        CancellationToken ct = default)
     {
-        var entry = _context.Entry(business);
-        
-        if (entry.State == EntityState.Detached)
-        {
-            _context.Businesses.Update(business);
-        }
-        
+        return _context.Employees
+            .AnyAsync(e => e.Id == employeeId && e.BusinessId == businessId, ct);
+    }
+
+    public Task<bool> BookableServiceBelongsToBusinessAsync(BookableServiceId serviceId, BusinessId businessId, CancellationToken ct)
+    {
+        return _context.Businesses
+            .AnyAsync(b => b.Id == businessId && b.Services.Any(s => s.Id == serviceId), ct);
+    }
+
+    public Task<bool> BookableServiceBelongsToEmployeeAsync(BookableServiceId serviceId, EmployeeId employeeId, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct)
+    {
+        var businessDto = await _context.Businesses
+            .AsNoTracking()
+            .Where(b => b.Id == businessId)
+            .Select(s => new BusinessShortInfoDto(
+                s.Id.Value,
+                s.OwnerId,
+                s.Name,
+                s.Description,
+                s.Location
+            ))
+            .FirstOrDefaultAsync(ct);
+
+        return businessDto;
+    }
+
+    public void Add(BusinessAggregate business, CancellationToken ct)
+    {
+        _context.Businesses.Add(business);
     }
 }
