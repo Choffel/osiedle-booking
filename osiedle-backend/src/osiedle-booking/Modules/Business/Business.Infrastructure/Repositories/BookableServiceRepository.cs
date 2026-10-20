@@ -79,14 +79,4 @@ public class BookableServiceRepository : IBookableServiceRepository
     {
         _dbContext.BookableServices.Add(service);
     }
-
-    public void Update(BookableService service, CancellationToken ct)
-    {
-        _dbContext.BookableServices.Update(service);
-    }
-
-    public void Delete(BookableService service, CancellationToken ct)
-    {
-        _dbContext.BookableServices.Remove(service);
-    }
 }

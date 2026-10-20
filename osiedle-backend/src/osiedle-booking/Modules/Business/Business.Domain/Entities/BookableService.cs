@@ -46,16 +46,21 @@ public class BookableService : Entity<BookableServiceId>
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void AddToEmployee(EmployeeId employeeId)
+    public void DeactivateService()
     {
-        EmployeeId = employeeId;
+        if (Status == ServiceStatus.Inactive)
+            return; 
+
+        Status = ServiceStatus.Inactive;
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void RemoveFromEmployee(EmployeeId employeeId)
+    public void ActivateService()
     {
-        EmployeeId = employeeId;
-        Status = ServiceStatus.Inactive;
+        if (Status == ServiceStatus.Active)
+            return;
+
+        Status = ServiceStatus.Active;
         UpdatedAt = DateTime.UtcNow;
     }
     
