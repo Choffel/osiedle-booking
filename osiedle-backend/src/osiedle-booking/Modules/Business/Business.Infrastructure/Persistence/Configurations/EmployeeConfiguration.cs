@@ -23,10 +23,9 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasConversion(
                 id => id != null ? id.Value : (Guid?)null,
                 value => value.HasValue ? BusinessId.From(value.Value) : null);
-
-        // Properties & Constraints
+        
         builder.Property(e => e.FirstName)
-            .HasMaxLength(50) // Увеличили с 10, чтобы длинные имена не упирались в лимит
+            .HasMaxLength(50) 
             .IsRequired();
         
         builder.Property(e => e.LastName)
@@ -51,16 +50,15 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        // Soft Delete Query Filter
+        
         builder.HasQueryFilter(e => e.DeletedAt == null);
 
-        // --- ОДНОСТОРОННЯЯ СВЯЗЬ HASMANY -> WITHONE() ---
+        
         builder.HasMany(e => e.BookableServices)
-            .WithOne() // <-- ПУСТОЙ ВЫЗОВ (так как в BookableService нет свойства Employee)
+            .WithOne() 
             .HasForeignKey(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade); 
-
-        // Настройка доступа к приватной коллекции _bookableServices через поле
+        
         builder.Navigation(e => e.BookableServices)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
