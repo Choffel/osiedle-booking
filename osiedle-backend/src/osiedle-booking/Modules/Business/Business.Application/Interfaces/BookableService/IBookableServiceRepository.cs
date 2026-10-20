@@ -16,6 +16,4 @@ public interface IBookableServiceRepository
     Task<bool> ExistsByNameForEmployeeAsync(string serviceName, EmployeeId employeeId, CancellationToken ct);
     
     void Add(Domain.Entities.BookableService service, CancellationToken ct);
-    void Update(Domain.Entities.BookableService service, CancellationToken ct);
-    void Delete(Domain.Entities.BookableService service, CancellationToken ct);
 }
