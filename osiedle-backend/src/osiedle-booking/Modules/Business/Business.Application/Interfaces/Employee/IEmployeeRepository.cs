@@ -20,7 +20,6 @@ public interface IEmployeeRepository
     
     void AddEmployee(Domain.Aggregates.Employee employee);
     
-    void DeleteEmployee(Domain.Aggregates.Employee employee);
     
     void AddWorkingHours(Domain.Entities.WorkingHours workingHours);
     void UpdateWorkingHours(Domain.Entities.WorkingHours workingHours);

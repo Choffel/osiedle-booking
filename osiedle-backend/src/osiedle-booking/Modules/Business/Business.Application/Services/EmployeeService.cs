@@ -93,8 +93,8 @@ public class EmployeeService : IEmployeeManagementService
         
         if (workingHours == null)
         {
-            _employeeRepository.AddWorkingHours(
-                WorkingHours.Create(employeeId, dto.Date, dto.StartTime, dto.EndTime));
+            _employeeRepository.AddWorkingHours(WorkingHours.Create(employeeId, dto.Date, dto.StartTime, dto.EndTime));
+            
         }
         else
         {
