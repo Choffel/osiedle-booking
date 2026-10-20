@@ -36,7 +36,7 @@ public class BusinessService : IBusinessManagementService
             createBusinessDto.Description, 
             createBusinessDto.Location);
         
-        await _businessRepository.AddBusinessAsync(business, cancellationToken);
+        _businessRepository.Add(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         return business.ToResponseDto();
@@ -44,7 +44,9 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
+        var businessIdValue = BusinessId.From(businessId);
+        
+        var business = await _businessRepository.GetBusinessByIdAsync(businessIdValue, cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 
@@ -64,7 +66,6 @@ public class BusinessService : IBusinessManagementService
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
-        await _businessRepository.UpdateBusinessInfoAsync(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
@@ -82,7 +83,7 @@ public class BusinessService : IBusinessManagementService
         
         business.ArchiveBusiness();
         
-        await _businessRepository.UpdateBusinessInfoAsync(business, cancellationToken);
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return  business.ToResponseDto();
     }
