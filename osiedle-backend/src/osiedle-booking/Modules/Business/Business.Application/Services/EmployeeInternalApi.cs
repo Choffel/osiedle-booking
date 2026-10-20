@@ -50,8 +50,7 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         CancellationToken ct = default)
     {
         var workingHours = await _employeeRepository.GetWorkingHoursAsync(employeeId, date, ct);
-
-        // По умолчанию сотрудник свободен весь день, если не задал часы на эту дату
+        
         if (workingHours == null)
         {
             IReadOnlyCollection<WorkingHoursDto> fullDay =

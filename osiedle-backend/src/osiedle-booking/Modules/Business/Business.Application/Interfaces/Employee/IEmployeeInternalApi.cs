@@ -12,8 +12,4 @@ public interface IEmployeeInternalApi
     
     Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default);
     
-    Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
-        EmployeeId employeeId, 
-        DateOnly date, 
-        CancellationToken ct = default);
 }
