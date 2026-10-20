@@ -20,5 +20,6 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="../tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
+    <Project Path="../tests/UsersModule/UserModule.csproj" />
   </Folder>
 </Solution>
