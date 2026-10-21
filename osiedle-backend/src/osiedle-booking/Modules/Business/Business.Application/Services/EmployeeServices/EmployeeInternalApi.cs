@@ -4,15 +4,17 @@ using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
-namespace Business.Application.Services;
+namespace Business.Application.Services.EmployeeServices;
 
 public class EmployeeInternalApi : IEmployeeInternalApi
 {
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IEmployeeWorkingHoursRepository _employeeWorkingHoursRepository;
 
-    public EmployeeInternalApi(IEmployeeRepository employeeRepository)
+    public EmployeeInternalApi(IEmployeeRepository employeeRepository, IEmployeeWorkingHoursRepository employeeWorkingHoursRepository)
     {
         _employeeRepository = employeeRepository;
+        _employeeWorkingHoursRepository = employeeWorkingHoursRepository;
     }
 
     public Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
@@ -43,29 +45,33 @@ public class EmployeeInternalApi : IEmployeeInternalApi
 
         return Result.Success(shortInfo);
     }
-
+    
     public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
         EmployeeId employeeId, 
         DateOnly date, 
         CancellationToken ct = default)
     {
-        var workingHours = await _employeeRepository.GetWorkingHoursAsync(employeeId, date, ct);
-        
-        if (workingHours == null)
+        var employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+        if (!employeeExists)
         {
-            IReadOnlyCollection<WorkingHoursDto> fullDay =
-            [
-                new WorkingHoursDto(TimeOnly.MinValue, TimeOnly.MaxValue)
-            ];
-            
-            return Result.Success(fullDay);
+            return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
         }
-
-        IReadOnlyCollection<WorkingHoursDto> hours =
+        
+        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
+        
+        if (workingHours is null)
+        {
+            return Result.Success<IReadOnlyCollection<WorkingHoursDto>>([]);
+        }
+        
+        IReadOnlyCollection<WorkingHoursDto> result =
         [
-            new WorkingHoursDto(workingHours.StartTime, workingHours.EndTime)
+            new WorkingHoursDto(
+                workingHours.Date, 
+                workingHours.StartTime, 
+                workingHours.EndTime)
         ];
 
-        return Result.Success(hours);
+        return Result.Success(result);
     }
 }

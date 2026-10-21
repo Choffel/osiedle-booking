@@ -10,7 +10,7 @@ using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
-namespace Business.Application.Services;
+namespace Business.Application.Services.BookableItemServices;
 
 public class BookableServiceManagementService : IBookableServiceManagementService
 {

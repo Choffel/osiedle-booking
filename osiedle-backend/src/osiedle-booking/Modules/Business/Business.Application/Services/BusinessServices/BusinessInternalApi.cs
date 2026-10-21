@@ -9,8 +9,7 @@ using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
-
-namespace Business.Application.Services;
+namespace Business.Application.Services.BusinessServices;
 
 public class BusinessInternalApi : IBusinessInternalApi
 {
@@ -19,9 +18,16 @@ public class BusinessInternalApi : IBusinessInternalApi
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IBookableServiceRepository _bookableServiceRepository;
 
-    public BusinessInternalApi(IBusinessRepository businessRepository)
+    public BusinessInternalApi(
+        IBusinessRepository businessRepository,
+        IEmployeeWorkingHoursRepository workingHoursRepository,
+        IEmployeeRepository employeeRepository,
+        IBookableServiceRepository bookableServiceRepository)
     {
         _businessRepository = businessRepository;
+        _workingHoursRepository = workingHoursRepository;
+        _employeeRepository = employeeRepository;
+        _bookableServiceRepository = bookableServiceRepository;
     }
 
 
@@ -39,22 +45,37 @@ public class BusinessInternalApi : IBusinessInternalApi
 
     public Task<bool> EmployeeBelongsToBusinessAsync(EmployeeId employeeId, BusinessId businessId, CancellationToken ct = default)
     {
-        
+        return _businessRepository.EmployeeBelongsToBusinessAsync(employeeId, businessId, ct);
     }
 
     public Task<bool> ServiceBelongsToBusinessAsync(BookableServiceId serviceId, BusinessId businessId, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _businessRepository.BookableServiceBelongsToBusinessAsync(serviceId, businessId, ct);
     }
 
     public Task<bool> ServiceBelongsToEmployeeAsync(BookableServiceId serviceId, EmployeeId employeeId, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        return _businessRepository.BookableServiceBelongsToEmployeeAsync(serviceId, employeeId, ct);
     }
 
-    public Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursForRangeAsync(EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
+    public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursForRangeAsync(EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
         CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        if(endDate <= startDate)
+        {
+            return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.InvalidDateRange);
+        }
+        
+        bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+        
+        if(!employeeExists)
+        {
+            return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
+        }
+        
+        var workingHours = await _workingHoursRepository.GetWorkingHoursForRangeAsync(employeeId, startDate, endDate, ct);
+
+
+        return Result.Success(workingHours);
     }
 }
