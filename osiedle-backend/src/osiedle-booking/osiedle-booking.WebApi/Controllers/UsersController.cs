@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
@@ -49,6 +50,14 @@ public class UsersController : ControllerBase
     public async Task<Result<string>> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
     {
         var result = await _userService.ConfirmEmailAsync(request, cancellationToken);
+        return result;
+    }
+    
+    [Authorize]
+    [HttpPut("Update")]
+    public async Task<Result<string>> UpdateAsync([FromBody] UpdateUserDto request, CancellationToken cancellationToken)
+    {
+        var result = await _userService.UpdateUserAsync(request, cancellationToken);
         return result;
     }
 }
