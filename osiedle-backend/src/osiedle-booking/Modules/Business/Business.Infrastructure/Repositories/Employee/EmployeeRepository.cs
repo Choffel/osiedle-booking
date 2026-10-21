@@ -1,12 +1,10 @@
 using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.Interfaces.Employee;
-using Business.Domain.Aggregates;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-namespace Business.Infrastructure.Repositories;
+namespace Business.Infrastructure.Repositories.Employee;
 
 public class EmployeeRepository : IEmployeeRepository
 {
@@ -18,7 +16,7 @@ public class EmployeeRepository : IEmployeeRepository
     }
 
 
-    public Task<Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public Task<Domain.Aggregates.Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
         return _context.Employees
             .AsNoTracking()
@@ -66,35 +64,8 @@ public class EmployeeRepository : IEmployeeRepository
             .SingleOrDefaultAsync(ct);
     }
 
-    public Task<Business.Domain.Entities.WorkingHours?> GetWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
-    {
-        return _context.WorkingHours
-            .AsNoTracking()
-            .SingleOrDefaultAsync(w => w.EmployeeId == employeeId && w.Date == date, ct);
-    }
-
-    public void AddEmployee(Employee employee)
+    public void AddEmployee(Domain.Aggregates.Employee employee)
     {
         _context.Employees.Add(employee);
-    }
-    
-    public void DeleteEmployee(Employee employee)
-    {
-        _context.Employees.Remove(employee);
-    }
-
-    public void AddWorkingHours(Business.Domain.Entities.WorkingHours workingHours)
-    {
-        _context.WorkingHours.Add(workingHours);
-    }
-
-    public void UpdateWorkingHours(Business.Domain.Entities.WorkingHours workingHours)
-    {
-        _context.WorkingHours.Update(workingHours);
-    }
-
-    public void RemoveWorkingHours(Business.Domain.Entities.WorkingHours workingHours)
-    {
-        _context.WorkingHours.Remove(workingHours);
     }
 }

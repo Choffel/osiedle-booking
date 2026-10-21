@@ -15,13 +15,5 @@ public interface IEmployeeRepository
     
     Task<EmployeeShortInfoDto?> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default);
     
-    Task<Domain.Entities.WorkingHours?> GetWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default);
-    
-    
     void AddEmployee(Domain.Aggregates.Employee employee);
-    
-    
-    void AddWorkingHours(Domain.Entities.WorkingHours workingHours);
-    void UpdateWorkingHours(Domain.Entities.WorkingHours workingHours);
-    void RemoveWorkingHours(Domain.Entities.WorkingHours workingHours);
 }
