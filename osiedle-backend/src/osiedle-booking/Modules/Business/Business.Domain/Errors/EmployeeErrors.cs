@@ -24,4 +24,7 @@ public static class EmployeeErrors
 
     public static readonly Error WorkingHoursInvalid =
         Error.Validation("Employee.WorkingHoursInvalid", "End time must be after start time");
+    
+    public static readonly Error InvalidDateRange =
+        Error.Validation("Employee.InvalidDateRange", "End date must be after start date");
 }
