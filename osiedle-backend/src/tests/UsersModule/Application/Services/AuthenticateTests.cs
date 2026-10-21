@@ -17,18 +17,20 @@ public class AuthenticateTests
     private readonly Mock<ILogger<UserService>> _loggerMock = new();
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
+    private readonly Mock<IUserContext> _userContextMock = new();
     private readonly UserService _userService;
-    private readonly IUserContext _userContext;
 
     public AuthenticateTests()
     {
+        _userContextMock.Setup(c => c.IpAddress).Returns("127.0.0.1");
+
         _userService = new UserService(
             _identityServiceMock.Object,
             _userRepositoryMock.Object,
             _loggerMock.Object,
             _roleServiceMock.Object,
             _tokenServiceMock.Object,
-            _userContext);
+            _userContextMock.Object);
     }
 
     [Fact]
@@ -110,7 +112,7 @@ public class AuthenticateTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Email not confirmed");
+        result.Error.Should().Be("Invalid Email or Password");
         _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
