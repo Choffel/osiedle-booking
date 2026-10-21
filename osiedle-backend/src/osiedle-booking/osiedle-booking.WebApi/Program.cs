@@ -1,3 +1,4 @@
+using Business.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using osiedle_booking.BuildingBlocks;
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 #region DI
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
+builder.Services.AddBusinessInfrastructure(builder.Configuration["CONNECTION_STRING"]!);
 #endregion
 
 builder.Services.AddControllers();
