@@ -35,6 +35,13 @@ public static class DependencyInjection
                 options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
+                
+                options.Lockout.AllowedForNewUsers = configuration.GetValue<bool>("Identity:Lockout:AllowedForNewUsers", true);
+                // Number of failed attempts allowed
+                options.Lockout.MaxFailedAccessAttempts = configuration.GetValue<int>("Identity:Lockout:MaxFailedAccessAttempts", 5);
+                // Lockout duration
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(
+                    configuration.GetValue<int>("Identity:Lockout:DefaultLockoutMinutes", 15));
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
@@ -60,11 +67,6 @@ public static class DependencyInjection
         var jwtKey = configuration["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"]!;
         var jwtIssuer = configuration["JWT_TOKEN_SETTINGS:ISSUER"]!;
         var jwtAudience = configuration["JWT_TOKEN_SETTINGS:AUDIENCE"]!;
-        
-        Console.WriteLine($"JWT Key: {jwtKey}");
-        Console.WriteLine($"JWT Issuer: {jwtIssuer}");
-        Console.WriteLine($"JWT Audience: {jwtAudience}");
-        Console.WriteLine($"Connection String: {connectionString}");
         
         services.AddAuthentication(options =>
             {
