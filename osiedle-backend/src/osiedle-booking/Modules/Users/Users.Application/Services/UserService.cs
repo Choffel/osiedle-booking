@@ -3,6 +3,7 @@ using Users.Application.Abstractions.Services;
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.Value_objects;
 using Microsoft.Extensions.Logging;
+using osiedle_booking.BuildingBlocks.Interfaces;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.DTOs;
 
@@ -15,14 +16,17 @@ public class UserService : IUserService
     private readonly ILogger<UserService> _logger;
     private readonly IRoleService _roleManager;
     private readonly ITokenService _tokenService;
+    private readonly IUserContext _userContext;
 
-    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger, IRoleService roleManager, ITokenService tokenService)
+    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger,
+        IRoleService roleManager, ITokenService tokenService, IUserContext userContext)
     {
         _identityService = identityService; 
         _userRepository = userRepository;
         _logger = logger;
         _roleManager = roleManager;
         _tokenService = tokenService;
+        _userContext = userContext;
     }
     
     public async Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
@@ -47,6 +51,7 @@ public class UserService : IUserService
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default)
     {
+        
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
@@ -55,12 +60,13 @@ public class UserService : IUserService
 
         if (!user.EmailConfirmed)
         {
-            return Result<TokenResponseDto>.Failure("Email not confirmed");
+            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
         }
 
         var isPasswordCorrect = await _identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken);
         if (!isPasswordCorrect)
         {
+            _logger.LogWarning("Failed login for {Email} from {Ip}", request.Email, _userContext.IpAddress);
             return Result<TokenResponseDto>.Failure("Invalid Email or Password");
         }
 
@@ -74,7 +80,7 @@ public class UserService : IUserService
     public async Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
+        if(user == null)
         {
             return Result<string>.Success("If this email address exists in the system, instructions have been sent to the email.");
         }
@@ -131,14 +137,16 @@ public class UserService : IUserService
     
     public async Task<Result<string>> UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken = default)
     {
-        var user = await _identityService.FindByEmailAsync(userDto.Email, cancellationToken);
+        var userEmail = _userContext.Email;
+        var userContextId = _userContext.UserId;
+        
+        var user = await _identityService.FindByEmailAsync(userEmail, cancellationToken);
         if (user == null)
         {
             return Result<string>.Failure("User not found");
         }
         
-        
-        var userId = new UserId(userDto.Id);
+        var userId = new UserId(userContextId);
 
         var domainUser = await _userRepository.GetByIdAsync(
             userId,
@@ -151,8 +159,7 @@ public class UserService : IUserService
 
         domainUser.Update(userDto.UserName);
 
-        _userRepository.Update(domainUser);
-        
+        await _userRepository.Update(domainUser);
 
         return Result<string>.Success("User updated successfully");
     }
