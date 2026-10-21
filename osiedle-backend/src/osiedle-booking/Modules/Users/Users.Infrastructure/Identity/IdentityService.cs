@@ -44,16 +44,18 @@ public sealed class IdentityService : IIdentityService
         return await _userManager.GenerateEmailConfirmationTokenAsync(user);
     }
     
-    public async Task<IdentityUserDto> FindByEmailAsync(string email, CancellationToken ct)
+    public async Task<IdentityUserDto?> FindByEmailAsync(string email, CancellationToken ct)
     {
         var user = await _userManager.FindByEmailAsync(email);
-        
+        if (user == null)
+            return null;
+
         var response = new IdentityUserDto(
             Id: user.Id,
             UserName: user.UserName,
             Email: user.Email,
             EmailConfirmed: user.EmailConfirmed,
-            Succeeded: user != null
+            Succeeded: true
         );
         
         return response;

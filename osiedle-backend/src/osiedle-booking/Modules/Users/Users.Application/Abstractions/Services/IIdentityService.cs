@@ -7,7 +7,7 @@ public interface IIdentityService
 {
     Task<Result<Guid>> CreateIdentityAsync(string email, string password, CancellationToken ct);
     Task<string> GenerateEmailConfirmationTokenAsync(Guid userId, CancellationToken ct);
-    Task<IdentityUserDto> FindByEmailAsync(string email, CancellationToken ct);
+    Task<IdentityUserDto?> FindByEmailAsync(string email, CancellationToken ct);
     Task<bool> CheckPasswordAsync(Guid userId, string password, CancellationToken ct);
     Task<string> GeneratePasswordResetTokenAsync(Guid userId, CancellationToken ct);
     Task<bool> ConfirmEmailAsync(Guid userId, string token, CancellationToken ct);

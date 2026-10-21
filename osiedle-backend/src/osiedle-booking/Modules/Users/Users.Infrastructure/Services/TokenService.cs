@@ -74,15 +74,16 @@ public class TokenService : ITokenService
             return Result<TokenResponseDto>.Failure("Invalid or expired refresh token.");
         }
 
-        storedRefreshToken.ExpiresAt = DateTime.UtcNow;
-
-        var newRefreshToken = await CreateRefreshTokenAsync(storedRefreshToken.UserId);
-
         var user = await _userManager.FindByIdAsync(storedRefreshToken.UserId.ToString());
         if (user == null)
         {
             return Result<TokenResponseDto>.Failure("User not found.");
         }
+
+        storedRefreshToken.ExpiresAt = DateTime.UtcNow;
+        await _tokenRepository.UpdateRefreshTokenAsync(storedRefreshToken);
+
+        var newRefreshToken = await CreateRefreshTokenAsync(storedRefreshToken.UserId);
 
         var userDto = new UserDto(user.Id, user.UserName ?? string.Empty, user.Email ?? string.Empty);
 
@@ -100,7 +101,7 @@ public class TokenService : ITokenService
         }
 
         refreshToken.ExpiresAt = DateTime.UtcNow;
-        
+        await _tokenRepository.UpdateRefreshTokenAsync(refreshToken);
 
         return Result<bool>.Success(true);
     }
@@ -188,7 +189,6 @@ public class TokenService : ITokenService
     private SigningCredentials CreateSigningCredentials()
     {
         var symmetricSecurityKey = _configuration["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"];
-        Console.WriteLine(symmetricSecurityKey);
 
         return new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(symmetricSecurityKey)),
