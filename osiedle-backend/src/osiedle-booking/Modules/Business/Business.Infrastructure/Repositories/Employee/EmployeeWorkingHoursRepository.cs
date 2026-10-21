@@ -1,12 +1,11 @@
 using Business.Application.DTOs.EmployeeDTOs;
-using Business.Application.Interfaces;
+using Business.Application.Interfaces.Employee;
 using Business.Domain.Entities;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-namespace Business.Infrastructure.Repositories;
+namespace Business.Infrastructure.Repositories.Employee;
 
 public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
 {
@@ -19,7 +18,7 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
 
 
     public async  Task<IReadOnlyCollection<WorkingHoursDto>> GetWorkingHoursForRangeAsync(EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
-        CancellationToken ct = default)
+        CancellationToken ct)
     {
         return await _dbContext.WorkingHours
             .AsNoTracking()
@@ -33,7 +32,7 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
             .ToListAsync(ct);
     }
 
-    public async  Task<WorkingHours?> GetWorkingHoursByDateAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
+    public async  Task<WorkingHours?> GetWorkingHoursByDateAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct)
     {
         return await _dbContext.WorkingHours
             .FirstOrDefaultAsync(w => w.EmployeeId == employeeId && w.Date == date, ct);
@@ -42,6 +41,11 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
     public void AddWorkingHours(WorkingHours workingHours)
     {
         _dbContext.WorkingHours.Add(workingHours);
+    }
+
+    public void UpdateWorkingHours(WorkingHours workingHours)
+    {
+        _dbContext.WorkingHours.Update(workingHours);
     }
 
     public void RemoveWorkingHours(WorkingHours workingHours)

@@ -2,7 +2,7 @@ using Business.Application.DTOs.EmployeeDTOs;
 using Business.Domain.Entities;
 using Business.Domain.ValueObjects;
 
-namespace Business.Application.Interfaces;
+namespace Business.Application.Interfaces.Employee;
 
 public interface IEmployeeWorkingHoursRepository
 {
@@ -10,16 +10,18 @@ public interface IEmployeeWorkingHoursRepository
         EmployeeId employeeId, 
         DateOnly startDate, 
         DateOnly endDate, 
-        CancellationToken ct = default);
+        CancellationToken ct);
 
  
     Task<WorkingHours?> GetWorkingHoursByDateAsync(
         EmployeeId employeeId, 
         DateOnly date, 
-        CancellationToken ct = default);
-
+        CancellationToken ct);
+    
     
     void AddWorkingHours(WorkingHours workingHours);
+    
+    void UpdateWorkingHours(WorkingHours workingHours);
     
     void RemoveWorkingHours(WorkingHours workingHours);
 }
