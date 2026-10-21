@@ -8,7 +8,7 @@ using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
 using Users.Application.Services;
 
-namespace UsersModule.Tests.Application.Services;
+namespace UserModule.Application.Services;
 
 public class AuthenticateTests
 {
