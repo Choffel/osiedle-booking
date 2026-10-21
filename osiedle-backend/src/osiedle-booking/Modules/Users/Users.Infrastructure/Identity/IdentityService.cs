@@ -10,11 +10,13 @@ public sealed class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<IdentityService> _logger;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
-    public IdentityService(UserManager<ApplicationUser> userManager, ILogger<IdentityService> logger)
+    public IdentityService(UserManager<ApplicationUser> userManager, ILogger<IdentityService> logger, SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
         _logger = logger;
+        _signInManager = signInManager;
     }
 
     public async Task<Result<Guid>> CreateIdentityAsync(string email, string password, CancellationToken ct)
@@ -57,14 +59,19 @@ public sealed class IdentityService : IIdentityService
         return response;
     }
     
-    public async Task<bool> CheckPasswordAsync(Guid userId, string password, CancellationToken ct)
+    public async Task<bool> CheckPasswordAsync(
+        Guid userId, string password, CancellationToken ct)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
-        if (user == null)
+        if (user is null)
             return false;
 
-        var isValid = await _userManager.CheckPasswordAsync(user, password);
-        return isValid;
+        var result = await _signInManager.CheckPasswordSignInAsync(
+            user, password, lockoutOnFailure: true);
+
+        if (result.Succeeded) return true;
+        if (result.IsLockedOut) return false;
+        return false;
     }
     
     public async Task<string> GeneratePasswordResetTokenAsync(Guid userId, CancellationToken ct)
