@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using osiedle_booking.BuildingBlocks.Interfaces;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
@@ -17,6 +18,7 @@ public class AuthenticateTests
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly UserService _userService;
+    private readonly IUserContext _userContext;
 
     public AuthenticateTests()
     {
@@ -25,7 +27,8 @@ public class AuthenticateTests
             _userRepositoryMock.Object,
             _loggerMock.Object,
             _roleServiceMock.Object,
-            _tokenServiceMock.Object);
+            _tokenServiceMock.Object,
+            _userContext);
     }
 
     [Fact]
