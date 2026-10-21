@@ -6,7 +6,7 @@ using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
-namespace Business.Application.Services;
+namespace Business.Application.Services.BusinessServices;
 
 public class BusinessService : IBusinessManagementService
 {
