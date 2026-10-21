@@ -5,6 +5,7 @@ using osiedle_booking.BuildingBlocks.Domain;
 
 namespace Business.Domain.Aggregates;
 
+//TODO: добавить рассписание 
 public class Employee : AggregateRoot<EmployeeId>
 {
     public string FirstName { get; private set; }
@@ -42,7 +43,7 @@ public class Employee : AggregateRoot<EmployeeId>
     
     public void UpdateInfo(string firstName, string lastName, string position, string review, string email)
     {
-        var normalizedEmail = email.ToLower().Trim();
+        var normalizedEmail = email.ToUpper().Trim();
         
         ValidateAndAssign(firstName, lastName, position, review, normalizedEmail);
         UpdatedAt = DateTime.UtcNow; 
@@ -61,6 +62,7 @@ public class Employee : AggregateRoot<EmployeeId>
         Status = newStatus;
     }
 
+    //fix throw
     private void ValidateAndAssign(string firstName, string lastName, string position, string review, string email)
     {
         if(string.IsNullOrWhiteSpace(email))
