@@ -1,6 +1,3 @@
-using osiedle_booking.BuildingBlocks.Domain.Entity;
-using Users.Domain.Entity.User.Value_objects;
-
 namespace Users.Domain.Entity.RefreshToken;
 
 public class RefreshToken
