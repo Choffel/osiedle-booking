@@ -27,7 +27,19 @@ public class Booking : AggregateRoot<BookingId>
         Money price
         )
     {
-        
+        ArgumentNullException.ThrowIfNull(businessId);
+        ArgumentNullException.ThrowIfNull(staffId);
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(serviceId);
+        ArgumentNullException.ThrowIfNull(slot);
+        ArgumentNullException.ThrowIfNull(price);
+
+        if (slot.Start < DateTime.UtcNow)
+            throw new BookingInPastException(slot.Start);
+
+        if (price.Amount < 0)
+            throw new InvalidBookingPriceException(price.Amount);
+
         var booking = new Booking
         {
             Id = BookingId.New(),
@@ -40,15 +52,16 @@ public class Booking : AggregateRoot<BookingId>
             Status = BookingStatus.Confirmed,
             CreatedAt = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day)
         };
-
-        /*booking.RaiseDomainEvent(new BookingCreatedDomainEvent(
-            booking.Id, businessId, staffId, clientId, slot));*/
-
+        
         return booking;
     }
 
     public void Delete()
     {
+       
+        if (Status == BookingStatus.Cancelled)
+            return;
+
         Status = BookingStatus.Cancelled;
         Cancellation = new CancellationInfo(CancelledBy.Client,"cancel", DateTime.UtcNow);
     }

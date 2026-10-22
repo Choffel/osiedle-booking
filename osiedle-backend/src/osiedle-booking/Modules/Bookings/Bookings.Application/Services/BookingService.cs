@@ -6,6 +6,7 @@ using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Enum;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.Domain;
 using osiedle_booking.BuildingBlocks.Interfaces;
 
 namespace Bookings.Application.Services;
@@ -31,7 +32,6 @@ public class BookingService : IBookingService
             request.Date.ToDateTime(new TimeOnly(9, 0)),
             request.Date.ToDateTime(new TimeOnly(18, 0)));
         
-        // Cancelled bookings must not occupy the schedule (the overlap check already ignores them).
         var occupiedSlots = availableSlots
             .Where(b => b.Status == BookingStatus.Confirmed)
             .Select(b => b.Slot)
@@ -40,7 +40,7 @@ public class BookingService : IBookingService
         var freeSlots = await _slotCalculator.CalculateAvailableSlots(
             barberWorkHours,
             occupiedSlots,
-            new TimeSpan(request.TimeForServices.Hour, request.TimeForServices.Minute, 0),
+            new TimeSpan(request.TimeForServices.Hour, request.TimeForServices.Minute, 0), // TODO: Change this when methods from the Business service become available
             new TimeSpan(0, 10, 0)
             );
 
@@ -51,35 +51,44 @@ public class BookingService : IBookingService
 
     public async Task<Result<bool>> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
     {
-        var slot = TimeSlot.Create(request.StartTime, request.EndTime);
-        
-        var day = request.StartTime.Date;
-
-        var barberWorkHours = TimeSlot.Create(
-            day.AddHours(9),
-            day.AddHours(18)
-        );
-        
-        if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct) ||
-           !await _slotCalculator.RelevantSlot(slot, barberWorkHours, ct))
+        try
         {
-            return Result<bool>.Failure("Overlapping booking found.");
+            var slot = TimeSlot.Create(request.StartTime, request.EndTime);
+
+            var day = request.StartTime.Date;
+
+            var barberWorkHours = TimeSlot.Create(  // TODO: Change this when methods from the Business service become available
+                day.AddHours(9),
+                day.AddHours(18)
+            );
+
+            if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct) ||
+               !await _slotCalculator.RelevantSlot(slot, barberWorkHours, ct))
+            {
+                return Result<bool>.Failure("Overlapping booking found.");
+            }
+
+            var moneyMok = new Money(100); // TODO: Change this when methods from the Business service become available
+
+            var booking = Booking.Create(
+                new BusinessId(request.BusinessId),
+                new StaffId(request.StaffId),
+                new ClientId(request.ClientId),
+                new ServiceId(request.ServiceId),
+                slot,
+                moneyMok
+            );
+
+            await _bookingRepository.CreateBookingAsync(booking, ct);
+
+            return Result<bool>.Success(true);
         }
-        
-        var moneyMok = new Money(100);
-        
-        var booking = Booking.Create(
-            new BusinessId(request.BusinessId),
-            new StaffId(request.StaffId),
-            new ClientId(request.ClientId),
-            new ServiceId(request.ServiceId),
-            slot,
-            moneyMok
-        );
-
-        await _bookingRepository.CreateBookingAsync(booking, ct);
-
-        return Result<bool>.Success(true);
+        catch (DomainException ex)
+        {
+            // Domain invariant violations (past slot, invalid range, negative price) are user-input
+            // errors, not server faults — surface them through the Result pattern instead of a 500.
+            return Result<bool>.Failure(ex.Message);
+        }
     }
 
     public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)

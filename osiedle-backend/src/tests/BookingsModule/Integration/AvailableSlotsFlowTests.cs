@@ -46,7 +46,7 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
         // 4 slots before the busy period (09:00-09:30) + 43 after it (10:30-17:30).
         slots.Should().HaveCount(47);
         slots.Should().NotContain(s =>
-            s.Start < new DateTime(2026, 11, 10, 10, 30, 0) && new DateTime(2026, 11, 10, 10, 0, 0) < s.End);
+            s.Start < At(10, 30) && At(10, 0) < s.End);
         slots.Should().Contain(s => s.Start == At(9, 30));
         slots.Should().Contain(s => s.Start == At(10, 30));
         slots.Should().NotContain(s => s.Start == At(10, 0));

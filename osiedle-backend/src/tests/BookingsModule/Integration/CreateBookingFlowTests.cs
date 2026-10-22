@@ -118,4 +118,35 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
     }
+
+    [Fact]
+    public async Task CreateBooking_SlotInPast_FailsWithoutThrowing()
+    {
+        using var scope = CreateScope();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+        var past = DateTime.UtcNow.Date.AddDays(-1).AddHours(10);
+
+        var result = await bookingService.CreateBookingAsync(
+            Request(past, past.AddMinutes(30)), CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Contain("past");
+
+        using var verifyScope = CreateScope();
+        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateBooking_EndBeforeStart_FailsWithoutThrowing()
+    {
+        using var scope = CreateScope();
+        var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+
+        var result = await bookingService.CreateBookingAsync(
+            Request(At(10, 30), At(10, 0)), CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Contain("must be after start time");
+    }
 }

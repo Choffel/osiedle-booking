@@ -37,9 +37,7 @@ public static class DependencyInjection
                 options.SignIn.RequireConfirmedEmail = true;
                 
                 options.Lockout.AllowedForNewUsers = configuration.GetValue<bool>("Identity:Lockout:AllowedForNewUsers", true);
-                // Number of failed attempts allowed
                 options.Lockout.MaxFailedAccessAttempts = configuration.GetValue<int>("Identity:Lockout:MaxFailedAccessAttempts", 5);
-                // Lockout duration
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(
                     configuration.GetValue<int>("Identity:Lockout:DefaultLockoutMinutes", 15));
             })

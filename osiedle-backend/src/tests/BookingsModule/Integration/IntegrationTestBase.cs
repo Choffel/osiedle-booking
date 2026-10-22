@@ -24,9 +24,9 @@ public sealed class TestUserContext : IUserContext
 
 public abstract class IntegrationTestBase : IDisposable
 {
-    // Fixed future date so tests never depend on "today" (Booking has no past-date validation,
-    // but keeping bookings in the future keeps the scenarios realistic).
-    protected static readonly DateOnly TestDate = new(2026, 11, 10);
+    // Dynamic future date: Booking.Create rejects past slots, so the fixture must stay
+    // in the future regardless of when the suite runs.
+    protected static readonly DateOnly TestDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(30));
 
     protected static readonly Guid Business = Guid.Parse("11111111-1111-1111-1111-111111111111");
     protected static readonly Guid Staff = Guid.Parse("22222222-2222-2222-2222-222222222222");

@@ -1,6 +1,7 @@
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Enum;
 using Bookings.Domain.Entities.Booking.Value_objects;
+using Bookings.Domain.Exceptions;
 
 namespace Bookings.Domain.Tests.Entities;
 
@@ -11,8 +12,12 @@ public class BookingTests
     private static readonly ClientId Client = new(Guid.NewGuid());
     private static readonly ServiceId Service = new(Guid.NewGuid());
     private static readonly Money Price = new(100m);
+
+    // Booking.Create rejects slots in the past, so the fixture must always be in the future.
     private static readonly TimeSlot Slot =
-        TimeSlot.Create(new DateTime(2026, 10, 15, 9, 0, 0), new DateTime(2026, 10, 15, 10, 0, 0));
+        TimeSlot.Create(
+            DateTime.UtcNow.Date.AddDays(7).AddHours(9),
+            DateTime.UtcNow.Date.AddDays(7).AddHours(10));
 
     [Fact]
     public void Create_ValidInput_ProducesConfirmedBookingWithGivenValues()
@@ -47,6 +52,49 @@ public class BookingTests
     }
 
     [Fact]
+    public void Create_SlotInPast_ThrowsBookingInPastException()
+    {
+        var pastSlot = TimeSlot.Create(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.Date);
+
+        var ex = Assert.Throws<BookingInPastException>(() =>
+            Booking.Create(Business, Staff, Client, Service, pastSlot, Price));
+
+        Assert.Equal(pastSlot.Start, ex.AttemptedStart);
+        Assert.Contains("past", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Create_NegativePrice_ThrowsInvalidBookingPriceException()
+    {
+        var ex = Assert.Throws<InvalidBookingPriceException>(() =>
+            Booking.Create(Business, Staff, Client, Service, Slot, new Money(-1m)));
+
+        Assert.Equal(-1m, ex.AttemptedAmount);
+    }
+
+    [Fact]
+    public void Create_ZeroPrice_IsAllowed()
+    {
+        var booking = Booking.Create(Business, Staff, Client, Service, Slot, new Money(0));
+
+        Assert.Equal(0m, booking.Price.Amount);
+    }
+
+    [Fact]
+    public void Create_NullSlot_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Booking.Create(Business, Staff, Client, Service, null!, Price));
+    }
+
+    [Fact]
+    public void Create_NullBusinessId_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Booking.Create(null!, Staff, Client, Service, Slot, Price));
+    }
+
+    [Fact]
     public void Delete_SetsCancelledStatusAndCancellationInfo()
     {
         var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
@@ -58,6 +106,19 @@ public class BookingTests
         Assert.Equal(CancelledBy.Client, booking.Cancellation!.By);
         Assert.Equal("cancel", booking.Cancellation.Reason);
         Assert.True(booking.Cancellation.CancelledAt <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void Delete_Twice_PreservesOriginalCancellationInfo()
+    {
+        var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
+
+        booking.Delete();
+        var original = booking.Cancellation;
+        booking.Delete();
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        Assert.Same(original, booking.Cancellation);
     }
 
     [Fact]
