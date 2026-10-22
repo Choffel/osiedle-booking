@@ -5,7 +5,8 @@ namespace Users.Application.Abstractions.Services;
 
 public interface IIdentityService
 {
-    Task<Result<Guid>> CreateIdentityAsync(string email, string password, CancellationToken ct);
+    Task<Result<Guid>> CreateIdentityAsync(string email, string userName, string password, CancellationToken ct);
+    Task UpdateUserNameAsync(Guid userId, string newName, CancellationToken ct);
     Task<string> GenerateEmailConfirmationTokenAsync(Guid userId, CancellationToken ct);
     Task<IdentityUserDto?> FindByEmailAsync(string email, CancellationToken ct);
     Task<bool> CheckPasswordAsync(Guid userId, string password, CancellationToken ct);

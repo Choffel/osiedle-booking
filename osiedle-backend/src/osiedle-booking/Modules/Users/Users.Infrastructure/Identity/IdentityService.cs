@@ -19,13 +19,13 @@ public sealed class IdentityService : IIdentityService
         _signInManager = signInManager;
     }
 
-    public async Task<Result<Guid>> CreateIdentityAsync(string email, string password, CancellationToken ct)
+    public async Task<Result<Guid>> CreateIdentityAsync(string email, string userName, string password, CancellationToken ct)
     {
         var identityUser = new ApplicationUser
         {
             Id = Guid.NewGuid(),
             Email = email,
-            UserName = email
+            UserName = userName
         };
 
         var result = await _userManager.CreateAsync(identityUser, password);
@@ -34,7 +34,19 @@ public sealed class IdentityService : IIdentityService
             ? osiedle_booking.BuildingBlocks.Result<Guid>.Success(identityUser.Id)
             : osiedle_booking.BuildingBlocks.Result<Guid>.Failure(string.Join("; ", result.Errors.Select(e => e.Description)));
     }
-    
+
+    public async Task UpdateUserNameAsync(Guid userId ,string newName, CancellationToken ct)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null)
+            throw new Exception("User not found");
+
+        user.UserName = newName;
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new Exception("Failed to update user name");
+    }
+
     public async Task<string> GenerateEmailConfirmationTokenAsync(Guid userId, CancellationToken ct)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
