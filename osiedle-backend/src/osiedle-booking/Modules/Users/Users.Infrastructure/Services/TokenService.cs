@@ -43,8 +43,7 @@ public class TokenService : ITokenService
     {
         var accessToken = await CreateTokenAsync(user);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
-
-
+        
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
@@ -163,8 +162,6 @@ public class TokenService : ITokenService
 
     private async Task<List<Claim>> CreateClaimsAsync(UserDto user)
     {
-        var jwtSub = _configuration["JwtTokenSettings:JwtRegisteredClaimNamesSub"];
-
         var claims = new List<Claim>
         {
             new Claim("userId", user.Id.ToString()),
