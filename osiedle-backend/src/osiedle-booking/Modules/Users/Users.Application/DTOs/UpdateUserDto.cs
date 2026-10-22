@@ -1,3 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Users.Application.DTOs;
 
-public record UpdateUserDto(string UserName);
+public record UpdateUserDto(
+    [Required]
+    [RegularExpression(@"^\S+$", ErrorMessage = "Username cannot contain spaces")]
+    string UserName);
