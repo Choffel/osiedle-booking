@@ -45,4 +45,34 @@ public class BookingTests
 
         Assert.NotEqual(first.Id, second.Id);
     }
+
+    [Fact]
+    public void Delete_SetsCancelledStatusAndCancellationInfo()
+    {
+        var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
+
+        booking.Delete();
+
+        Assert.Equal(BookingStatus.Cancelled, booking.Status);
+        Assert.NotNull(booking.Cancellation);
+        Assert.Equal(CancelledBy.Client, booking.Cancellation!.By);
+        Assert.Equal("cancel", booking.Cancellation.Reason);
+        Assert.True(booking.Cancellation.CancelledAt <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void IsOwnedBy_MatchingClient_ReturnsTrue()
+    {
+        var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
+
+        Assert.True(booking.IsOwnedBy(Client));
+    }
+
+    [Fact]
+    public void IsOwnedBy_DifferentClient_ReturnsFalse()
+    {
+        var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
+
+        Assert.False(booking.IsOwnedBy(new ClientId(Guid.NewGuid())));
+    }
 }
