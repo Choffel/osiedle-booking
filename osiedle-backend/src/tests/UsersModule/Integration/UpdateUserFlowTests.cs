@@ -22,7 +22,7 @@ public class UpdateUserFlowTests : IntegrationTestBase
         UserContext.UserId = userId;
         UserContext.Email = email;
 
-        var result = await userService.UpdateUserAsync(new UpdateUserDto("Nowa nazwa"));
+        var result = await userService.UpdateUserAsync(new UpdateUserDto("Nowanazwa"));
 
         result.IsSuccess.Should().BeTrue(result.Error);
         result.Value.Should().Be("User updated successfully");
@@ -30,7 +30,7 @@ public class UpdateUserFlowTests : IntegrationTestBase
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var domainUser = await db.Users.AsNoTracking().SingleAsync(u => u.Id == new UserId(userId));
-        domainUser.DisplayName.Should().Be("Nowa nazwa");
+        domainUser.DisplayName.Should().Be("Nowanazwa");
     }
 
     [Fact]
