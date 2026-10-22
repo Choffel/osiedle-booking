@@ -32,7 +32,7 @@ public class UserService : IUserService
     public async Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
     {
         var identityResult = await _identityService.CreateIdentityAsync(
-            request.Email, request.Password, ct);
+            request.Email,  request.FirstName, request.Password, ct);
 
         if (!identityResult.IsSuccess)
             return Result<UserId>.Failure(identityResult.Error);
@@ -158,9 +158,23 @@ public class UserService : IUserService
         }
 
         domainUser.Update(userDto.UserName);
+        await _identityService.UpdateUserNameAsync(userContextId, userDto.UserName, cancellationToken);
 
         await _userRepository.Update(domainUser);
 
         return Result<string>.Success("User updated successfully");
+    }
+
+    public async Task<Result<CurrentUserDto>> GetCurrentUserAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = _userContext.UserId;
+        
+        var user = await _userRepository.GetByIdAsync(new UserId(userId), cancellationToken);
+        if (user == null)
+        {
+            return Result<CurrentUserDto>.Failure("User not found");
+        }
+
+        return Result<CurrentUserDto>.Success(new CurrentUserDto(user.DisplayName));
     }
 }
