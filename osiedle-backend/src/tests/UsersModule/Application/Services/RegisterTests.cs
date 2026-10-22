@@ -38,7 +38,7 @@ public class RegisterTests
         var identityId = Guid.NewGuid();
 
         _identityServiceMock
-            .Setup(s => s.CreateIdentityAsync(request.Email, request.Password, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Guid>.Success(identityId));
         _identityServiceMock
             .Setup(s => s.GenerateEmailConfirmationTokenAsync(identityId, It.IsAny<CancellationToken>()))
@@ -61,7 +61,7 @@ public class RegisterTests
         var request = new RegisterUserRequest("Jan", "Kowalski", "jan@example.com", "Password1");
 
         _identityServiceMock
-            .Setup(s => s.CreateIdentityAsync(request.Email, request.Password, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CreateIdentityAsync(request.Email,  request.FirstName, request.Password, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<Guid>.Failure("Email is already taken"));
 
         var result = await _userService.RegisterAsync(request, CancellationToken.None);

@@ -51,17 +51,18 @@ public class IdentityServiceTests
     {
         var email = "jan@example.com";
         var password = "Password1";
+        var userName = "jan";
 
         _userManagerMock
             .Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), password))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _sut.CreateIdentityAsync(email, password, CancellationToken.None);
+        var result = await _sut.CreateIdentityAsync(email, userName, password, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeEmpty();
         _userManagerMock.Verify(m => m.CreateAsync(
-            It.Is<ApplicationUser>(u => u.Email == email && u.UserName == email), password), Times.Once);
+            It.Is<ApplicationUser>(u => u.Email == email && u.UserName == userName), password), Times.Once);
     }
 
     [Fact]
@@ -71,7 +72,7 @@ public class IdentityServiceTests
             .Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Email is already taken" }));
 
-        var result = await _sut.CreateIdentityAsync("jan@example.com", "Password1", CancellationToken.None);
+        var result = await _sut.CreateIdentityAsync("jan@example.com", "jan", "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Email is already taken");
