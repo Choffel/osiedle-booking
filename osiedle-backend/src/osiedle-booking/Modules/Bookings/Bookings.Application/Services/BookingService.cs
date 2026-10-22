@@ -3,6 +3,7 @@ using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Application.Abstractions.Repositories;
 using Bookings.Domain.Entities.Booking;
+using Bookings.Domain.Entities.Booking.Enum;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
@@ -30,9 +31,15 @@ public class BookingService : IBookingService
             request.Date.ToDateTime(new TimeOnly(9, 0)),
             request.Date.ToDateTime(new TimeOnly(18, 0)));
         
+        // Cancelled bookings must not occupy the schedule (the overlap check already ignores them).
+        var occupiedSlots = availableSlots
+            .Where(b => b.Status == BookingStatus.Confirmed)
+            .Select(b => b.Slot)
+            .ToList();
+
         var freeSlots = await _slotCalculator.CalculateAvailableSlots(
             barberWorkHours,
-            availableSlots.Select(b => b.Slot).ToList(),
+            occupiedSlots,
             new TimeSpan(request.TimeForServices.Hour, request.TimeForServices.Minute, 0),
             new TimeSpan(0, 10, 0)
             );
