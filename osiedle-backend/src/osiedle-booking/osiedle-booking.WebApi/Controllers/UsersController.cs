@@ -60,4 +60,12 @@ public class UsersController : ControllerBase
         var result = await _userService.UpdateUserAsync(request, cancellationToken);
         return result;
     }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<Result<CurrentUserDto>> GetCurrentUserAsync()
+    {
+        var result = await _userService.GetCurrentUserAsync();
+        return result;
+    }
 }
