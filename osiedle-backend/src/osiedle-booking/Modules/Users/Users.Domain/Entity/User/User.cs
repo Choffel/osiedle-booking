@@ -11,12 +11,17 @@ public class User : AggregateRoot<UserId>
     {
         Id = id;
         DisplayName = displayName;
+        CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
     }
     private User() { }
 
     public static User Create(UserId id, string displayName)
     {
-        var user = new User(id, displayName);
+        var user = new User(
+            id,
+            displayName
+        );
+        
         return user;
     }
     
