@@ -8,6 +8,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
+      <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
+      <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>
 
     <ItemGroup>

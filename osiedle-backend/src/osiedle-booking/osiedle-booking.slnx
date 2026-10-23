@@ -23,4 +23,8 @@
     <Project Path="Modules/Users/Users.Domain/Users.Domain.csproj" />
     <Project Path="Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Tests/Business/">
+    <Project Path="../../tests/Business/Business.Application.Tests/Business.Application.Tests.csproj" />
+    <Project Path="../../tests/Business/Business.Domain.Tests/Business.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

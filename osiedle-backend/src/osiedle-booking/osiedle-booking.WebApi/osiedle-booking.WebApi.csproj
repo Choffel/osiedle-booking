@@ -27,6 +27,9 @@
         <ProjectReference Include="..\Modules\Business\Business.Application\Business.Application.csproj" />
         <ProjectReference Include="..\Modules\Business\Business.Domain\Business.Domain.csproj" />
         <ProjectReference Include="..\Modules\Business\Business.Infrastructure\Business.Infrastructure.csproj" />
+        <ProjectReference Include="..\Modules\Notifications\Notifications.Application\Notifications.Application.csproj" />
+        <ProjectReference Include="..\Modules\Notifications\Notifications.Domain\Notifications.Domain.csproj" />
+        <ProjectReference Include="..\Modules\Notifications\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
         <ProjectReference Include="..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>
 
