@@ -7,8 +7,8 @@ namespace Business.Application.Interfaces.BookableService;
 
 public interface IBookableServiceRepository 
 {
-    Task <Domain.Entities.BookableService> GetByIdAsync(BookableServiceId id, CancellationToken ct);
-    Task <ServiceShortInfoDto> GetBasicInfoByIdAsync(BookableServiceId id, CancellationToken ct);
+    Task <Domain.Entities.BookableService?> GetByIdAsync(BookableServiceId id, CancellationToken ct);
+    Task <ServiceShortInfoDto?> GetBasicInfoByIdAsync(BookableServiceId id, CancellationToken ct);
     Task <IReadOnlyList<ServiceShortInfoDto>> GetShortInfosByEmployeeIdAsync(EmployeeId employeeId, CancellationToken ct);
     
     Task<bool> ExistsAsync(BookableServiceId id, CancellationToken ct);

@@ -21,7 +21,5 @@ public interface IEmployeeWorkingHoursRepository
     
     void AddWorkingHours(WorkingHours workingHours);
     
-    void UpdateWorkingHours(WorkingHours workingHours);
-    
     void RemoveWorkingHours(WorkingHours workingHours);
 }

@@ -53,11 +53,11 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UpdateBusinessInfoDto updateBusinessInfoDto,
-        CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(Guid businessId,
+        UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var businessId = BusinessId.From(updateBusinessInfoDto.BusinessId);
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
+        var id = BusinessId.From(businessId);
+        var business = await _businessRepository.GetBusinessByIdAsync(id, cancellationToken);
 
         if (business is null)
         {

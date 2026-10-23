@@ -7,8 +7,8 @@ public static  class BookableMappingExtensions
     public static BookableServiceResponseDto ToDto(this Domain.Entities.BookableService bookableService)
     {
         return new BookableServiceResponseDto(
-            bookableService.Id.Value,           
-            bookableService.EmployeeId.Value,   
+            bookableService.EmployeeId.Value,
+            bookableService.Id.Value,
             bookableService.ServiceName,
             bookableService.Description,
             bookableService.Price,

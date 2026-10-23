@@ -7,7 +7,7 @@ public interface IBookableServiceManagementService
 {
     Task<Result<BookableServiceResponseDto>>CreateBookableServiceAsync(CreateBookableServiceDto bookableServiceDto, CancellationToken ct);
     
-    Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(UpdateBookableServiceDto bookableServiceDto, CancellationToken ct);
+    Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(Guid bookableServiceId, UpdateBookableServiceDto bookableServiceDto, CancellationToken ct);
     
     Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(Guid bookableServiceId, CancellationToken ct);
     

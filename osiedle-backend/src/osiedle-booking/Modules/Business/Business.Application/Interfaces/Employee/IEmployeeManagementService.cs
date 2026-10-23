@@ -8,7 +8,7 @@ public interface IEmployeeManagementService
 {
     Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default);
     
-    Task<Result> UpdateProfileAsync(UpdateEmployeeProfileDto dto, CancellationToken ct = default);
+    Task<Result> UpdateProfileAsync(Guid employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default);
     
-    Task<Result> DeactivateEmployeeAsync(EmployeeId id, CancellationToken ct = default);
+    Task<Result> DeactivateEmployeeAsync(Guid employeeId, CancellationToken ct = default);
 }

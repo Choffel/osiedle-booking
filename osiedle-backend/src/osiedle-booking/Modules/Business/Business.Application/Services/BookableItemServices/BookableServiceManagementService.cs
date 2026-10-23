@@ -29,20 +29,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     public async Task<Result<BookableServiceResponseDto>> CreateBookableServiceAsync(CreateBookableServiceDto bookableServiceDto, CancellationToken ct)
     {
         var employeeId = EmployeeId.From(bookableServiceDto.EmployeeId);
-        
-        
-        bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
-        if (!employeeExists)
-        {
-            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
-        }
 
-        bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(bookableServiceDto.ServiceName, employeeId, ct);
-        if (isNameTaken)
-        {
-            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.NameAlreadyTaken);
-        }
-        
         var bookableService = BookableService.Create(
             employeeId,
             bookableServiceDto.ServiceName,
@@ -50,17 +37,28 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
             bookableServiceDto.ServicePrice,
             bookableServiceDto.ServiceDuration
         );
-        
+
+        bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+        if (!employeeExists)
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
+        }
+
+        bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(bookableService.ServiceName, employeeId, ct);
+        if (isNameTaken)
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.NameAlreadyTaken);
+        }
+
         _bookableServiceRepository.Add(bookableService, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         
         return Result.Success(bookableService.ToDto());
     }
 
-    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(UpdateBookableServiceDto dto, CancellationToken ct)
+    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(Guid bookableServiceId, UpdateBookableServiceDto dto, CancellationToken ct)
     { 
-        
-    var serviceId = BookableServiceId.From(dto.Id);
+        var serviceId = BookableServiceId.From(bookableServiceId);
     var employeeId = EmployeeId.From(dto.EmployeeId);
 
     

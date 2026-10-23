@@ -9,7 +9,7 @@ public interface IBusinessManagementService
     
     Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default);
     
-    Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default);
+    Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(Guid businessId, UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default);
     
     Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(Guid businessId, CancellationToken cancellationToken = default);
     

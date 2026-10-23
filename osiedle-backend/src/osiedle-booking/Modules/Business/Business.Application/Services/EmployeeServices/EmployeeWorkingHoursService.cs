@@ -24,35 +24,28 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> SetWorkingHoursAsync(SetWorkingHoursDto dto, CancellationToken ct = default)
+    public async Task<Result> SetWorkingHoursAsync(Guid employeeId, SetWorkingHoursDto dto, CancellationToken ct = default)
     {
-        if (dto.EndTime <= dto.StartTime)
-        {
-            return Result.Failure(EmployeeErrors.WorkingHoursInvalid);
-        }
-        
-        var employeeId = EmployeeId.From(dto.EmployeeId);
-        
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
-        
-        if (employee == null)
+        var id = EmployeeId.From(employeeId);
+    
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(id, ct);
+        if (employee is null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
-        
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, dto.Date, ct);
-        
-        if (workingHours == null)
+
+        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(id, dto.Date, ct);
+
+        if (workingHours is null)
         {
-            _employeeWorkingHoursRepository.AddWorkingHours(WorkingHours.Create(employeeId, dto.Date, dto.StartTime, dto.EndTime));
-            
+            var newWorkingHours = WorkingHours.Create(id, dto.Date, dto.StartTime, dto.EndTime);
+            _employeeWorkingHoursRepository.AddWorkingHours(newWorkingHours);
         }
         else
         {
             workingHours.UpdateTime(dto.StartTime, dto.EndTime);
-            _employeeWorkingHoursRepository.UpdateWorkingHours(workingHours);
         }
-        
+
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }

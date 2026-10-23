@@ -8,6 +8,8 @@ public interface IBusinessRepository
 {
     Task <BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct);
     
+    Task<bool> ExistsByIdAsync(BusinessId businessId, CancellationToken ct = default);
+    
     Task<bool>ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default);
     
     Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct);
