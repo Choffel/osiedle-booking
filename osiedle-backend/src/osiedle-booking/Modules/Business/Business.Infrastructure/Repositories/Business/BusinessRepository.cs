@@ -17,6 +17,11 @@ public class BusinessRepository : IBusinessRepository
     }
     
     
+    public async Task<bool> ExistsByIdAsync(BusinessId businessId, CancellationToken ct = default)
+    {
+        return await _context.Businesses.AnyAsync(b => b.Id == businessId, ct);
+    }
+
     public async Task<bool> ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
     {
         var exist = await _context.Businesses.AnyAsync(b => b.OwnerId == ownerId, ct);
@@ -27,7 +32,6 @@ public class BusinessRepository : IBusinessRepository
     public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct)
     {
         var business = await _context.Businesses
-            .Include(b => b.OwnerId)
             .Include(s => s.Services)
             .FirstOrDefaultAsync(b => b.Id == businessId, ct);
         return business;

@@ -17,10 +17,9 @@ public class BookableServiceRepository : IBookableServiceRepository
         _dbContext = dbContext;
     }
     
-    public Task <BookableService> GetByIdAsync(BookableServiceId id, CancellationToken ct)
+    public Task <BookableService?> GetByIdAsync(BookableServiceId id, CancellationToken ct)
     {
         return  _dbContext.BookableServices
-            .AsNoTracking()
             .SingleOrDefaultAsync(bookableService => bookableService.Id == id, ct);
             
     }

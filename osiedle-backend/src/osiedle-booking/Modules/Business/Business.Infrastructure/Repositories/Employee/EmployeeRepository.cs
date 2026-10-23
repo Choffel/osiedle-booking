@@ -19,7 +19,6 @@ public class EmployeeRepository : IEmployeeRepository
     public Task<Domain.Aggregates.Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
         return _context.Employees
-            .AsNoTracking()
             .Include(e => e.BookableServices)
             .SingleOrDefaultAsync(e => e.Id == employeeId, ct);
     }

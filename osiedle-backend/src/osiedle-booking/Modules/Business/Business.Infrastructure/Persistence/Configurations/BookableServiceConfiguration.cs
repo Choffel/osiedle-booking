@@ -34,6 +34,6 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
         builder.Property(x => x.Duration).IsRequired();
         builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt).IsRequired();
+        builder.Property(x => x.UpdatedAt);
     }
 }
