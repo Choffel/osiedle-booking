@@ -21,13 +21,9 @@ public class BookableService : Entity<BookableServiceId>
     
     private BookableService() { }
     
-    private BookableService(BookableServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan date) : base(id)   
+    private BookableService(BookableServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration) : base(id)   
     {
-        EmployeeId = employeeId;
-        ServiceName = serviceName;
-        Description = description;
-        Price = price;
-        Duration = date;
+        ValidateAndAssign(employeeId, serviceName, description, price, duration);
         Status = ServiceStatus.Active;
     }
     
@@ -39,11 +35,25 @@ public class BookableService : Entity<BookableServiceId>
     
     public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan duration)
     {
+        ValidateAndAssign(EmployeeId, serviceName, description, price, duration);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private void ValidateAndAssign(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
+
+        if (price <= 0)
+            throw new ArgumentException("Service price must be greater than zero.", nameof(price));
+
+        if (duration <= TimeSpan.Zero)
+            throw new ArgumentException("Service duration must be greater than zero.", nameof(duration));
+
+        EmployeeId = employeeId;
         ServiceName = serviceName;
         Description = description;
         Price = price;
         Duration = duration;
-        UpdatedAt = DateTime.UtcNow;
     }
     
     public void DeactivateService()

@@ -5,7 +5,7 @@ using osiedle_booking.BuildingBlocks.Domain;
 
 namespace Business.Domain.Aggregates;
 
-//TODO: добавить рассписание 
+
 public class Employee : AggregateRoot<EmployeeId>
 {
     public string FirstName { get; private set; }
@@ -33,7 +33,7 @@ public class Employee : AggregateRoot<EmployeeId>
         string firstName, 
         string lastName, 
         string position, 
-        string review,
+        string? review,
         string email
         ) : base(id)
     {
@@ -41,11 +41,9 @@ public class Employee : AggregateRoot<EmployeeId>
         ValidateAndAssign(firstName, lastName, position, review, email);
     }
     
-    public void UpdateInfo(string firstName, string lastName, string position, string review, string email)
+    public void UpdateInfo(string firstName, string lastName, string position, string? review, string email)
     {
-        var normalizedEmail = email.ToUpper().Trim();
-        
-        ValidateAndAssign(firstName, lastName, position, review, normalizedEmail);
+        ValidateAndAssign(firstName, lastName, position, review, email);
         UpdatedAt = DateTime.UtcNow; 
     }
     
@@ -61,32 +59,28 @@ public class Employee : AggregateRoot<EmployeeId>
 
         Status = newStatus;
     }
-
-    //fix throw
-    private void ValidateAndAssign(string firstName, string lastName, string position, string review, string email)
+    
+    private void ValidateAndAssign(string firstName, string lastName, string position, string? review, string email)
     {
-        if(string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email cannot be empty.", nameof(email));
-        
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be empty.", nameof(firstName));
-
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
-
-        if (string.IsNullOrWhiteSpace(position))
-            throw new ArgumentException("Position cannot be empty.", nameof(position));
-
-        if (string.IsNullOrWhiteSpace(review))
-            throw new ArgumentException("Review cannot be empty.", nameof(review));
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(lastName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(position);
 
         FirstName = firstName;
         LastName = lastName;
         Position = position;
-        Review = review;
+        Review = string.IsNullOrWhiteSpace(review) ? null : review;
+        Email = NormalizeEmail(email);
+    }
+
+    public static string NormalizeEmail(string email)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        return email.Trim().ToLowerInvariant();
     }
     
-    public static Employee Create(BusinessId? businessId, string firstName, string lastName, string position, string review, string email)
+    public static Employee Create(BusinessId? businessId, string firstName, string lastName, string position, string? review, string email)
     {
         var employeeId = EmployeeId.New();
         return new Employee(employeeId, businessId, firstName, lastName, position, review, email);
