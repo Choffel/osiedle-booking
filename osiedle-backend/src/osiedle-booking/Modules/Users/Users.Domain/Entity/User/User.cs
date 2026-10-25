@@ -1,5 +1,5 @@
-using Users.Domain.Entity.User.Value_objects;
 using osiedle_booking.BuildingBlocks.Domain;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Domain.Entity.User;
 

@@ -2,9 +2,9 @@ using osiedle_booking.BuildingBlocks;
 using Users.Appliation.Abstractions;
 using Users.Appliation.DTOs;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
 using Users.Domain.Errors;
 using Microsoft.Extensions.Logging;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Appliation.Services;
 

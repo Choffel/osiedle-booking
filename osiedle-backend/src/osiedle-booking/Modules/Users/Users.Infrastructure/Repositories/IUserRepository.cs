@@ -1,3 +1,4 @@
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Appliation.Abstractions;
 using Users.Infrastructure.Data;
 
@@ -18,7 +19,7 @@ public class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(ct); 
     }
 
-    public Task<Domain.Entity.User.User?> GetByIdAsync(Domain.Entity.User.Value_objects.UserId id, CancellationToken ct)
+    public Task<Domain.Entity.User.User?> GetByIdAsync(UserId id, CancellationToken ct)
     {
         throw new NotImplementedException();
     }
