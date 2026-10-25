@@ -1,15 +1,15 @@
 ﻿using Business.Domain.Entities;
 using Business.Domain.Enums;
-using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.Domain;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Domain.Aggregates;
 
 public class Business : AggregateRoot<BusinessId> 
 {
     public string Name { get; private set; } = null!;
-    public Guid OwnerId { get; private set; } 
+    public UserId OwnerId { get; private set; } 
     
     public string Description { get; private set; }
     public string Location { get; private set; } 
@@ -26,13 +26,10 @@ public class Business : AggregateRoot<BusinessId>
     
     private Business() { }
 
-    private Business(BusinessId id, string name, string location, Guid ownerId, string description) : base(id)
+    private Business(BusinessId id, string name, string location, UserId ownerId, string description) : base(id)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Business name cannot be empty.", nameof(name));
-
-        if (ownerId == Guid.Empty)
-            throw new ArgumentException("Owner ID cannot be empty.", nameof(ownerId));
         
         if(string.IsNullOrWhiteSpace(location))
             throw new ArgumentException("Business location cannot be empty.", nameof(location));
@@ -48,7 +45,7 @@ public class Business : AggregateRoot<BusinessId>
         CreatedAt = DateTime.UtcNow;
     }
     
-    public static Business Create(string name, Guid ownerId, string description, string location)
+    public static Business Create(string name, UserId ownerId, string description, string location)
     {
         var businessId = BusinessId.New();
         return new Business(businessId, name, location, ownerId, description);
