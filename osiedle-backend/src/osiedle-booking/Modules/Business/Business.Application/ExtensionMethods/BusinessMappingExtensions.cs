@@ -8,7 +8,7 @@ public static class BusinessMappingExtensions
     {
         return new BusinessResponseDto(
             business.Id.Value,
-            business.OwnerId,
+            business.OwnerId.Value,
             business.Name,
             business.Description,
             business.Location,
