@@ -4,9 +4,10 @@ using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
-namespace Business.Infrastructure.Repositories;
+namespace Business.Infrastructure.Repositories.Business;
 
 public class BusinessRepository : IBusinessRepository
 {
@@ -22,7 +23,7 @@ public class BusinessRepository : IBusinessRepository
         return await _context.Businesses.AnyAsync(b => b.Id == businessId, ct);
     }
 
-    public async Task<bool> ExistsByOwnerIdAsync(Guid ownerId, CancellationToken ct = default)
+    public async Task<bool> ExistsByOwnerIdAsync(UserId ownerId, CancellationToken ct = default)
     {
         var exist = await _context.Businesses.AnyAsync(b => b.OwnerId == ownerId, ct);
         
@@ -45,18 +46,13 @@ public class BusinessRepository : IBusinessRepository
         return _context.Employees
             .AnyAsync(e => e.Id == employeeId && e.BusinessId == businessId, ct);
     }
-
+    
     public Task<bool> BookableServiceBelongsToBusinessAsync(BookableServiceId serviceId, BusinessId businessId, CancellationToken ct)
     {
         return _context.Businesses
             .AnyAsync(b => b.Id == businessId && b.Services.Any(s => s.Id == serviceId), ct);
     }
-
-    public Task<bool> BookableServiceBelongsToEmployeeAsync(BookableServiceId serviceId, EmployeeId employeeId, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public async Task<BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct)
     {
         var businessDto = await _context.Businesses
@@ -64,7 +60,7 @@ public class BusinessRepository : IBusinessRepository
             .Where(b => b.Id == businessId)
             .Select(s => new BusinessShortInfoDto(
                 s.Id.Value,
-                s.OwnerId,
+                s.OwnerId.Value,
                 s.Name,
                 s.Description,
                 s.Location
