@@ -1,4 +1,5 @@
 ﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
@@ -42,22 +43,19 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var businessIdValue = BusinessId.From(businessId);
-        
-        var business = await _businessRepository.GetBusinessByIdAsync(businessIdValue, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(Guid businessId,
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var id = BusinessId.From(businessId);
-        var business = await _businessRepository.GetBusinessByIdAsync(id, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
         {
@@ -71,11 +69,10 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var id = BusinessId.From(businessId);
         
-        var business = await _businessRepository.GetBusinessByIdAsync(id, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;

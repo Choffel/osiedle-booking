@@ -62,10 +62,9 @@ public class EmployeeService : IEmployeeManagementService
         return Result.Success(employee.Id);
     }
     
-    public async Task<Result> UpdateProfileAsync(Guid employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateProfileAsync(EmployeeId employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
     {
-        var id = EmployeeId.From(employeeId);
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(id, ct);
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         if (employee == null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
@@ -86,10 +85,9 @@ public class EmployeeService : IEmployeeManagementService
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateEmployeeAsync(Guid employeeId, CancellationToken ct = default)
+    public async Task<Result> DeactivateEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
-        var id = EmployeeId.From(employeeId);
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(id, ct);
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         
         if (employee == null)
         {

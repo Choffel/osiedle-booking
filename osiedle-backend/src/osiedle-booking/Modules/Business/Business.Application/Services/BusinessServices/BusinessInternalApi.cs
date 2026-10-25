@@ -55,7 +55,7 @@ public class BusinessInternalApi : IBusinessInternalApi
 
     public Task<bool> ServiceBelongsToEmployeeAsync(BookableServiceId serviceId, EmployeeId employeeId, CancellationToken ct = default)
     {
-        return _businessRepository.BookableServiceBelongsToEmployeeAsync(serviceId, employeeId, ct);
+        return _bookableServiceRepository.BelongsToEmployeeAsync(serviceId, employeeId, ct);
     }
 
     public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursForRangeAsync(EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
