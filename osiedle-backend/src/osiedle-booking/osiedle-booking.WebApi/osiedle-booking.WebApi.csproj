@@ -25,7 +25,7 @@
         <ProjectReference Include="..\Modules\Users\Users.Infrastructure\Users.Infrastructure.csproj" />
     
         <ProjectReference Include="..\Modules\Bookings\Bookings.Infrastructure\Bookings.Infrastructure.csproj" />
-        <ProjectReference Include="..\Modules\Bookings\Bookings.Domain\Bookings.Domain.csproj" />        
+        <ProjectReference Include="..\Modules\Bookings\Bookings.Domain\Bookings.Domain.csproj" />
         <ProjectReference Include="..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>
 

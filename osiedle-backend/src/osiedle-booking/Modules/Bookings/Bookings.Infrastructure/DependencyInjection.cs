@@ -1,4 +1,3 @@
-using System.Text;
 using Bookings.Application.Abstractions.Repositories;
 using Bookings.Application.Abstractions.Services;
 using Bookings.Application.Services;
