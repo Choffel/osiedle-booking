@@ -10,21 +10,20 @@ namespace Users.Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IIdentityService _identityService;
+ 
+    private readonly IIdentityAccountService _identityAccountService;
     private readonly IUserRepository _userRepository;
-    private readonly ILogger<UserService> _logger;
-    private readonly IRoleService _roleManager;
-    private readonly ITokenService _tokenService;
+    
     private readonly IUserContext _userContext;
 
-    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger,
-        IRoleService roleManager, ITokenService tokenService, IUserContext userContext)
+    public UserService(IIdentityAccountService identityAccountService,IUserRepository userRepository,
+        IUserContext userContext)
     {
-        _identityService = identityService; 
+        
+        _identityAccountService = identityAccountService;
+        
         _userRepository = userRepository;
-        _logger = logger;
-        _roleManager = roleManager;
-        _tokenService = tokenService;
+        
         _userContext = userContext;
     }
     
@@ -33,7 +32,7 @@ public class UserService : IUserService
         var userEmail = _userContext.Email;
         var userContextId = _userContext.UserId;
         
-        var user = await _identityService.FindByEmailAsync(userEmail, cancellationToken);
+        var user = await _identityAccountService.FindByEmailAsync(userEmail, cancellationToken);
         if (user == null)
         {
             return Result<string>.Failure("User not found");
@@ -51,7 +50,7 @@ public class UserService : IUserService
         }
 
         domainUser.Update(userDto.UserName);
-        await _identityService.UpdateUserNameAsync(userContextId, userDto.UserName, cancellationToken);
+        await _identityAccountService.UpdateUserNameAsync(userContextId, userDto.UserName, cancellationToken);
 
         await _userRepository.Update(domainUser);
 
