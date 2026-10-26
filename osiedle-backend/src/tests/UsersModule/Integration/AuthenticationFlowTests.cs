@@ -14,7 +14,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -37,11 +37,13 @@ public class AuthenticationFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var result = await userService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
 
+        // RequireConfirmedEmail makes SignInManager reject the sign-in; AuthService maps
+        // every credential failure to the same generic message (no enumeration).
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Invalid Email or Password");
     }
@@ -50,7 +52,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
     public async Task Authenticate_ShouldFail_WhenEmailIsUnknown()
     {
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.AuthenticateAsync(
             new AuthRequest("ghost@example.com", ValidPassword));
@@ -64,7 +66,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 

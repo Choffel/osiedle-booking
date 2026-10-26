@@ -16,7 +16,8 @@ public class UpdateUserFlowTests : IntegrationTestBase
         const string email = "jan@example.com";
         using var scope = CreateScope();
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-        var userId = await RegisterUserAsync(userService, email, ValidPassword);
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+        var userId = await RegisterUserAsync(authService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
         UserContext.UserId = userId;
@@ -54,7 +55,8 @@ public class UpdateUserFlowTests : IntegrationTestBase
         const string email = "jan@example.com";
         using var scope = CreateScope();
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-        var userId = await RegisterUserAsync(userService, email, ValidPassword);
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+        var userId = await RegisterUserAsync(authService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

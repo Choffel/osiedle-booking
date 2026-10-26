@@ -9,6 +9,7 @@ namespace UserModule.Infrastructure.Identity;
 public class RoleServiceTests
 {
     private readonly Mock<RoleManager<RoleIdentity>> _roleManagerMock;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly RoleService _sut;
 
     public RoleServiceTests()
@@ -20,7 +21,18 @@ public class RoleServiceTests
             new IdentityErrorDescriber(),
             Mock.Of<ILogger<RoleManager<RoleIdentity>>>());
 
-        _sut = new RoleService(_roleManagerMock.Object);
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            Mock.Of<IUserStore<ApplicationUser>>(),
+            Microsoft.Extensions.Options.Options.Create(new IdentityOptions()),
+            Mock.Of<IPasswordHasher<ApplicationUser>>(),
+            Array.Empty<IUserValidator<ApplicationUser>>(),
+            Array.Empty<IPasswordValidator<ApplicationUser>>(),
+            Mock.Of<ILookupNormalizer>(),
+            new IdentityErrorDescriber(),
+            Mock.Of<IServiceProvider>(),
+            Mock.Of<ILogger<UserManager<ApplicationUser>>>());
+
+        _sut = new RoleService(_roleManagerMock.Object, _userManagerMock.Object);
     }
 
     [Fact]

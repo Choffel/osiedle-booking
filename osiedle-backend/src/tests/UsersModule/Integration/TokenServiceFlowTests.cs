@@ -25,7 +25,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -48,7 +48,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         const string email = "jan@example.com";
         const string oldTokenValue = "old-refresh-token";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -99,7 +99,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         const string email = "jan@example.com";
         const string refreshTokenValue = "refresh-token-to-revoke";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -125,7 +125,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -154,7 +154,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 

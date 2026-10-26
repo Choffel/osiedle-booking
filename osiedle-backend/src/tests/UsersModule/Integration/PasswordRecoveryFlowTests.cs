@@ -16,7 +16,7 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
     public async Task ForgotPassword_ShouldReturnGenericMessage_ForUnknownEmail()
     {
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.ForgotPasswordAsync(new ForgotPasswordRequest("ghost@example.com"));
 
@@ -29,7 +29,7 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var result = await userService.ForgotPasswordAsync(new ForgotPasswordRequest(email));
@@ -45,7 +45,7 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
         const string email = "jan@example.com";
         const string newPassword = "BrandNew1";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -72,7 +72,7 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
         await ConfirmEmailAsync(scope, email);
 
@@ -91,7 +91,7 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
     public async Task ResetPassword_ShouldFail_WhenEmailIsUnknown()
     {
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.ResetPasswordAsync(
             new ResetPasswordDto("ghost@example.com", "any-token", "BrandNew1"));

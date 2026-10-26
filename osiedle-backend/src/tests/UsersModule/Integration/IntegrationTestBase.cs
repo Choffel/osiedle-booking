@@ -70,7 +70,10 @@ public abstract class IntegrationTestBase : IDisposable
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITokenRepository, TokenRepository>();
-        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IIdentityAccountService, IdentityAccountService>();
+        services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
+        services.AddScoped<IIdentityEmailService, IdentityEmailService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IUserService, UserService>();
@@ -87,9 +90,9 @@ public abstract class IntegrationTestBase : IDisposable
     protected IServiceScope CreateScope() => Provider.CreateScope();
 
     protected async Task<Guid> RegisterUserAsync(
-        IUserService userService, string email, string password, string firstName = "Jan")
+        IAuthService authService, string email, string password, string firstName = "Jan")
     {
-        var result = await userService.RegisterAsync(
+        var result = await authService.RegisterAsync(
             new RegisterUserRequest(firstName, "Kowalski", email, password), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue("registration must succeed, error: {0}", result.Error);
@@ -104,8 +107,8 @@ public abstract class IntegrationTestBase : IDisposable
 
         var token = await userManager.GenerateEmailConfirmationTokenAsync(identityUser!);
 
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-        var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+        var result = await authService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
         result.IsSuccess.Should().BeTrue("email confirmation must succeed, error: {0}", result.Error);
     }

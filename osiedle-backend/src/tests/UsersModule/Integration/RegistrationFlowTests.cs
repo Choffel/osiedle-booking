@@ -17,7 +17,7 @@ public class RegistrationFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var userId = await RegisterUserAsync(userService, email, ValidPassword);
 
@@ -38,14 +38,14 @@ public class RegistrationFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var duplicate = await userService.RegisterAsync(
             new RegisterUserRequest("Jan", "Kowalski", email, ValidPassword), CancellationToken.None);
 
         duplicate.IsSuccess.Should().BeFalse();
-        duplicate.Error.Should().Contain("already taken");
+        duplicate.Error.Should().Be("Failed to create user");
 
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var domainUsersCount = await db.Users.AsNoTracking().CountAsync();
@@ -57,13 +57,13 @@ public class RegistrationFlowTests : IntegrationTestBase
     {
         const string email = "weak@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.RegisterAsync(
             new RegisterUserRequest("Jan", "Kowalski", email, "abc"), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("at least one digit");
+        result.Error.Should().Be("Failed to create user");
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         (await userManager.FindByEmailAsync(email)).Should().BeNull();

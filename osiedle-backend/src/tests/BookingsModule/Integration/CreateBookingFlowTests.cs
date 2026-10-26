@@ -1,5 +1,6 @@
 using Bookings.Application.Abstractions.Services;
 using Bookings.Domain.Entities.Booking.Enum;
+using Bookings.Domain.Exceptions;
 using Bookings.Infrastructure.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -120,17 +121,19 @@ public class CreateBookingFlowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task CreateBooking_SlotInPast_FailsWithoutThrowing()
+    public async Task CreateBooking_SlotInPast_ThrowsBookingInPastException()
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var past = DateTime.UtcNow.Date.AddDays(-1).AddHours(10);
 
-        var result = await bookingService.CreateBookingAsync(
+        // BookingService no longer converts domain violations to Result — the invariant
+        // surfaces as a domain exception instead.
+        var act = () => bookingService.CreateBookingAsync(
             Request(past, past.AddMinutes(30)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("past");
+        await act.Should().ThrowAsync<BookingInPastException>()
+            .WithMessage("*past*");
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -138,15 +141,14 @@ public class CreateBookingFlowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task CreateBooking_EndBeforeStart_FailsWithoutThrowing()
+    public async Task CreateBooking_EndBeforeStart_ThrowsInvalidTimeSlotRangeException()
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
-        var result = await bookingService.CreateBookingAsync(
+        var act = () => bookingService.CreateBookingAsync(
             Request(At(10, 30), At(10, 0)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("must be after start time");
+        await act.Should().ThrowAsync<InvalidTimeSlotRangeException>();
     }
 }

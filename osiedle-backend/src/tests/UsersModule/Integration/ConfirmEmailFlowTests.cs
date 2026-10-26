@@ -14,7 +14,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -36,7 +36,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, "garbage-token"));
@@ -53,7 +53,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     public async Task ConfirmEmail_ShouldFail_WhenEmailIsUnknown()
     {
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.ConfirmEmailAsync(
             new ConfirmEmailRequest("ghost@example.com", "any-token"));
@@ -67,7 +67,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleIdentity>>();

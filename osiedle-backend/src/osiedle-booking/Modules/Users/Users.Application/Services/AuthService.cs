@@ -40,7 +40,7 @@ public class AuthService : IAuthService
             request.Email,  request.FirstName, request.Password, ct);
 
         if (!identityResult.IsSuccess)
-            return Result<UserId>.Failure(identityResult.Error);
+            return Result<UserId>.Failure("Failed to create user");
         
         var userId = new UserId(identityResult.Value);
         var user = User.Create(userId, request.FirstName);
@@ -65,14 +65,14 @@ public class AuthService : IAuthService
 
         if (!user.IsSuccess)
         {
-            return Result<TokenResponseDto>.Failure(user.Error);
+            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
         }
 
         var isPasswordCorrect = await _identityCredentialsService.CheckPasswordAsync(user.Value.Id, request.Password, cancellationToken);
         if (!isPasswordCorrect.IsSuccess)
         {
             _logger.LogWarning("Failed login for {Email} from {Ip}", request.Email, _userContext.IpAddress);
-            return Result<TokenResponseDto>.Failure(isPasswordCorrect.Error);
+            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
         }
 
         var userDto = new UserDto(user.Value.Id, user.Value.UserName ?? string.Empty, user.Value.Email ?? string.Empty);
