@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
-using Users.Domain.Entity.User.Value_objects;
 
 namespace osiedle_booking.WebApi.Controllers;
 
