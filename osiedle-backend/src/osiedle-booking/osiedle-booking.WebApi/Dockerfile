@@ -15,6 +15,14 @@ COPY ["Modules/Users/Users.Application/Users.Application.csproj", "Modules/Users
 COPY ["Modules/Users/Users.Domain/Users.Domain.csproj", "Modules/Users/Users.Domain/"]
 COPY ["Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj", "Modules/Users/Users.Infrastructure/"]
 
+COPY ["Modules/Business/Business.Application/Business.Application.csproj", "Modules/Business/Business.Application/"]
+COPY ["Modules/Business/Business.Domain/Business.Domain.csproj", "Modules/Business/Business.Domain/"]
+COPY ["Modules/Business/Business.Infrastructure/Business.Infrastructure.csproj", "Modules/Business/Business.Infrastructure/"]
+
+COPY ["Modules/Notifications/Notifications.Application/Notifications.Application.csproj", "Modules/Notifications/Notifications.Application/"]
+COPY ["Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj", "Modules/Notifications/Notifications.Domain/"]
+COPY ["Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj", "Modules/Notifications/Notifications.Infrastructure/"]
+
 COPY ["BuildingBlocks/osiedle-booking.BuildingBlocks/osiedle-booking.BuildingBlocks.csproj", "BuildingBlocks/osiedle-booking.BuildingBlocks/"]
 
 RUN dotnet restore "osiedle-booking.WebApi/osiedle-booking.WebApi.csproj"

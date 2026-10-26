@@ -1,5 +1,5 @@
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
 
 namespace Users.Application.Abstractions.Repositories;
 

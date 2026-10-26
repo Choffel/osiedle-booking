@@ -1,21 +1,48 @@
 using Bookings.Infrastructure;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
+using Business.Infrastructure;
+using Business.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.WebApi.Errors;
+using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
+using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
+
+var connectionString = builder.Configuration.GetConnectionString("Database") 
+                       ?? builder.Configuration["CONNECTION_STRING"] 
+                       ?? "Host=localhost;Port=5432;Database=osiedle_booking;Username=postgres;Password=postgres";
+
 #region DI
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBookingInfrastructure(builder.Configuration);
+builder.Services.AddBusinessInfrastructure(connectionString);
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 #endregion
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<BusinessId>(BusinessId.From, id => id.Value));
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<EmployeeId>(EmployeeId.From, id => id.Value));
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<BookableServiceId>(BookableServiceId.From, id => id.Value));
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<WorkingHoursId>(WorkingHoursId.From, id => id.Value));
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 #region Swagger
@@ -84,6 +111,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseExceptionHandler();
 app.UseCors(); // TODO: Configure CORS policy as needed
 app.UseAuthentication();
 app.UseAuthorization();
@@ -92,7 +120,13 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
 {
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
-    
+
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+
+    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+    await businessDbContext.Database.MigrateAsync();
+
     await RoleInitData.InitializeAsync(roleManager);
 }
 

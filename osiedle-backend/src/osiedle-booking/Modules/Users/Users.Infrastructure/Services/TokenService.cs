@@ -12,6 +12,7 @@ using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
+using Users.Domain.Errors;
 using Users.Infrastructure.Identity;
 
 namespace Users.Infrastructure.Services;
@@ -70,13 +71,13 @@ public class TokenService : ITokenService
         var storedRefreshToken = await _tokenRepository.GetRefreshTokenAsync(_userContext.RefreshToken);
         if (storedRefreshToken == null || storedRefreshToken.IsExpired)
         {
-            return Result<TokenResponseDto>.Failure("Invalid or expired refresh token.");
+            return Result<TokenResponseDto>.Failure(UserErrors.InvalidRefreshToken);
         }
 
         var user = await _userManager.FindByIdAsync(storedRefreshToken.UserId.ToString());
         if (user == null)
         {
-            return Result<TokenResponseDto>.Failure("User not found.");
+            return Result<TokenResponseDto>.Failure(UserErrors.NotFound);
         }
 
         storedRefreshToken.ExpiresAt = DateTime.UtcNow;
@@ -96,7 +97,7 @@ public class TokenService : ITokenService
         var refreshToken = await _tokenRepository.GetRefreshTokenAsync(_userContext.RefreshToken);
         if (refreshToken == null || refreshToken.UserId != _userContext.UserId || refreshToken.IsExpired)
         {
-            return Result<bool>.Failure("Invalid refresh token.");
+            return Result<bool>.Failure(UserErrors.InvalidRefreshToken);
         }
 
         refreshToken.ExpiresAt = DateTime.UtcNow;
@@ -124,12 +125,12 @@ public class TokenService : ITokenService
 
         if (refreshToken == null || refreshToken.UserId != _userContext.UserId || refreshToken.IsExpired)
         {
-            return Result<string>.Failure("Invalid refresh token.");
+            return Result<string>.Failure(UserErrors.InvalidRefreshToken);
         }
 
         if (refreshToken.Token == _userContext.RefreshToken)
         {
-            return Result<string>.Failure("Cannot revoke the current session.");
+            return Result<string>.Failure(UserErrors.CannotRevokeCurrentSession);
         }
 
         refreshToken.ExpiresAt = DateTime.UtcNow;

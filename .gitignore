@@ -1,4 +1,7 @@
 .DS_Store
+node_modules/
+**/bin/
+**/obj/
 /osiedle-backend/src/osiedle-booking/.idea
 /osiedle-backend/src/osiedle-booking/BuildingBlocks/osiedle-booking.BuildingBlocks/obj
 /osiedle-backend/src/osiedle-booking/Modules/Users/Users.Appliation/obj
