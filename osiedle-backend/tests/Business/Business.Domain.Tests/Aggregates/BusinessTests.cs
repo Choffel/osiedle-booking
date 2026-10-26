@@ -1,12 +1,13 @@
 using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
 namespace Business.Domain.Tests.Aggregates;
 
 public class BusinessTests
 {
-    private static readonly Guid OwnerId = Guid.NewGuid();
+    private static readonly UserId OwnerId = UserId.New();
 
     [Fact]
     public void Create_WithValidData_InitializesActiveAggregate()
@@ -55,7 +56,7 @@ public class BusinessTests
     [Fact]
     public void Create_WithEmptyOwnerId_Throws()
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", Guid.Empty, "Description", "Location"));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", new UserId(Guid.Empty), "Description", "Location"));
     }
 
     [Fact]
