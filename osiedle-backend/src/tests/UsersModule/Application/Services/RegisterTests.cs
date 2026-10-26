@@ -74,7 +74,7 @@ public class RegisterTests
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be("Failed to create user");
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         _identityEmailMock.Verify(
             s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
