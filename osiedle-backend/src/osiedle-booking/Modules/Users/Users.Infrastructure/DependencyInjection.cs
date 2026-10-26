@@ -50,6 +50,7 @@ public static class DependencyInjection
         #endregion
 
         #region Services
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ITokenService, TokenService>();
