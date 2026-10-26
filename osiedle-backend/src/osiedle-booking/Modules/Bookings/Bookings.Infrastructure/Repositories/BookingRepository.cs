@@ -41,29 +41,27 @@ public class BookingRepository : IBookingRepository
          return result.Entity;
     }
 
-    public async Task<IReadOnlyCollection<Booking>> GetBookingsByClientIdIdAsync(ClientId id, CancellationToken ct, bool trackChanges = false)
+    public async Task<IReadOnlyCollection<Booking>> FindBookingsByClientIdIdAsync(ClientId id, CancellationToken ct)
     {
-        IQueryable<Booking> query = _dbContext.Bookings;
-
-        if (!trackChanges)
-        {
-            query = query.AsNoTracking();
-        }
-        
-        var result = await query.Where(b => b.ClientId == id).ToListAsync(ct);
+        var result = _dbContext.Bookings.Where(b => b.ClientId == id).AsNoTracking().ToList();
         return result;
     }
     
-    public async Task<Booking> GetBookingByIdAsync(BookingId id, CancellationToken ct, bool trackChanges = false)
+    public async Task<IReadOnlyCollection<Booking>> GetBookingsByClientIdIdAsync(ClientId id, CancellationToken ct)
     {
-        IQueryable<Booking> query = _dbContext.Bookings;
-
-        if (!trackChanges)
-        {
-            query = query.AsNoTracking();
-        }
-        
-        var result = await query.FirstOrDefaultAsync(b => b.Id == id, ct);
+        var result = _dbContext.Bookings.Where(b => b.ClientId == id).ToList();
+        return result;
+    }
+    
+    public async Task<Booking> FindBookingByIdAsync(BookingId id, CancellationToken ct)
+    {
+        var result = await _dbContext.Bookings.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id, ct);
+        return result;
+    }
+    
+    public async Task<Booking> GetBookingByIdAsync(BookingId id, CancellationToken ct)
+    {
+        var result = await _dbContext.Bookings.FirstOrDefaultAsync(b => b.Id == id, ct);
         return result;
     }
 

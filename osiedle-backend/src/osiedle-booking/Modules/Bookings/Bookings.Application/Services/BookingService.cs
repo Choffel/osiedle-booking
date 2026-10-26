@@ -6,7 +6,7 @@ using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Enum;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Domain;
+
 using osiedle_booking.BuildingBlocks.Interfaces;
 
 namespace Bookings.Application.Services;
@@ -51,8 +51,6 @@ public class BookingService : IBookingService
 
     public async Task<Result<bool>> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
     {
-        try
-        {
             var slot = TimeSlot.Create(request.StartTime, request.EndTime);
 
             var day = request.StartTime.Date;
@@ -82,18 +80,11 @@ public class BookingService : IBookingService
             await _bookingRepository.CreateBookingAsync(booking, ct);
 
             return Result<bool>.Success(true);
-        }
-        catch (DomainException ex)
-        {
-            // Domain invariant violations (past slot, invalid range, negative price) are user-input
-            // errors, not server faults — surface them through the Result pattern instead of a 500.
-            return Result<bool>.Failure(ex.Message);
-        }
     }
 
     public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
     {
-        var userId = new ClientId(_userContext.UserId);
+        var userId = ClientId.From(_userContext.UserId);
         var reservations = await _bookingRepository.GetBookingsByClientIdIdAsync(userId, ct);
         
         var response = new List<MyReservationDTO>(
@@ -109,7 +100,9 @@ public class BookingService : IBookingService
 
     public async Task<Result<bool>> CancelBookingAsync(CancelBookingRequest request, CancellationToken ct)
     {
-        var booking = await _bookingRepository.GetBookingByIdAsync(new BookingId(request.BookingId), ct, true);
+        var bookingId = BookingId.From(request.BookingId);
+        
+        var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, ct);
         if(booking == null)
         {
             return Result<bool>.Failure("Booking not found.");
