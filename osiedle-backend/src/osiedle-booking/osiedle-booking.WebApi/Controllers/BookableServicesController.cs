@@ -1,5 +1,7 @@
 using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.Interfaces.BookableService;
+using Business.Domain.ValueObject;
+using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.WebApi.Extensions;
 
@@ -30,7 +32,9 @@ public class BookableServicesController : ControllerBase
         [FromBody] UpdateBookableServiceDto dto,
         CancellationToken ct = default)
     {
-        return (await _bookableServiceManagementService.UpdateBookableServiceAsync(bookableServiceId, dto, ct))
+        var serviceId = BookableServiceId.From(bookableServiceId);
+        
+        return (await _bookableServiceManagementService.UpdateBookableServiceAsync(serviceId, dto, ct))
             .ToActionResult();
     }
 
@@ -39,7 +43,10 @@ public class BookableServicesController : ControllerBase
         Guid bookableServiceId,
         CancellationToken ct = default)
     {
-        return (await _bookableServiceManagementService.DeleteBookableServiceAsync(bookableServiceId, ct))
+        
+        var serviceId = BookableServiceId.From(bookableServiceId);
+        
+        return (await _bookableServiceManagementService.DeleteBookableServiceAsync(serviceId, ct))
             .ToActionResult();
     }
 
@@ -49,7 +56,10 @@ public class BookableServicesController : ControllerBase
         [FromQuery] Guid employeeId,
         CancellationToken ct = default)
     {
-        return (await _bookableServiceManagementService.ActivateBookableServiceAsync(employeeId, bookableServiceId, ct))
+        var serviceId = BookableServiceId.From(bookableServiceId);
+        var employee = EmployeeId.From(employeeId);
+        
+        return (await _bookableServiceManagementService.ActivateBookableServiceAsync(employee, serviceId, ct))
             .ToActionResult();
     }
 
@@ -59,7 +69,10 @@ public class BookableServicesController : ControllerBase
         [FromQuery] Guid employeeId,
         CancellationToken ct = default)
     {
-        return (await _bookableServiceManagementService.DeactivateBookableServiceAsync(employeeId, bookableServiceId, ct))
+        var employee = EmployeeId.From(employeeId);
+        var serviceId = BookableServiceId.From(bookableServiceId);
+        
+        return (await _bookableServiceManagementService.DeactivateBookableServiceAsync(employee, serviceId, ct))
             .ToActionResult();
     }
 }

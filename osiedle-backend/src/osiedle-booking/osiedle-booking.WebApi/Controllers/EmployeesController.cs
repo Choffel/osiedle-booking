@@ -35,7 +35,9 @@ public class EmployeesController : ControllerBase
         [FromBody] UpdateEmployeeProfileDto dto,
         CancellationToken ct = default)
     {
-        return (await _employeeManagementService.UpdateProfileAsync(employeeId, dto, ct))
+        var employee = EmployeeId.From(employeeId);
+        
+        return (await _employeeManagementService.UpdateProfileAsync(employee, dto, ct))
             .ToActionResult();
     }
 
@@ -44,7 +46,9 @@ public class EmployeesController : ControllerBase
         Guid employeeId,
         CancellationToken ct = default)
     {
-        return (await _employeeManagementService.DeactivateEmployeeAsync(employeeId, ct))
+        var employee = EmployeeId.From(employeeId);
+        
+        return (await _employeeManagementService.DeactivateEmployeeAsync(employee, ct))
             .ToActionResult();
     }
 
@@ -54,7 +58,9 @@ public class EmployeesController : ControllerBase
         [FromBody] SetWorkingHoursDto dto,
         CancellationToken ct = default)
     {
-        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(employeeId, dto, ct)).ToActionResult();
+        var employee = EmployeeId.From(employeeId);
+        
+        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(employee, dto, ct)).ToActionResult();
     }
 
     [HttpDelete("{employeeId:guid}/working-hours")]
@@ -63,6 +69,8 @@ public class EmployeesController : ControllerBase
         [FromQuery] DateOnly date,
         CancellationToken ct = default)
     {
-        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(employeeId, date, ct)).ToActionResult();
+        var employee = EmployeeId.From(employeeId);
+        
+        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(employee, date, ct)).ToActionResult();
     }
 }
