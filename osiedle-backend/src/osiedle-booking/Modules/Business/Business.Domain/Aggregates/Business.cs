@@ -37,6 +37,9 @@ public class Business : AggregateRoot<BusinessId>
         if(string.IsNullOrWhiteSpace(description))
             throw new ArgumentException("Business description cannot be empty.", nameof(description));
 
+        if (ownerId.Value == Guid.Empty)
+            throw new ArgumentException("Business owner id cannot be empty.", nameof(ownerId));
+
         Name = name;
         OwnerId = ownerId;
         Description = description;
