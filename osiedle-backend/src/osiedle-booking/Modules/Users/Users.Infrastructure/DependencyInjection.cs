@@ -19,7 +19,8 @@ public static class DependencyInjection
     public static IServiceCollection AddUsersInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         #region Database
-        var connectionString = configuration["CONNECTION_STRING"];
+        var connectionString = configuration.GetConnectionString("Database")
+                               ?? configuration["CONNECTION_STRING"];
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
         #endregion

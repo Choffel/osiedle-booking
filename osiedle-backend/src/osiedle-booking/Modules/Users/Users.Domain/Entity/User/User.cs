@@ -1,6 +1,5 @@
-using System.Security.AccessControl;
-using Users.Domain.Entity.User.Value_objects;
 using osiedle_booking.BuildingBlocks.Domain;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Domain.Entity.User;
 
@@ -24,6 +23,6 @@ public class User : AggregateRoot<UserId>
     public void Update(string displayName)
     {
         DisplayName = displayName;
-        UpdatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        UpdatedAt = DateTime.UtcNow;
     }
 }

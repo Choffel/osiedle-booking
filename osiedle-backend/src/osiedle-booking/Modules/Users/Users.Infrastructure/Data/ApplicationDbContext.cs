@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
 using Users.Infrastructure.Identity;
 
 namespace Users.Infrastructure.Data;

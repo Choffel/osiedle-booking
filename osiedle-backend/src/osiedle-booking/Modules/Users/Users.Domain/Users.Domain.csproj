@@ -9,5 +9,9 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Entity\User\Value objects\" />
+    </ItemGroup>
     
 </Project>
