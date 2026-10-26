@@ -1,10 +1,12 @@
 using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
 using Business.Application.Services.BusinessServices;
 using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
 namespace Business.Application.Tests.Services;
@@ -23,7 +25,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WithFreeOwner_AddsBusinessAndSaves()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Haircuts and more", "Main Street 1");
+        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Haircuts and more", "Main Street 1");
         BusinessAggregate? added = null;
 
         _businessRepository
@@ -52,7 +54,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WhenOwnerAlreadyHasBusiness_ReturnsConflict()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Description", "Location");
+        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Description", "Location");
 
         _businessRepository
             .Setup(r => r.ExistsByOwnerIdAsync(dto.OwnerId, It.IsAny<CancellationToken>()))
@@ -69,12 +71,12 @@ public class BusinessServiceTests
     [Fact]
     public async Task GetBusinessByIdAsync_WhenBusinessExists_ReturnsMappedBusiness()
     {
-        var business = BusinessAggregate.Create("Beauty Salon", Guid.NewGuid(), "Description", "Location");
+        var business = BusinessAggregate.Create("Beauty Salon", UserId.New(), "Description", "Location");
         _businessRepository
             .Setup(r => r.GetBusinessByIdAsync(It.IsAny<BusinessId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
 
-        var result = await _sut.GetBusinessByIdAsync(Guid.NewGuid());
+        var result = await _sut.GetBusinessByIdAsync(BusinessId.New());
 
         Assert.True(result.IsSuccess);
         Assert.Equal(business.Id.Value, result.Value.Id);
@@ -89,7 +91,7 @@ public class BusinessServiceTests
             .Setup(r => r.GetBusinessByIdAsync(It.IsAny<BusinessId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BusinessAggregate?)null);
 
-        var result = await _sut.GetBusinessByIdAsync(Guid.NewGuid());
+        var result = await _sut.GetBusinessByIdAsync(BusinessId.New());
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);
@@ -98,7 +100,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task UpdateBusinessInfoAsync_WhenBusinessExists_UpdatesFieldsAndSaves()
     {
-        var business = BusinessAggregate.Create("Old name", Guid.NewGuid(), "Old description", "Old location");
+        var business = BusinessAggregate.Create("Old name", UserId.New(), "Old description", "Old location");
         var dto = new UpdateBusinessInfoDto("New name", "New description", "New location");
 
         _businessRepository
@@ -108,7 +110,7 @@ public class BusinessServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpdateBusinessInfoAsync(business.Id.Value, dto);
+        var result = await _sut.UpdateBusinessInfoAsync(business.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.NewName, business.Name);
@@ -126,7 +128,7 @@ public class BusinessServiceTests
             .ReturnsAsync((BusinessAggregate?)null);
 
         var result = await _sut.UpdateBusinessInfoAsync(
-            Guid.NewGuid(), new UpdateBusinessInfoDto("New name", "New description", "New location"));
+            BusinessId.New(), new UpdateBusinessInfoDto("New name", "New description", "New location"));
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);
@@ -136,7 +138,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task ArchiveBusinessAsync_WhenBusinessExists_ArchivesAndSaves()
     {
-        var business = BusinessAggregate.Create("Name", Guid.NewGuid(), "Description", "Location");
+        var business = BusinessAggregate.Create("Name", UserId.New(), "Description", "Location");
 
         _businessRepository
             .Setup(r => r.GetBusinessByIdAsync(It.IsAny<BusinessId>(), It.IsAny<CancellationToken>()))
@@ -145,7 +147,7 @@ public class BusinessServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.ArchiveBusinessAsync(business.Id.Value);
+        var result = await _sut.ArchiveBusinessAsync(business.Id);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(BusinessStatus.Archived, business.Status);
@@ -161,7 +163,7 @@ public class BusinessServiceTests
             .Setup(r => r.GetBusinessByIdAsync(It.IsAny<BusinessId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BusinessAggregate?)null);
 
-        var result = await _sut.ArchiveBusinessAsync(Guid.NewGuid());
+        var result = await _sut.ArchiveBusinessAsync(BusinessId.New());
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);

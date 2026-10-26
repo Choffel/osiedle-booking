@@ -158,7 +158,7 @@ public class EmployeeServiceTests
             .Setup(r => r.ExistsByEmailAsync("taken@example.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var result = await _sut.UpdateProfileAsync(employee.Id.Value, dto);
+        var result = await _sut.UpdateProfileAsync(employee.Id, dto);
 
         Assert.True(result.IsFailure);
         Assert.Equal(EmployeeErrors.AlreadyExists, result.Error);
@@ -180,7 +180,7 @@ public class EmployeeServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpdateProfileAsync(employee.Id.Value, dto);
+        var result = await _sut.UpdateProfileAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         _employeeRepository.Verify(
@@ -203,7 +203,7 @@ public class EmployeeServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpdateProfileAsync(employee.Id.Value, dto);
+        var result = await _sut.UpdateProfileAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.FirstName, employee.FirstName);
@@ -221,7 +221,7 @@ public class EmployeeServiceTests
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
-        var result = await _sut.UpdateProfileAsync(EmployeeId.New().Value,
+        var result = await _sut.UpdateProfileAsync(EmployeeId.New(),
             new UpdateEmployeeProfileDto("Adam", "Nowak", "Stylist", "Very good", "adam@example.com"));
 
         Assert.True(result.IsFailure);
@@ -242,7 +242,7 @@ public class EmployeeServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.DeactivateEmployeeAsync(employee.Id.Value);
+        var result = await _sut.DeactivateEmployeeAsync(employee.Id);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(EmploymentStatus.Terminated, employee.Status);
@@ -256,7 +256,7 @@ public class EmployeeServiceTests
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
-        var result = await _sut.DeactivateEmployeeAsync(EmployeeId.New().Value);
+        var result = await _sut.DeactivateEmployeeAsync(EmployeeId.New());
 
         Assert.True(result.IsFailure);
         Assert.Equal(EmployeeErrors.NotFound, result.Error);

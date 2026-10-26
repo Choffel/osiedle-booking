@@ -101,14 +101,15 @@ public class BookableServiceManagementServiceTests
     [Fact]
     public async Task UpdateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
+        var service = BookableService.Create(
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            Guid.NewGuid(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(service);
 
-        var result = await _sut.UpdateBookableServiceAsync(Guid.NewGuid(), dto, CancellationToken.None);
+        var result = await _sut.UpdateBookableServiceAsync(service.Id, dto, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NotFoundOrAccessDenied, result.Error);
@@ -119,7 +120,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenServiceMissing_ReturnsNotFound()
     {
         var dto = new UpdateBookableServiceDto(
-            Guid.NewGuid(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
                 It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -128,7 +129,7 @@ public class BookableServiceManagementServiceTests
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BookableService?)null);
 
-        var result = await _sut.UpdateBookableServiceAsync(Guid.NewGuid(), dto, CancellationToken.None);
+        var result = await _sut.UpdateBookableServiceAsync(BookableServiceId.New(), dto, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NotFound, result.Error);
@@ -141,7 +142,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            Guid.NewGuid(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
@@ -155,7 +156,7 @@ public class BookableServiceManagementServiceTests
                 dto.ServiceName, It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var result = await _sut.UpdateBookableServiceAsync(service.Id.Value, dto, CancellationToken.None);
+        var result = await _sut.UpdateBookableServiceAsync(service.Id, dto, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NameAlreadyTaken, result.Error);
@@ -169,7 +170,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            Guid.NewGuid(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
@@ -186,7 +187,7 @@ public class BookableServiceManagementServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpdateBookableServiceAsync(service.Id.Value, dto, CancellationToken.None);
+        var result = await _sut.UpdateBookableServiceAsync(service.Id, dto, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.ServiceName, service.ServiceName);
@@ -202,7 +203,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            Guid.NewGuid(), "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
@@ -215,7 +216,7 @@ public class BookableServiceManagementServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.UpdateBookableServiceAsync(service.Id.Value, dto, CancellationToken.None);
+        var result = await _sut.UpdateBookableServiceAsync(service.Id, dto, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         _bookableServiceRepository.Verify(
@@ -232,7 +233,7 @@ public class BookableServiceManagementServiceTests
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BookableService?)null);
 
-        var result = await _sut.DeleteBookableServiceAsync(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.DeleteBookableServiceAsync(BookableServiceId.New(), CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NotFound, result.Error);
@@ -249,7 +250,7 @@ public class BookableServiceManagementServiceTests
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
 
-        var result = await _sut.DeleteBookableServiceAsync(service.Id.Value, CancellationToken.None);
+        var result = await _sut.DeleteBookableServiceAsync(service.Id, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.AlreadyArchived, result.Error);
@@ -269,7 +270,7 @@ public class BookableServiceManagementServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.DeleteBookableServiceAsync(service.Id.Value, CancellationToken.None);
+        var result = await _sut.DeleteBookableServiceAsync(service.Id, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ServiceStatus.Archived, service.Status);
@@ -279,13 +280,14 @@ public class BookableServiceManagementServiceTests
     [Fact]
     public async Task ActivateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
+        var service = BookableService.Create(
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(service);
 
         var result = await _sut.ActivateBookableServiceAsync(
-            Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
+            EmployeeId.New(), service.Id, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NotFoundOrAccessDenied, result.Error);
@@ -310,7 +312,7 @@ public class BookableServiceManagementServiceTests
             .Returns(Task.CompletedTask);
 
         var result = await _sut.ActivateBookableServiceAsync(
-            Guid.NewGuid(), service.Id.Value, CancellationToken.None);
+            service.EmployeeId, service.Id, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ServiceStatus.Active, service.Status);
@@ -320,13 +322,14 @@ public class BookableServiceManagementServiceTests
     [Fact]
     public async Task DeactivateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
+        var service = BookableService.Create(
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(service);
 
         var result = await _sut.DeactivateBookableServiceAsync(
-            Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
+            EmployeeId.New(), service.Id, CancellationToken.None);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BookableServiceErrors.NotFoundOrAccessDenied, result.Error);
@@ -350,7 +353,7 @@ public class BookableServiceManagementServiceTests
             .Returns(Task.CompletedTask);
 
         var result = await _sut.DeactivateBookableServiceAsync(
-            Guid.NewGuid(), service.Id.Value, CancellationToken.None);
+            service.EmployeeId, service.Id, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ServiceStatus.Inactive, service.Status);

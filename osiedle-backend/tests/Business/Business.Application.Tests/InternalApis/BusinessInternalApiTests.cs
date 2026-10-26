@@ -88,14 +88,18 @@ public class BusinessInternalApiTests
     [Fact]
     public async Task ServiceBelongsToEmployeeAsync_DelegatesToRepository()
     {
-        _businessRepository
-            .Setup(r => r.BookableServiceBelongsToEmployeeAsync(
+        _bookableServiceRepository
+            .Setup(r => r.BelongsToEmployeeAsync(
                 It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _sut.ServiceBelongsToEmployeeAsync(BookableServiceId.New(), EmployeeId.New());
 
         Assert.True(result);
+        _bookableServiceRepository.Verify(
+            r => r.BelongsToEmployeeAsync(
+                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

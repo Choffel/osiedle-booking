@@ -29,7 +29,7 @@ public class EmployeeWorkingHoursServiceTests
     [Fact]
     public async Task SetWorkingHoursAsync_WhenEmployeeMissing_ReturnsNotFound()
     {
-        var employeeId = Guid.NewGuid();
+        var employeeId = EmployeeId.New();
         var dto = new SetWorkingHoursDto(Date, new TimeOnly(9, 0), new TimeOnly(17, 0));
         _employeeRepository
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.SetWorkingHoursAsync(employee.Id.Value, dto);
+        var result = await _sut.SetWorkingHoursAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(added);
@@ -92,7 +92,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.SetWorkingHoursAsync(employee.Id.Value, dto);
+        var result = await _sut.SetWorkingHoursAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.StartTime, existing.StartTime);
@@ -117,7 +117,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.ClearWorkingHoursAsync(employee.Id.Value, Date);
+        var result = await _sut.ClearWorkingHoursAsync(employee.Id, Date);
 
         Assert.True(result.IsSuccess);
         _workingHoursRepository.Verify(r => r.RemoveWorkingHours(existing), Times.Once);
@@ -131,7 +131,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(r => r.GetWorkingHoursByDateAsync(It.IsAny<EmployeeId>(), Date, It.IsAny<CancellationToken>()))
             .ReturnsAsync((WorkingHours?)null);
 
-        var result = await _sut.ClearWorkingHoursAsync(Guid.NewGuid(), Date);
+        var result = await _sut.ClearWorkingHoursAsync(EmployeeId.New(), Date);
 
         Assert.True(result.IsSuccess);
         _workingHoursRepository.Verify(r => r.RemoveWorkingHours(It.IsAny<WorkingHours>()), Times.Never);

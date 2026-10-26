@@ -2,6 +2,7 @@ using Business.Application.ExtensionMethods;
 using Business.Domain.Enums;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 using BusinessServiceEntity = Business.Domain.Entities.BookableService;
 using EmployeeAggregate = Business.Domain.Aggregates.Employee;
@@ -13,13 +14,13 @@ public class MappingExtensionsTests
     [Fact]
     public void ToResponseDto_MapsBusinessFields()
     {
-        var ownerId = Guid.NewGuid();
+        var ownerId = UserId.New();
         var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", "Location");
 
         var dto = business.ToResponseDto();
 
         Assert.Equal(business.Id.Value, dto.Id);
-        Assert.Equal(ownerId, dto.OwnerId);
+        Assert.Equal(ownerId.Value, dto.OwnerId);
         Assert.Equal(business.Name, dto.Name);
         Assert.Equal(business.Description, dto.Description);
         Assert.Equal(business.Location, dto.Location);
