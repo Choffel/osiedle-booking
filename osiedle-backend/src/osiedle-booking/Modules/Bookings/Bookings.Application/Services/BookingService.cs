@@ -4,6 +4,7 @@ using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Application.Abstractions.Repositories;
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Enum;
+using Bookings.Domain.Errors;
 using Bookings.Domain.Services;
 using osiedle_booking.BuildingBlocks;
 
@@ -63,7 +64,7 @@ public class BookingService : IBookingService
             if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct) ||
                !await _slotCalculator.RelevantSlot(slot, barberWorkHours, ct))
             {
-                return Result<bool>.Failure("Overlapping booking found.");
+                return Result<bool>.Failure(BookingError.Overlapping);
             }
 
             var moneyMok = new Money(100); // TODO: Change this when methods from the Business service become available
@@ -105,11 +106,11 @@ public class BookingService : IBookingService
         var booking = await _bookingRepository.GetBookingByIdAsync(bookingId, ct);
         if(booking == null)
         {
-            return Result<bool>.Failure("Booking not found.");
+            return Result<bool>.Failure(BookingError.NotFound);
         }
         if(!booking.IsOwnedBy(new ClientId(_userContext.UserId)))
         {
-            return Result<bool>.Failure("You cannot delete a reservation that isn't yours.");
+            return Result<bool>.Failure(BookingError.NotOwnedByClient);
         }
         
         booking.Delete();
