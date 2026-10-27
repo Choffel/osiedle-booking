@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
-using Users.Domain.Entity.User.Value_objects;
 
 namespace osiedle_booking.WebApi.Controllers;
 
@@ -16,7 +15,7 @@ public class AuthenticationController : ControllerBase
     }
     
     [HttpPost("register")]
-    public async Task<Result<UserId>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
+    public async Task<Result<Guid>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
     {
         var result = await _authService.RegisterAsync(createUserDto, cancellationToken);
         return result;
