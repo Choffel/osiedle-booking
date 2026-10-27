@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Users.Appliation.Abstractions;
-using Users.Appliation.Services;
+using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Repositories;
+using Users.Application.Services;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
 using Users.Infrastructure.Repositories;
@@ -35,6 +36,11 @@ public static class DependencyInjection
                 options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
+                
+                options.Lockout.AllowedForNewUsers = configuration.GetValue<bool>("Identity:Lockout:AllowedForNewUsers", true);
+                options.Lockout.MaxFailedAccessAttempts = configuration.GetValue<int>("Identity:Lockout:MaxFailedAccessAttempts", 5);
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(
+                    configuration.GetValue<int>("Identity:Lockout:DefaultLockoutMinutes", 15));
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
@@ -45,8 +51,11 @@ public static class DependencyInjection
         #endregion
 
         #region Services
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IIdentityAccountService, IdentityAccountService>();
+        services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
+        services.AddScoped<IIdentityEmailService, IdentityEmailService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IRoleService, RoleService>();
         #endregion
@@ -61,11 +70,6 @@ public static class DependencyInjection
         var jwtIssuer = configuration["JWT_TOKEN_SETTINGS:ISSUER"]!;
         var jwtAudience = configuration["JWT_TOKEN_SETTINGS:AUDIENCE"]!;
         
-        Console.WriteLine($"JWT Key: {jwtKey}");
-        Console.WriteLine($"JWT Issuer: {jwtIssuer}");
-        Console.WriteLine($"JWT Audience: {jwtAudience}");
-        Console.WriteLine($"Connection String: {connectionString}");
-        
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -75,8 +79,8 @@ public static class DependencyInjection
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtIssuer,

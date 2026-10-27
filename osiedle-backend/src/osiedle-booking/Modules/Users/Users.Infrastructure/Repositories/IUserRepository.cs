@@ -1,6 +1,7 @@
-using osiedle_booking.BuildingBlocks.ValueObjects;
-using Users.Appliation.Abstractions;
+using Microsoft.EntityFrameworkCore;
+using Users.Application.Abstractions.Repositories;
 using Users.Infrastructure.Data;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Infrastructure.Repositories;
 
@@ -19,13 +20,14 @@ public class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(ct); 
     }
 
-    public Task<Domain.Entity.User.User?> GetByIdAsync(UserId id, CancellationToken ct)
+    public async Task<Domain.Entity.User.User?> GetByIdAsync(UserId id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
     }
 
-    public void Update(Domain.Entity.User.User user)
+    public async Task Update(Domain.Entity.User.User user)
     {
-        throw new NotImplementedException();
+        _dbContext.Users.Update(user);
+        await _dbContext.SaveChangesAsync();
     }
 }

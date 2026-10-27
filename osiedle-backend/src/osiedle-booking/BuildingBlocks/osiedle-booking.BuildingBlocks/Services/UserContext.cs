@@ -20,7 +20,7 @@ public class UserContext : IUserContext
     public Guid UserId => _userId ??= GetUserId();
     public string? Email => User?.FindFirstValue(ClaimTypes.Email);
     public string RefreshToken => _httpContextAccessor.HttpContext?.Request.Headers["X-Refresh-Token"].ToString() ?? string.Empty;
-
+    public string? IpAddress => _httpContextAccessor.HttpContext?.Request.HttpContext.Connection.RemoteIpAddress?.ToString();
     public IReadOnlyCollection<string> Roles => _roles ??= User?.FindAll(ClaimTypes.Role)
         .Select(c => c.Value)
         .ToList() ?? [];

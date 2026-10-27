@@ -8,6 +8,11 @@
   <Folder Name="/Modules/">
     <File Path="compose.yaml" />
   </Folder>
+  <Folder Name="/Modules/Bookings/">
+    <Project Path="Modules/Bookings/Bookings.Application/Bookings.Application.csproj" />
+    <Project Path="Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj" />
+    <Project Path="Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Business/">
     <Project Path="Modules/Business/Business.Application/Business.Application.csproj" />
     <Project Path="Modules/Business/Business.Domain/Business.Domain.csproj" />
@@ -19,9 +24,14 @@
     <Project Path="Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Modules/Users/">
-    <Project Path="Modules/Users/Users.Appliation/Users.Appliation.csproj" />
     <Project Path="Modules/Users/Users.Domain/Users.Domain.csproj" />
     <Project Path="Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj" />
+    <Project Path="Modules\Users\Users.Application\Users.Application.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="../tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
+    <Project Path="../tests/BookingsModule/BookingsModule.csproj" />
+    <Project Path="../tests/UsersModule/UserModule.csproj" />
   </Folder>
   <Folder Name="/Tests/Business/">
     <Project Path="../../tests/Business/Business.Application.Tests/Business.Application.Tests.csproj" />

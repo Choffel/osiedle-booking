@@ -1,3 +1,4 @@
+using Bookings.Infrastructure;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
@@ -24,6 +25,7 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 #region DI
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
+builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -96,7 +98,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 #endregion
-
 
 var app = builder.Build();
 

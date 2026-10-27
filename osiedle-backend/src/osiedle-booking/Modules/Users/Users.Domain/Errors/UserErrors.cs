@@ -33,4 +33,16 @@ public static class UserErrors
     
     public static readonly Error RegistrationFailed =
         Error.Validation("User.RegistrationFailed", "User registration failed");
+
+    public static readonly Error UpdateFailed =
+        Error.Failure("User.UpdateFailed", "Failed to update user");
+    
+    public static readonly Error LockedOut =
+        Error.Conflict("User.IsLockedOut", "User is locked out");
+    
+    public static readonly Error ResetPasswordFailed =
+        Error.Failure("User.FailedToResetPassword", "Failed to reset password");
+
+    public static readonly Error AddUserToRoleFailed =
+        Error.Failure("User.FailedToAddUserToRole", "Failed to add user to role");
 }

@@ -11,17 +11,30 @@ public class User : AggregateRoot<UserId>
     {
         Id = id;
         DisplayName = displayName;
+        CreatedAt = DateTime.UtcNow;
     }
     private User() { }
 
     public static User Create(UserId id, string displayName)
     {
-        var user = new User(id, displayName);
+        if (string.IsNullOrEmpty(displayName))
+        {
+            throw new ArgumentException("Display name cannot be null or empty", nameof(displayName));
+        }
+        var user = new User(
+            id,
+            displayName
+        );
+        
         return user;
     }
     
     public void Update(string displayName)
     {
+        if (string.IsNullOrEmpty(displayName))
+        {
+            throw new ArgumentException("Display name cannot be null or empty", nameof(displayName));
+        }
         DisplayName = displayName;
         UpdatedAt = DateTime.UtcNow;
     }

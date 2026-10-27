@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Appliation.Abstractions;
-using Users.Appliation.DTOs;
+using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Repositories;
+using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Errors;
 using Users.Infrastructure.Identity;
@@ -39,12 +40,11 @@ public class TokenService : ITokenService
         _userContext = userContext;
     }
 
-    public async Task<TokenResponseDto> GetTokens(UserDto user, CancellationToken cancellationToken = default)
+    public async Task<TokenResponseDto> GetTokens(UserDto user, CancellationToken ct)
     {
         var accessToken = await CreateTokenAsync(user);
         var refreshToken = await CreateRefreshTokenAsync(user.Id);
-
-
+        
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
@@ -74,15 +74,16 @@ public class TokenService : ITokenService
             return Result<TokenResponseDto>.Failure(UserErrors.InvalidRefreshToken);
         }
 
-        storedRefreshToken.ExpiresAt = DateTime.UtcNow;
-
-        var newRefreshToken = await CreateRefreshTokenAsync(storedRefreshToken.UserId);
-
         var user = await _userManager.FindByIdAsync(storedRefreshToken.UserId.ToString());
         if (user == null)
         {
             return Result<TokenResponseDto>.Failure(UserErrors.NotFound);
         }
+
+        storedRefreshToken.ExpiresAt = DateTime.UtcNow;
+        await _tokenRepository.UpdateRefreshTokenAsync(storedRefreshToken);
+
+        var newRefreshToken = await CreateRefreshTokenAsync(storedRefreshToken.UserId);
 
         var userDto = new UserDto(user.Id, user.UserName ?? string.Empty, user.Email ?? string.Empty);
 
@@ -100,7 +101,7 @@ public class TokenService : ITokenService
         }
 
         refreshToken.ExpiresAt = DateTime.UtcNow;
-        
+        await _tokenRepository.UpdateRefreshTokenAsync(refreshToken);
 
         return Result<bool>.Success(true);
     }
@@ -140,7 +141,7 @@ public class TokenService : ITokenService
 
     private async Task<string> CreateTokenAsync(UserDto user)
     {
-        int expirationMinutes = int.Parse(_configuration["JWT_TOKEN_SETTINGS:EXPIRATION_MINUTES"]);
+        int expirationMinutes = 60;
         var expiration = DateTime.UtcNow.AddMinutes(expirationMinutes);
         var token = CreateJwtToken(
             await CreateClaimsAsync(user),
@@ -162,8 +163,6 @@ public class TokenService : ITokenService
 
     private async Task<List<Claim>> CreateClaimsAsync(UserDto user)
     {
-        var jwtSub = _configuration["JwtTokenSettings:JwtRegisteredClaimNamesSub"];
-
         var claims = new List<Claim>
         {
             new Claim("userId", user.Id.ToString()),
