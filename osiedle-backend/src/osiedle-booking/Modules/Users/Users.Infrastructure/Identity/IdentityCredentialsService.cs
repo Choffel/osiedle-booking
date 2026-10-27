@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs.Identity;
+using Users.Domain.Errors;
 
 namespace Users.Infrastructure.Identity;
 
@@ -21,21 +22,21 @@ public class IdentityCredentialsService : IIdentityCredentialsService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null)
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
 
         var result = await _signInManager.CheckPasswordSignInAsync(
             user, password, lockoutOnFailure: true);
 
         if (result.Succeeded) return Result<string>.Success("Password is correct");
-        if (result.IsLockedOut) return Result<string>.Failure("User is locked out");
-        return Result<string>.Failure("Password is incorrect");
+        if (result.IsLockedOut) return Result<string>.Failure(UserErrors.LockedOut);
+        return Result<string>.Failure(UserErrors.InvalidCredentials);
     }
     
     public async Task<Result<string>> GeneratePasswordResetTokenAsync(Guid userId, CancellationToken ct)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
 
         return Result<string>.Success(await _userManager.GeneratePasswordResetTokenAsync(user));
     }
@@ -44,11 +45,11 @@ public class IdentityCredentialsService : IIdentityCredentialsService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
-            return Result<IdentityUserDto>.Failure("User not found");
+            return Result<IdentityUserDto>.Failure(UserErrors.NotFound);
 
         var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
         if (!result.Succeeded)
-            return Result<IdentityUserDto>.Failure("Failed to reset password");
+            return Result<IdentityUserDto>.Failure(UserErrors.ResetPasswordFailed);
 
         return Result<IdentityUserDto>.Success(new IdentityUserDto(
             Id: user.Id,

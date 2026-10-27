@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs.Identity;
+using Users.Domain.Errors;
 
 namespace Users.Infrastructure.Identity;
 
@@ -26,11 +27,11 @@ public class RoleService : IRoleService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
-            return Result<IdentityUserDto>.Failure("User not found");
+            return Result<IdentityUserDto>.Failure(UserErrors.NotFound);
 
         var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
-            return Result<IdentityUserDto>.Failure("Failed to add user to role");
+            return Result<IdentityUserDto>.Failure(UserErrors.AddUserToRoleFailed);
 
         return Result<IdentityUserDto>.Success(new IdentityUserDto(
             Id: user.Id,

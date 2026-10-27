@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
+using Users.Domain.Errors;
 
 namespace Users.Infrastructure.Identity;
 
@@ -18,7 +19,7 @@ public class IdentityEmailService : IIdentityEmailService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
         
         return Result<string>.Success(await _userManager.GenerateEmailConfirmationTokenAsync(user));
     }
@@ -27,13 +28,13 @@ public class IdentityEmailService : IIdentityEmailService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
 
         var result = await _userManager.ConfirmEmailAsync(user, token);
         if (result.Succeeded)
             return Result<string>.Success("Email confirmed");
         
-        return Result<string>.Failure("Failed to confirm email");
+        return Result<string>.Failure(UserErrors.EmailConfirmationFailed);
     }
 
 }
