@@ -23,7 +23,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
 
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().Be("Email confirmed");
 
         var confirmedUser = await userManager.FindByEmailAsync(email);
@@ -42,7 +42,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, "garbage-token"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired confirmation token");
+        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var user = await userManager.FindByEmailAsync(email);
@@ -59,7 +59,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
             new ConfirmEmailRequest("ghost@example.com", "any-token"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid email address");
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
     }
 
     [Fact]
@@ -81,6 +81,6 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Role 'User' does not exist");
+        result.Error.Should().Be(UserErrors.RoleNotFound);
     }
 }

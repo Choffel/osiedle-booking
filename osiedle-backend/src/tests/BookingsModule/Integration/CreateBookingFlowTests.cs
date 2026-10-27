@@ -18,7 +18,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
 
         var result = await bookingService.CreateBookingAsync(Request(At(10, 0), At(10, 30)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().BeTrue();
 
         using var verifyScope = CreateScope();
@@ -47,7 +47,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
             Request(At(10, 15), At(10, 45)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -64,7 +64,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(
             Request(At(10, 30), At(11, 0)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -81,7 +81,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(
             Request(At(10, 0), At(10, 30), staff: OtherStaff), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -97,7 +97,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(Request(At(8, 0), At(8, 30)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -113,7 +113,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(Request(At(17, 45), At(18, 15)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

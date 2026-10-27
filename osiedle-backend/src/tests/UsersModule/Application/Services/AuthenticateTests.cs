@@ -81,12 +81,12 @@ public class AuthenticateTests
         var request = new AuthRequest("missing@example.com", "P@ssw0rd1");
 
         _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure("User not found"));
+            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
 
         var result = await _authService.AuthenticateAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
         _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -99,12 +99,12 @@ public class AuthenticateTests
         _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<IdentityUserDto?>.Success(identityUser));
         _identityCredentialsMock.Setup(s => s.CheckPasswordAsync(identityUser.Id, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<string>.Failure("Password is incorrect"));
+            .ReturnsAsync(Result<string>.Failure(UserErrors.InvalidCredentials));
 
         var result = await _authService.AuthenticateAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
         _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -117,12 +117,12 @@ public class AuthenticateTests
         _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<IdentityUserDto?>.Success(identityUser));
         _identityCredentialsMock.Setup(s => s.CheckPasswordAsync(identityUser.Id, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<string>.Failure("User is locked out"));
+            .ReturnsAsync(Result<string>.Failure(UserErrors.LockedOut));
 
         var result = await _authService.AuthenticateAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
         _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

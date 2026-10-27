@@ -62,7 +62,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         var result = await tokenService.GetNewAccessTokenAsync();
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value!.AccessToken.Split('.').Should().HaveCount(3);
         result.Value.RefreshToken.Should().NotBe(oldTokenValue);
 
@@ -86,7 +86,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         var result = await tokenService.GetNewAccessTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -112,7 +112,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         var result = await tokenService.RevokeRefreshTokenAsync();
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -142,7 +142,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         var result = await tokenService.GetActiveSessionsAsync();
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         var sessions = result.Value!.ToList();
         sessions.Should().HaveCount(2, "сессии других пользователей не должны попадать в выдачу");
         sessions.Single(s => s.TokenId == currentToken.Id).IsCurrentSession.Should().BeTrue();
@@ -171,10 +171,10 @@ public class TokenServiceFlowTests : IntegrationTestBase
 
         var refuseResult = await tokenService.RevokeSessionAsync(currentToken.Id);
         refuseResult.IsSuccess.Should().BeFalse();
-        refuseResult.Error.Should().Be("Cannot revoke the current session.");
+        refuseResult.Error.Should().Be(UserErrors.CannotRevokeCurrentSession);
 
         var revokeResult = await tokenService.RevokeSessionAsync(otherToken.Id);
-        revokeResult.IsSuccess.Should().BeTrue(revokeResult.Error);
+        revokeResult.IsSuccess.Should().BeTrue(revokeResult.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

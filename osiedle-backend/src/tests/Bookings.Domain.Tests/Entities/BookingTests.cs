@@ -39,7 +39,7 @@ public class BookingTests
         var booking = Booking.Create(Business, Staff, Client, Service, Slot, Price);
 
         Assert.NotEqual(Guid.Empty, booking.Id.Value);
-        Assert.Equal(DateOnly.FromDateTime(DateTime.UtcNow), booking.CreatedAt);
+        Assert.Equal(DateTime.UtcNow, booking.CreatedAt, TimeSpan.FromSeconds(5));
     }
 
     [Fact]

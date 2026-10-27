@@ -63,7 +63,7 @@ public class IdentityAccountServiceTests
         var result = await _sut.CreateIdentityAsync("jan@example.com", "jan", "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Email is already taken");
+        result.Error.Should().Be(UserErrors.RegistrationFailed);
     }
 
     [Fact]
@@ -97,8 +97,7 @@ public class IdentityAccountServiceTests
         var result = await _sut.FindByEmailAsync("ghost@example.com", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
-        result.Value.Should().BeNull();
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]
@@ -124,7 +123,7 @@ public class IdentityAccountServiceTests
         var result = await _sut.UpdateUserNameAsync(Guid.NewGuid(), "nowy-nick", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]
@@ -139,6 +138,6 @@ public class IdentityAccountServiceTests
         var result = await _sut.UpdateUserNameAsync(user.Id, "zla nazwa", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("cannot contain spaces");
+        result.Error.Should().Be(UserErrors.UpdateFailed);
     }
 }

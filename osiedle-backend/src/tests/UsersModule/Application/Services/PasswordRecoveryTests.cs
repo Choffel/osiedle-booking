@@ -45,7 +45,7 @@ public class PasswordRecoveryTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure("User not found"));
+            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
 
         var result = await _authService.ForgotPasswordAsync(request);
 
@@ -83,12 +83,12 @@ public class PasswordRecoveryTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure("User not found"));
+            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
 
         var result = await _authService.ResetPasswordAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("ghost@example.com - this email address is not registered");
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
         _identityCredentialsMock.Verify(
             s => s.ResetPasswordAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()), Times.Never);
@@ -105,12 +105,12 @@ public class PasswordRecoveryTests
             .ReturnsAsync(Result<IdentityUserDto?>.Success(KnownUser(userId, request.Email)));
         _identityCredentialsMock
             .Setup(s => s.ResetPasswordAsync(userId, request.Token, request.NewPassword!, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto>.Failure("Failed to reset password"));
+            .ReturnsAsync(Result<IdentityUserDto>.Failure(UserErrors.ResetPasswordFailed));
 
         var result = await _authService.ResetPasswordAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to reset password");
+        result.Error.Should().Be(UserErrors.PasswordResetFailed);
     }
 
     [Fact]

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
-using Users.Domain.Entity.User.Value_objects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Infrastructure.Data;
 
 namespace UserModule.Integration;
@@ -25,7 +25,7 @@ public class UpdateUserFlowTests : IntegrationTestBase
 
         var result = await userService.UpdateUserAsync(new UpdateUserDto("Nowanazwa"));
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().Be("User updated successfully");
 
         using var verifyScope = CreateScope();
@@ -46,7 +46,7 @@ public class UpdateUserFlowTests : IntegrationTestBase
         var result = await userService.UpdateUserAsync(new UpdateUserDto("Nowa nazwa"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]
@@ -70,6 +70,6 @@ public class UpdateUserFlowTests : IntegrationTestBase
         var result = await userService.UpdateUserAsync(new UpdateUserDto("Nowa nazwa"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 }

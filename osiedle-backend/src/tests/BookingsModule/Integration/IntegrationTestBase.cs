@@ -73,7 +73,7 @@ public abstract class IntegrationTestBase : IDisposable
         IBookingService bookingService, DateTime start, DateTime end, Guid? staff = null, Guid? client = null)
     {
         var result = await bookingService.CreateBookingAsync(Request(start, end, staff, client), CancellationToken.None);
-        result.IsSuccess.Should().BeTrue("booking creation must succeed, error: {0}", result.Error);
+        result.IsSuccess.Should().BeTrue("booking creation must succeed, error: {0}", result.Error.Description);
 
         using var scope = CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -95,8 +95,8 @@ public abstract class IntegrationTestBase : IDisposable
         var result = await authService.RegisterAsync(
             new RegisterUserRequest(firstName, "Kowalski", email, password), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue("registration must succeed, error: {0}", result.Error);
-        return result.Value!.Value;
+        result.IsSuccess.Should().BeTrue("registration must succeed, error: {0}", result.Error.Description);
+        return result.Value;
     }
 
     protected async Task ConfirmEmailAsync(IServiceScope scope, string email)
@@ -110,7 +110,7 @@ public abstract class IntegrationTestBase : IDisposable
         var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         var result = await authService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
-        result.IsSuccess.Should().BeTrue("email confirmation must succeed, error: {0}", result.Error);
+        result.IsSuccess.Should().BeTrue("email confirmation must succeed, error: {0}", result.Error.Description);
     }
 
     public void Dispose()

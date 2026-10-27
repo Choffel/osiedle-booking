@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
-using Users.Domain.Entity.User.Value_objects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
 
@@ -45,7 +45,7 @@ public class RegistrationFlowTests : IntegrationTestBase
             new RegisterUserRequest("Jan", "Kowalski", email, ValidPassword), CancellationToken.None);
 
         duplicate.IsSuccess.Should().BeFalse();
-        duplicate.Error.Should().Be("Failed to create user");
+        duplicate.Error.Should().Be(UserErrors.RegistrationFailed);
 
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var domainUsersCount = await db.Users.AsNoTracking().CountAsync();
@@ -63,7 +63,7 @@ public class RegistrationFlowTests : IntegrationTestBase
             new RegisterUserRequest("Jan", "Kowalski", email, "abc"), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to create user");
+        result.Error.Should().Be(UserErrors.RegistrationFailed);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         (await userManager.FindByEmailAsync(email)).Should().BeNull();

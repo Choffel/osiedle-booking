@@ -66,7 +66,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.CheckPasswordAsync(userId, "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
         _signInManagerMock.Verify(
             m => m.CheckPasswordSignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<bool>()),
             Times.Never);
@@ -84,7 +84,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.CheckPasswordAsync(user.Id, "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User is locked out");
+        result.Error.Should().Be(UserErrors.LockedOut);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.CheckPasswordAsync(user.Id, "WrongPassword", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Password is incorrect");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.GeneratePasswordResetTokenAsync(Guid.NewGuid(), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.ResetPasswordAsync(Guid.NewGuid(), "token", "NewPassword1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
         _userManagerMock.Verify(
             m => m.ResetPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
@@ -154,7 +154,7 @@ public class IdentityCredentialsServiceTests
         var result = await _sut.ResetPasswordAsync(user.Id, "bad-token", "NewPassword1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to reset password");
+        result.Error.Should().Be(UserErrors.ResetPasswordFailed);
     }
 
     [Fact]

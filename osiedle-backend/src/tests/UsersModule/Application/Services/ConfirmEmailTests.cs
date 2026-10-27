@@ -44,12 +44,12 @@ public class ConfirmEmailTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure("User not found"));
+            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
 
         var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid email address");
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
         _identityEmailMock.Verify(
             s => s.ConfirmEmailAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _roleServiceMock.Verify(
@@ -67,12 +67,12 @@ public class ConfirmEmailTests
             .ReturnsAsync(Result<IdentityUserDto?>.Success(KnownUser(userId)));
         _identityEmailMock
             .Setup(s => s.ConfirmEmailAsync(userId, request.Token, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<string>.Failure("Failed to confirm email"));
+            .ReturnsAsync(Result<string>.Failure(UserErrors.EmailConfirmationFailed));
 
         var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired confirmation token");
+        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
         _roleServiceMock.Verify(
             s => s.AddToRoleAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -96,7 +96,7 @@ public class ConfirmEmailTests
         var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Role 'User' does not exist");
+        result.Error.Should().Be(UserErrors.RoleNotFound);
         _roleServiceMock.Verify(
             s => s.AddToRoleAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }

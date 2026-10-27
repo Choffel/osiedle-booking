@@ -52,7 +52,7 @@ public class IdentityEmailServiceTests
         var result = await _sut.GenerateEmailConfirmationTokenAsync(Guid.NewGuid(), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class IdentityEmailServiceTests
         var result = await _sut.ConfirmEmailAsync(user.Id, "bad-token", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to confirm email");
+        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class IdentityEmailServiceTests
         var result = await _sut.ConfirmEmailAsync(Guid.NewGuid(), "token", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
         _userManagerMock.Verify(
             m => m.ConfirmEmailAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
     }

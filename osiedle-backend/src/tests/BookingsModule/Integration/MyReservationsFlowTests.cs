@@ -21,7 +21,7 @@ public class MyReservationsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetMyReservationsAsync(CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         var reservations = result.Value;
 
         reservations.Should().HaveCount(1);
@@ -48,7 +48,7 @@ public class MyReservationsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetMyReservationsAsync(CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().BeEmpty();
     }
 }

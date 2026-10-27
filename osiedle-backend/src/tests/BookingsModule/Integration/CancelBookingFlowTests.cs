@@ -20,7 +20,7 @@ public class CancelBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CancelBookingAsync(
             new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().BeTrue();
 
         using var verifyScope = CreateScope();
@@ -46,7 +46,7 @@ public class CancelBookingFlowTests : IntegrationTestBase
             new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("You cannot delete a reservation that isn't yours.");
+        result.Error.Should().Be(BookingError.NotOwnedByClient);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -67,7 +67,7 @@ public class CancelBookingFlowTests : IntegrationTestBase
             new Bookings.Application.DTOs.CancelBookingRequest(Guid.NewGuid()), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Booking not found.");
+        result.Error.Should().Be(BookingError.NotFound);
     }
 
     [Fact]
@@ -80,17 +80,17 @@ public class CancelBookingFlowTests : IntegrationTestBase
 
         var cancelResult = await bookingService.CancelBookingAsync(
             new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
-        cancelResult.IsSuccess.Should().BeTrue(cancelResult.Error);
+        cancelResult.IsSuccess.Should().BeTrue(cancelResult.Error.Description);
 
         // The cancelled booking must no longer block the slot:
         // availability shows the whole day again and rebooking the same slot succeeds.
         var slotsResult = await bookingService.GetAvailableSlotsAsync(SlotsRequest(), CancellationToken.None);
-        slotsResult.IsSuccess.Should().BeTrue(slotsResult.Error);
+        slotsResult.IsSuccess.Should().BeTrue(slotsResult.Error.Description);
         slotsResult.Value.Should().Contain(s => s.Start == At(10, 0));
 
         var rebookResult = await bookingService.CreateBookingAsync(
             Request(At(10, 0), At(10, 30)), CancellationToken.None);
-        rebookResult.IsSuccess.Should().BeTrue(rebookResult.Error);
+        rebookResult.IsSuccess.Should().BeTrue(rebookResult.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

@@ -54,7 +54,7 @@ public class RegisterTests
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Value.Should().Be(identityId);
+        result.Value.Should().Be(identityId);
         _userRepositoryMock.Verify(r => r.AddAsync(
             It.Is<User>(u => u.Id.Value == identityId && u.DisplayName == request.FirstName),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -69,12 +69,12 @@ public class RegisterTests
 
         _identityAccountMock
             .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Guid>.Failure("Email is already taken"));
+            .ReturnsAsync(Result<Guid>.Failure(UserErrors.RegistrationFailed));
 
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to create user");
+        result.Error.Should().Be(UserErrors.RegistrationFailed);
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         _identityEmailMock.Verify(
             s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);

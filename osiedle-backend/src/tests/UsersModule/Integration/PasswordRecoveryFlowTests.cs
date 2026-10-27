@@ -56,15 +56,15 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
         var resetResult = await userService.ResetPasswordAsync(
             new ResetPasswordDto(email, token, newPassword));
 
-        resetResult.IsSuccess.Should().BeTrue(resetResult.Error);
+        resetResult.IsSuccess.Should().BeTrue(resetResult.Error.Description);
         resetResult.Value.Should().Be("Password reset successfully");
 
         var oldPasswordAuth = await userService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
         oldPasswordAuth.IsSuccess.Should().BeFalse();
-        oldPasswordAuth.Error.Should().Be("Invalid Email or Password");
+        oldPasswordAuth.Error.Should().Be(UserErrors.InvalidCredentials);
 
         var newPasswordAuth = await userService.AuthenticateAsync(new AuthRequest(email, newPassword));
-        newPasswordAuth.IsSuccess.Should().BeTrue(newPasswordAuth.Error);
+        newPasswordAuth.IsSuccess.Should().BeTrue(newPasswordAuth.Error.Description);
     }
 
     [Fact]
@@ -80,10 +80,10 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
             new ResetPasswordDto(email, "garbage-token", "BrandNew1"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Failed to reset password");
+        result.Error.Should().Be(UserErrors.PasswordResetFailed);
 
         var originalPasswordAuth = await userService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
-        originalPasswordAuth.IsSuccess.Should().BeTrue(originalPasswordAuth.Error,
+        originalPasswordAuth.IsSuccess.Should().BeTrue(originalPasswordAuth.Error.Description,
             "пароль не должен меняться при невалидном токене");
     }
 
@@ -97,6 +97,6 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
             new ResetPasswordDto("ghost@example.com", "any-token", "BrandNew1"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("ghost@example.com - this email address is not registered");
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
     }
 }

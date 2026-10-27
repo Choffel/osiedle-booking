@@ -20,7 +20,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
 
         var result = await userService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value!.AccessToken.Split('.').Should().HaveCount(3);
         result.Value.RefreshToken.Should().NotBeNullOrWhiteSpace();
 
@@ -45,7 +45,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
         // RequireConfirmedEmail makes SignInManager reject the sign-in; AuthService maps
         // every credential failure to the same generic message (no enumeration).
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
             new AuthRequest("ghost@example.com", ValidPassword));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
     }
 
     [Fact]
@@ -73,6 +73,6 @@ public class AuthenticationFlowTests : IntegrationTestBase
         var result = await userService.AuthenticateAsync(new AuthRequest(email, "WrongPassword1"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
+        result.Error.Should().Be(UserErrors.InvalidCredentials);
     }
 }

@@ -8,7 +8,7 @@ using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
 using Users.Application.Services;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace UserModule.Application.Services;
 
@@ -39,12 +39,12 @@ public class UpdateUserTests
     [Fact]
     public async Task UpdateUser_ShouldFail_WhenIdentityUserNotFound()
     {
-        SetupIdentityLookup(Result<IdentityUserDto?>.Failure("User not found"));
+        SetupIdentityLookup(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
 
         var result = await _userService.UpdateUserAsync(new UpdateUserDto("Nowa nazwa"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
         _userRepositoryMock.Verify(r => r.Update(It.IsAny<User>()), Times.Never);
         _identityAccountMock.Verify(
             s => s.UpdateUserNameAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -62,7 +62,7 @@ public class UpdateUserTests
         var result = await _userService.UpdateUserAsync(new UpdateUserDto("Nowa nazwa"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found");
+        result.Error.Should().Be(UserErrors.NotFound);
         _userRepositoryMock.Verify(r => r.Update(It.IsAny<User>()), Times.Never);
     }
 

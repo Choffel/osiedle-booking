@@ -89,7 +89,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeRefreshTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
         _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
     }
 
@@ -110,7 +110,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeRefreshTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeRefreshTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class TokenServiceTests
         var result = await _sut.GetNewAccessTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
         _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
     }
 
@@ -187,7 +187,7 @@ public class TokenServiceTests
         var result = await _sut.GetNewAccessTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class TokenServiceTests
         var result = await _sut.GetNewAccessTokenAsync();
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("User not found.");
+        result.Error.Should().Be(UserErrors.NotFound);
         _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
         _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
     }
@@ -288,7 +288,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
         _tokenRepositoryMock.Verify(r => r.DeleteRefreshTokenAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -308,7 +308,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
     }
 
     [Fact]
@@ -328,7 +328,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid refresh token.");
+        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public class TokenServiceTests
         var result = await _sut.RevokeSessionAsync(tokenId);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Cannot revoke the current session.");
+        result.Error.Should().Be(UserErrors.CannotRevokeCurrentSession);
         _tokenRepositoryMock.Verify(r => r.DeleteRefreshTokenAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

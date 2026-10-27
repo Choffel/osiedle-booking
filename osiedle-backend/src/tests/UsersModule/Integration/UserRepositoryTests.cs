@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Repositories;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Infrastructure.Data;
 
 namespace UserModule.Integration;

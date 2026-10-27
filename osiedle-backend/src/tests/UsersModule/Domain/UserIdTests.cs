@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Users.Domain.Entity.User.Value_objects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace UserModule.Domain;
 
