@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Users.Application.Abstractions.Repositories;
 using Users.Infrastructure.Data;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Infrastructure.Repositories;
 
@@ -19,7 +20,7 @@ public class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(ct); 
     }
 
-    public async Task<Domain.Entity.User.User?> GetByIdAsync(Domain.Entity.User.Value_objects.UserId id, CancellationToken ct)
+    public async Task<Domain.Entity.User.User?> GetByIdAsync(UserId id, CancellationToken ct)
     {
         return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
     }
