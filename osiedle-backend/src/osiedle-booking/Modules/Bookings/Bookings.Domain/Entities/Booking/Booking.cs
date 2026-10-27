@@ -50,7 +50,7 @@ public class Booking : AggregateRoot<BookingId>
             Slot = slot,
             Price = price,
             Status = BookingStatus.Confirmed,
-            CreatedAt = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day)
+            CreatedAt = DateTime.UtcNow
         };
         
         return booking;
