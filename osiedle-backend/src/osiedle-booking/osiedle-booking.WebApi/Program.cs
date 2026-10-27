@@ -98,6 +98,18 @@ builder.Services.AddSwaggerGen(options =>
 #endregion
 
 
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
+
+builder.Services.AddDbContext<BusinessDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Business")));
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -115,19 +127,19 @@ app.UseCors(); // TODO: Configure CORS policy as needed
 app.UseAuthentication();
 app.UseAuthorization();
 
-using (var scope = app.Services.CreateScope()) // TODO: refactor this to a proper migration or seeding mechanism
-{
-    var services = scope.ServiceProvider;
-    var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
-
-    var dbContext = services.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
-
-    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
-    await businessDbContext.Database.MigrateAsync();
-
-    await RoleInitData.InitializeAsync(roleManager);
-}
+// using (var scope = app.Services.CreateScope()) // TODO: refactor this to a proper migration or seeding mechanism
+// {
+//     var services = scope.ServiceProvider;
+//     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
+//
+//     var dbContext = services.GetRequiredService<ApplicationDbContext>();
+//     await dbContext.Database.MigrateAsync();
+//
+//     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+//     await businessDbContext.Database.MigrateAsync();
+//
+//     await RoleInitData.InitializeAsync(roleManager);
+// }
 
 app.MapControllers();
 
