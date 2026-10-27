@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Business.Infrastructure.Persistence.Configurations;
 
+//TODO: soft delete, change price to work with VO
 public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Domain.Entities.BookableService>
 {
     public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Business.Domain.Entities.BookableService> builder)
@@ -31,7 +32,7 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
         builder.Property(x => x.ServiceName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Price).IsRequired().HasColumnType("numeric(18,2)");
         builder.Property(x => x.Description).HasMaxLength(500);
-        builder.Property(x => x.Duration).IsRequired();
+        builder.Property(x => x.Duration).HasColumnType("interval").IsRequired();
         builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt);

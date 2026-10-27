@@ -43,7 +43,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .IsRequired()
             .HasMaxLength(256);
 
-        builder.HasIndex(e => e.Email).IsUnique();
+        builder.HasIndex(e => e.Email).IsUnique().HasFilter("deleted at IS NULL");
 
         builder.Property(e => e.Status)
             .IsRequired()
