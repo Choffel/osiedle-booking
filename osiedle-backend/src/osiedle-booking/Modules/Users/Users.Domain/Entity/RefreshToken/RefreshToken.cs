@@ -30,10 +30,10 @@ public class RefreshToken : AggregateRoot<RefreshTokenId>
         DateTime utcNow) 
     {
         if (string.IsNullOrWhiteSpace(token))
-            throw new InvalidOperationException("Token cannot be empty.");
+            throw new ArgumentException("Token cannot be empty.", nameof(token));
             
         if (expiresAt <= utcNow)
-            throw new InvalidOperationException("Expiration date must be in the future.");
+            throw new ArgumentException("Expiration date must be in the future.", nameof(expiresAt));
 
         return new RefreshToken(id, token, userId, expiresAt);
     }
@@ -41,7 +41,7 @@ public class RefreshToken : AggregateRoot<RefreshTokenId>
     public void Revoke(UserId userId, DateTime utcNow)
     {
         if (!IsOwnedBy(userId))
-            throw new InvalidOperationException("Token is not owned by the specified user.");
+            throw new ArgumentException("Token is not owned by the specified user.", nameof(userId));
 
         if (RevokedAt != null)
             return;
