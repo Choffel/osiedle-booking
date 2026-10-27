@@ -1,11 +1,12 @@
 using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
 using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
+using Users.Domain.Errors;
 
 namespace Users.Application.Services;
 
@@ -34,13 +35,13 @@ public class AuthService : IAuthService
         _userContext = userContext;
     }
     
-     public async Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
+     public async Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
     {
         var identityResult = await _identityAccountService.CreateIdentityAsync(
             request.Email,  request.FirstName, request.Password, ct);
 
         if (!identityResult.IsSuccess)
-            return Result<UserId>.Failure("Failed to create user");
+            return Result<Guid>.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
         
         var userId = new UserId(identityResult.Value);
         var user = User.Create(userId, request.FirstName);
@@ -51,28 +52,24 @@ public class AuthService : IAuthService
         
         _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token); // TODO: Fix this when the notification service becomes available 
 
-        return Result<UserId>.Success(userId);
+        return Result<Guid>.Success(userId.Value);
     }
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default)
     {
         
         var user = await _identityAccountService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
-        {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
-        }
-
+        
         if (!user.IsSuccess)
         {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
+            return Result<TokenResponseDto>.Failure(UserErrors.InvalidCredentials);
         }
 
         var isPasswordCorrect = await _identityCredentialsService.CheckPasswordAsync(user.Value.Id, request.Password, cancellationToken);
         if (!isPasswordCorrect.IsSuccess)
         {
             _logger.LogWarning("Failed login for {Email} from {Ip}", request.Email, _userContext.IpAddress);
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
+            return Result<TokenResponseDto>.Failure(UserErrors.InvalidCredentials);
         }
 
         var userDto = new UserDto(user.Value.Id, user.Value.UserName ?? string.Empty, user.Value.Email ?? string.Empty);
@@ -106,14 +103,14 @@ public class AuthService : IAuthService
         var user = await _identityAccountService.FindByEmailAsync(request.Email, cancellationToken);
         if (!user.IsSuccess)
         {
-            return Result<string>.Failure($"{request.Email} - this email address is not registered");
+            return Result<string>.Failure(UserErrors.EmailNotRegistered);
         }
 
         var resetPassResult = await _identityCredentialsService.ResetPasswordAsync(user.Value.Id, request.Token, request.NewPassword!, cancellationToken);
 
         if (!resetPassResult.IsSuccess)
         {
-            return Result<string>.Failure("Failed to reset password");
+            return Result<string>.Failure(UserErrors.PasswordResetFailed);
         }
 
         return Result<string>.Success("Password reset successfully");
@@ -124,19 +121,19 @@ public class AuthService : IAuthService
         var user = await _identityAccountService.FindByEmailAsync(request.Email, cancellationToken);
         if (!user.IsSuccess)
         {
-            return Result<string>.Failure("Invalid email address");
+            return Result<string>.Failure(UserErrors.EmailNotRegistered);
         }
 
         var result = await _identityEmailService.ConfirmEmailAsync(user.Value.Id, request.Token, cancellationToken);
         if (!result.IsSuccess)
         {
-            return Result<string>.Failure("Invalid or expired confirmation token");
+            return Result<string>.Failure(UserErrors.EmailConfirmationFailed);
         }
 
         var roleExists = await _roleManager.RoleExistsAsync("User", cancellationToken);
         if (!roleExists)
         {
-            return Result<string>.Failure("Role 'User' does not exist");
+            return Result<string>.Failure(UserErrors.RoleNotFound);
         }
 
         await _roleManager.AddToRoleAsync(user.Value.Id, "User", cancellationToken);
