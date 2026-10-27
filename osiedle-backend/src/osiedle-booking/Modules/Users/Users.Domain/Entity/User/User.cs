@@ -1,5 +1,5 @@
-using Users.Domain.Entity.User.Value_objects;
 using osiedle_booking.BuildingBlocks.Domain;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Users.Domain.Entity.User;
 
@@ -11,7 +11,7 @@ public class User : AggregateRoot<UserId>
     {
         Id = id;
         DisplayName = displayName;
-        CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        CreatedAt = DateTime.UtcNow;
     }
     private User() { }
 
@@ -36,6 +36,6 @@ public class User : AggregateRoot<UserId>
             throw new ArgumentException("Display name cannot be null or empty", nameof(displayName));
         }
         DisplayName = displayName;
-        UpdatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+        UpdatedAt = DateTime.UtcNow;
     }
 }
