@@ -1,10 +1,10 @@
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
-using Users.Domain.Entity.User.Value_objects;
-using Microsoft.Extensions.Logging;
 using osiedle_booking.BuildingBlocks.Interfaces;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Repositories;
 using Users.Application.DTOs;
+using Users.Domain.Errors;
 
 namespace Users.Application.Services;
 
@@ -33,9 +33,9 @@ public class UserService : IUserService
         var userContextId = _userContext.UserId;
         
         var user = await _identityAccountService.FindByEmailAsync(userEmail, cancellationToken);
-        if (user == null)
+        if (!user.IsSuccess)
         {
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
         }
         
         var userId = new UserId(userContextId);
@@ -46,7 +46,7 @@ public class UserService : IUserService
 
         if (domainUser is null)
         {
-            return Result<string>.Failure("User not found");
+            return Result<string>.Failure(UserErrors.NotFound);
         }
 
         domainUser.Update(userDto.UserName);
@@ -64,7 +64,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAsync(new UserId(userId), cancellationToken);
         if (user == null)
         {
-            return Result<CurrentUserDto>.Failure("User not found");
+            return Result<CurrentUserDto>.Failure(UserErrors.NotFound);
         }
 
         return Result<CurrentUserDto>.Success(new CurrentUserDto(user.DisplayName));
