@@ -53,7 +53,8 @@ namespace Business.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -61,7 +62,8 @@ namespace Business.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("DeletedAt IS NULL");
 
                     b.ToTable("Businesses");
                 });
@@ -115,7 +117,8 @@ namespace Business.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("deleted at IS NULL");
 
                     b.ToTable("Employees", (string)null);
                 });
@@ -188,10 +191,10 @@ namespace Business.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time without time zone");
+                        .HasColumnType("time");
 
                     b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time without time zone");
+                        .HasColumnType("time");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -201,7 +204,10 @@ namespace Business.Infrastructure.Migrations
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
 
-                    b.ToTable("WorkingHours", (string)null);
+                    b.ToTable("WorkingHours", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "\"EndTime\" > \"StartTime\"");
+                        });
                 });
 
             modelBuilder.Entity("Business.Domain.Entities.BookableService", b =>
