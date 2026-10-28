@@ -2,6 +2,7 @@
 using Business.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Infrastructure.Persistence.Configurations;
 
