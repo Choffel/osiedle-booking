@@ -1,4 +1,4 @@
-﻿namespace Business.Domain.ValueObjects;
+﻿namespace osiedle_booking.BuildingBlocks.ValueObjects;
 
 public readonly record struct BusinessId
 {
