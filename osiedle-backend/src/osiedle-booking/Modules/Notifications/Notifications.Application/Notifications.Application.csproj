@@ -13,7 +13,6 @@
 
     <ItemGroup>
       <Folder Include="Commands\Booking\" />
-      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>
