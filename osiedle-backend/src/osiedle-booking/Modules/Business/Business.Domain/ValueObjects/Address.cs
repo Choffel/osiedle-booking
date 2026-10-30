@@ -3,8 +3,8 @@ namespace Business.Domain.ValueObjects;
 //TODO: add postal code
 public readonly record struct Address
 {
-    private  string Street { get; }
-    private  string Number { get; }
+    private string Street { get; }
+    private string Number { get; }
     private string City { get; }
     
     private Address(string street, string number, string city)

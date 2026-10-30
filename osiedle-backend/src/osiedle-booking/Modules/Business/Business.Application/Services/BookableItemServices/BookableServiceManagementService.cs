@@ -56,7 +56,8 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success(bookableService.ToDto());
     }
 
-    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(BookableServiceId serviceId, UpdateBookableServiceDto dto, CancellationToken ct)
+    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(BookableServiceId serviceId,
+        UpdateBookableServiceDto dto, CancellationToken ct)
     { 
         
     var bookableService = await _bookableServiceRepository.GetByIdAsync(serviceId, ct);
@@ -89,12 +90,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         }
     }
     
-    bookableService.UpdateInfo(
-        dto.ServiceName,
-        dto.ServiceDescription,
-        dto.ServicePrice,
-        dto.ServiceDuration
-    );
+    bookableService.UpdateDetails();
     
     await _unitOfWork.SaveChangesAsync(ct);
     
@@ -102,7 +98,8 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     
     }
 
-    public async Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(BookableServiceId bookableServiceId, CancellationToken ct)
+    public async Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(BookableServiceId bookableServiceId, 
+        CancellationToken ct)
     {
         
         var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
@@ -128,7 +125,8 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success(bookableService.ToDto());
     }
 
-    public  async Task<Result> ActivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, CancellationToken ct)
+    public  async Task<Result> ActivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, 
+        CancellationToken ct)
     {
         var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
         if (bookableService is null)
@@ -150,7 +148,8 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, CancellationToken ct)
+    public async Task<Result> DeactivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, 
+        CancellationToken ct)
     {
         var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
         
