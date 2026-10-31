@@ -113,8 +113,10 @@ public static class DependencyInjection
                 "JWT Issuer cannot be empty.")
             .Validate(settings => !string.IsNullOrWhiteSpace(settings.Audience), 
                 "JWT Audience cannot be empty.")
-            .Validate(settings => settings.ExpiryMinutes > 0, 
-                "JWT ExpiryMinutes must be greater than 0.")
+            .Validate(settings => settings.AccessTokenExpiryMinutes > 0, 
+                "JWT AccessTokenExpiryMinutes must be greater than 0.")
+            .Validate(settings => settings.RefreshTokenExpiryDays > 0, 
+                "JWT RefreshTokenExpiryDays must be greater than 0.")
             .ValidateOnStart();
         
         return services;
