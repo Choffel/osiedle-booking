@@ -1,4 +1,5 @@
 using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Entities;
 using Business.Domain.ValueObjects;
@@ -17,7 +18,7 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
     }
 
 
-    public async  Task<IReadOnlyCollection<WorkingHoursDto>> GetWorkingHoursForRangeAsync(EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
+    public async  Task<IReadOnlyCollection<WorkingHoursDto>> GetWorkingHoursForRangeAsync(WorkingHoursId workingHoursId,EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
         CancellationToken ct)
     {
         return await _dbContext.WorkingHours
@@ -32,10 +33,12 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
             .ToListAsync(ct);
     }
 
-    public async  Task<WorkingHours?> GetWorkingHoursByDateAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct)
+    public async  Task<WorkingHours?> GetWorkingHoursByDateAsync(WorkingHoursId workingHoursId,EmployeeId employeeId, DateOnly date, CancellationToken ct)
     {
+        //&& workinghourid
         return await _dbContext.WorkingHours
-            .FirstOrDefaultAsync(w => w.EmployeeId == employeeId && w.Date == date, ct);
+            .Where(w => w.EmployeeId == employeeId && 
+                        )
     }
 
     public void AddWorkingHours(WorkingHours workingHours)

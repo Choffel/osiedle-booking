@@ -1,4 +1,4 @@
-using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Entities;
@@ -24,7 +24,8 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> SetWorkingHoursAsync(EmployeeId employeeId, SetWorkingHoursDto dto, CancellationToken ct = default)
+    public async Task<Result> SetWorkingHoursAsync(EmployeeId employeeId,
+        SetWorkingHoursDto dto, CancellationToken ct = default)
     {
         var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         if (employee is null)
@@ -32,16 +33,16 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
             return Result.Failure(EmployeeErrors.NotFound);
         }
 
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, dto.Date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(dto.WorkingHoursId,employeeId, dto.Date, ct);
 
         if (workingHours is null)
         {
-            var newWorkingHours = WorkingHours.Create(employeeId, dto.Date, dto.StartTime, dto.EndTime);
+            var newWorkingHours = WorkingHours.Create(employeeId, dto.Date, dto.Slot);
             _employeeWorkingHoursRepository.AddWorkingHours(newWorkingHours);
         }
         else
         {
-            workingHours.UpdateTime(dto.StartTime, dto.EndTime);
+            workingHours.UpdateSlot(dto.Slot);
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
@@ -50,6 +51,8 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
 
     public async Task<Result> ClearWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
     {
+        var employee
+        
         var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
         
         if (workingHours != null)
