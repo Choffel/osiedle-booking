@@ -28,35 +28,24 @@ public class EmployeeService : IEmployeeManagementService
     
     public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
     {
-        var businessId = BusinessId.FromNullable(dto.BusinessId);
-
-        if (businessId is not null)
+        if (dto.BusinessId is not null)
         {
-            var businessExists = await _businessRepository.ExistsByIdAsync(businessId.Value, ct);
-
+            bool businessExists = await _businessRepository.ExistsByIdAsync(dto.BusinessId.Value, ct);
             if (!businessExists)
             {
                 return Result.Failure<EmployeeId>(EmployeeErrors.BusinessNotFound);
             }
         }
-
+        
         var employee = Employee.Create(
-            businessId,
-            dto.FirstName,
-            dto.LastName,
+            dto.BusinessId,
+            dto.Name,
             dto.Position,
             dto.Review,
-            dto.Email);
-
-        var existing = await _employeeRepository.ExistsByEmailAsync(employee.Email, ct);
-
-        if (existing)
-        {
-            return Result.Failure<EmployeeId>(EmployeeErrors.AlreadyExists);
-        }
+            dto.Email
+        );
 
         _employeeRepository.AddEmployee(employee);
-
         await _unitOfWork.SaveChangesAsync(ct);
 
         return Result.Success(employee.Id);
@@ -69,17 +58,35 @@ public class EmployeeService : IEmployeeManagementService
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
-
-        var normalizedEmail = Employee.NormalizeEmail(dto.Email);
         
-        var isEmailChanged = !string.Equals(employee.Email, normalizedEmail, StringComparison.Ordinal);
-    
-        if (isEmailChanged && await _employeeRepository.ExistsByEmailAsync(normalizedEmail, ct))
+        var normalizedEmail = Employee.NormalizeEmail(dto.Email);
+        bool isEmailChanged = !string.Equals(employee.Email, normalizedEmail, StringComparison.Ordinal);
+
+        if (isEmailChanged)
         {
-            return Result.Failure(EmployeeErrors.AlreadyExists);
+            bool isEmailTaken = await _employeeRepository.ExistsByEmailAsync(normalizedEmail, ct);
+            if (isEmailTaken)
+            {
+                return Result.Failure(EmployeeErrors.AlreadyExists);
+            }
+
+            employee.ChangeEmail(normalizedEmail);
         }
         
-        employee.UpdateInfo(dto.FirstName, dto.LastName, dto.Position, dto.Review, normalizedEmail);
+        var newName = EmployeeName.Create(dto.FirstName, dto.LastName);
+        if (employee.EmployeeName != newName)
+        {
+            employee.UpdateEmployeeName(newName);
+        }
+        
+        if (!string.Equals(employee.Position, dto.Position, StringComparison.Ordinal))
+        {
+            employee.ChangePosition(dto.Position);
+        }
+        
+        employee.ChangeReview(dto.Review);
+
+        // 5. Сохранение изменений
         await _unitOfWork.SaveChangesAsync(ct);
 
         return Result.Success();

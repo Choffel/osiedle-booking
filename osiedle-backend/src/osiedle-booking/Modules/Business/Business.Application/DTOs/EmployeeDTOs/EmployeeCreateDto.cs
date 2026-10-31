@@ -5,8 +5,7 @@ namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record EmployeeCreateDto(
     BusinessId? BusinessId,
-    string FirstName,
-    string LastName,
+    EmployeeName Name,
     string Position,
     string? Review,
     string Email

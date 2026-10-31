@@ -1,7 +1,9 @@
-﻿namespace Business.Application.DTOs;
+﻿using Business.Domain.ValueObjects;
+
+namespace Business.Application.DTOs.BusinessDTOs;
 
 public record UpdateBusinessInfoDto(
     string NewName,
     string NewDescription,
-    string NewLocation
+    Address NewLocation
     );

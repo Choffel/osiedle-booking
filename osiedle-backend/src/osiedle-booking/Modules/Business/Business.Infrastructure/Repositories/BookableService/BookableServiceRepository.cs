@@ -1,12 +1,11 @@
 using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.Interfaces.BookableService;
-using Business.Domain.Entities;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Business.Infrastructure.Repositories;
+namespace Business.Infrastructure.Repositories.BookableService;
 
 public class BookableServiceRepository : IBookableServiceRepository
 {
@@ -17,7 +16,7 @@ public class BookableServiceRepository : IBookableServiceRepository
         _dbContext = dbContext;
     }
     
-    public Task <BookableService?> GetByIdAsync(BookableServiceId id, CancellationToken ct)
+    public Task <Domain.Entities.BookableService?> GetByIdAsync(BookableServiceId id, CancellationToken ct)
     {
         return  _dbContext.BookableServices
             .SingleOrDefaultAsync(bookableService => bookableService.Id == id, ct);
@@ -74,7 +73,7 @@ public class BookableServiceRepository : IBookableServiceRepository
             .AnyAsync(s => s.ServiceName == serviceName && s.EmployeeId == employeeId, ct);
     }
 
-    public void Add(BookableService service, CancellationToken ct)
+    public void Add(Domain.Entities.BookableService service, CancellationToken ct)
     {
         _dbContext.BookableServices.Add(service);
     }

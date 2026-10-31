@@ -1,7 +1,8 @@
-namespace Business.Application.DTOs.EmployeeDTOs;
+using Business.Domain.ValueObjects;
+
+namespace Business.Application.DTOs.WorkingHoursDTOs;
 
 public record WorkingHoursDto(
     DateOnly Date,
-    TimeOnly StartTime,
-    TimeOnly EndTime
+    TimeSlot TimeSlot
 );

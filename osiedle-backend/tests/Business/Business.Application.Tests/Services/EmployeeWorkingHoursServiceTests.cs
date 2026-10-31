@@ -1,4 +1,5 @@
 using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Employee;
 using Business.Application.Services.EmployeeServices;
