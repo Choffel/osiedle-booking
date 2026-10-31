@@ -9,7 +9,7 @@ using Users.Domain.Entity.RefreshToken.ValueObjects;
 
 namespace Users.Application.Services;
 
-public class UserSessionService : IUserSessionService // TODO подумать над тем, как лучше организовать этот класс 
+public class UserSessionService : IUserSessionService 
 {
     private readonly ITokenReadRepository _tokenReadRepository;
     private readonly IUnitOfWork _unitOfWork;
