@@ -20,9 +20,6 @@ public readonly record struct RefreshTokenId
     public static RefreshTokenId New() => new(Guid.NewGuid());
     public static RefreshTokenId From(Guid value)
     {
-        if (value == Guid.Empty)
-            throw new ArgumentException("Id cannot be empty.", nameof(value));
-            
         return new(value);
     }
     
