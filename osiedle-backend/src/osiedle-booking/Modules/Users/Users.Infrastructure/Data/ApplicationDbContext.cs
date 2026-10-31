@@ -11,7 +11,6 @@ namespace Users.Infrastructure.Data;
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdentity, Guid>
 {
     
-
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
