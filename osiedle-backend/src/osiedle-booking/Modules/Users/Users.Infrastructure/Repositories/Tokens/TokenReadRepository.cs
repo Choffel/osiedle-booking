@@ -9,25 +9,23 @@ namespace Users.Infrastructure.Repositories.Tokens;
 
 public class TokenReadRepository : ITokenReadRepository
 {
-    private readonly ApplicationDbContext _context;
-    private readonly TimeProvider _timeProvider;
+    private readonly ApplicationDbContext _dbContext;
 
-    public TokenReadRepository(ApplicationDbContext context, TimeProvider timeProvider)
+    public TokenReadRepository(ApplicationDbContext dbContext)
     {
-        _context = context;
-        _timeProvider = timeProvider;
+        _dbContext = dbContext;
     }
     
     public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken ct = default)
     {
-        return _context.RefreshTokens
+        return _dbContext.RefreshTokens
             .AsNoTracking()
             .FirstOrDefaultAsync(rt => rt.Token == token, ct);
     }
     
     public Task<RefreshToken?> GetByIdAsync(RefreshTokenId id, CancellationToken ct = default)
     {
-        return _context.RefreshTokens
+        return _dbContext.RefreshTokens
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, ct);
     }
@@ -36,11 +34,9 @@ public class TokenReadRepository : ITokenReadRepository
         UserId userId, 
         CancellationToken ct = default)
     {
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
-
-        return await _context.RefreshTokens
+        return await _dbContext.RefreshTokens
             .AsNoTracking()
-            .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > now)
+            .Where(t => t.UserId == userId && t.RevokedAt == null && t.IsActive)
             .ToListAsync(ct);
     }
 }
