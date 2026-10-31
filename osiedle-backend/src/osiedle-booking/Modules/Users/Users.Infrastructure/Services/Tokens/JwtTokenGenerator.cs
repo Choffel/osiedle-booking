@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using osiedle_booking.BuildingBlocks.ValueObjects;
@@ -9,16 +10,16 @@ using Users.Application.Abstractions.Services;
 using Users.Infrastructure.Options;
 using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 
-namespace Users.Infrastructure.Services;
+namespace Users.Infrastructure.Services.Tokens;
 
-public class JwtTokenGenerator : IJwtTokenGenerator
+internal sealed class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly JsonWebTokenHandler _tokenHandler = new();
     private readonly JwtSettings _jwtSettings;
     
-    internal JwtTokenGenerator(JwtSettings jwtSettings)
+    public JwtTokenGenerator(IOptions<JwtSettings> jwtSettings)
     {
-        _jwtSettings = jwtSettings;
+        _jwtSettings = jwtSettings.Value;
     }
     
     public string GenerateAccessToken(UserId userId, string email, IReadOnlyCollection<string> roles)
@@ -29,7 +30,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         {
             Issuer = _jwtSettings.Issuer,
             Audience = _jwtSettings.Audience,
-            Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpiryMinutes),
             SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
             Subject = CreateClaimsIdentity(userId, email, roles)
         };
