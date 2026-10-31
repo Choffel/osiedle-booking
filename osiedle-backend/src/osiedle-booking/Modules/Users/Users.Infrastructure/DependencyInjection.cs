@@ -5,13 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Users.Application.Abstractions;
 using Users.Application.Abstractions.Services;
-using Users.Application.Abstractions.Repositories;
+using Users.Application.Abstractions.Repositories.Tokens;
+using Users.Application.Abstractions.Repositories.Users;
+using Users.Application.Abstractions.Services.Identity;
 using Users.Application.Services;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
-using Users.Infrastructure.Repositories;
-using Users.Infrastructure.Services;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
+using Users.Infrastructure.Options;
+using Users.Infrastructure.Repositories.Tokens;
+using Users.Infrastructure.Repositories.Users;
+using Users.Infrastructure.UnitOtWork;
 
 namespace Users.Infrastructure;
 
@@ -56,20 +63,23 @@ public static class DependencyInjection
         services.AddScoped<IIdentityAccountService, IdentityAccountService>();
         services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
         services.AddScoped<IIdentityEmailService, IdentityEmailService>();
-        services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IRoleService, RoleService>();
         #endregion
 
         #region Repositories
+        services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ITokenRepository, TokenRepository>();
+        services.AddScoped<ITokenReadRepository, TokenReadRepository>();
+        services.AddScoped<ITokenWriteRepository, TokenWriteRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         #endregion
         
         #region JWT Authentication
-        var jwtKey = configuration["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"]!;
-        var jwtIssuer = configuration["JWT_TOKEN_SETTINGS:ISSUER"]!;
-        var jwtAudience = configuration["JWT_TOKEN_SETTINGS:AUDIENCE"]!;
-        
+        var jwtSettings = configuration
+                              .GetSection(JwtSettings.SectionName)
+                              .Get<JwtSettings>() 
+                          ?? throw new InvalidOperationException("JwtSettings section is missing in configuration.");
+
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -79,19 +89,33 @@ public static class DependencyInjection
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtIssuer,
-                    ValidAudience = jwtAudience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                     ClockSkew = TimeSpan.Zero
                 };
             });
         
         services.AddAuthorization();
         #endregion
+        
+        services.AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Secret), 
+                "JWT Secret cannot be empty.")
+            .Validate(settings => settings.Secret.Length >= 32, 
+                "JWT Secret must be at least 256 bits (32 characters) long.")
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Issuer), 
+                "JWT Issuer cannot be empty.")
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Audience), 
+                "JWT Audience cannot be empty.")
+            .Validate(settings => settings.ExpiryMinutes > 0, 
+                "JWT ExpiryMinutes must be greater than 0.")
+            .ValidateOnStart();
         
         return services;
     }
