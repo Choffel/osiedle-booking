@@ -1,41 +1,42 @@
 using osiedle_booking.BuildingBlocks.Domain;
 using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Domain.Entity.User.ValueObjects;
 
 namespace Users.Domain.Entity.User;
 
 public class User : AggregateRoot<UserId>
 {
-    public string DisplayName { get; private set; }
+    public Name Name { get; } //TODO вынести имя в VO
+    
+    public string Email { get; private set; }
 
-    private User(UserId id, string displayName)
+    private User(UserId id, string firstName, string lastName, string email)
     {
         Id = id;
-        DisplayName = displayName;
+        Name.Create(firstName, lastName);
+        Email = email;
         CreatedAt = DateTime.UtcNow;
     }
     private User() { }
 
-    public static User Create(UserId id, string displayName)
+    public static User Create(UserId id, string firstName, string lastName, string email)
     {
-        if (string.IsNullOrEmpty(displayName))
-        {
-            throw new ArgumentException("Display name cannot be null or empty", nameof(displayName));
-        }
+        if (string.IsNullOrEmpty(email))
+            throw new ArgumentException("Email cannot be null or empty", nameof(email));
+        
         var user = new User(
             id,
-            displayName
+            firstName,
+            lastName,
+            email
         );
         
         return user;
     }
     
-    public void Update(string displayName)
+    public void Update(string firstName, string lastName)
     {
-        if (string.IsNullOrEmpty(displayName))
-        {
-            throw new ArgumentException("Display name cannot be null or empty", nameof(displayName));
-        }
-        DisplayName = displayName;
+        Name.Update(firstName, lastName);
         UpdatedAt = DateTime.UtcNow;
     }
 }

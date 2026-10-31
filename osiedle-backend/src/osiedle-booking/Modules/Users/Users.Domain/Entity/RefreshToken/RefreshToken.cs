@@ -10,7 +10,7 @@ public class RefreshToken : AggregateRoot<RefreshTokenId>
     public UserId UserId { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
-    public bool IsActive(DateTime utcNow) => RevokedAt == null && utcNow < ExpiresAt;
+    public bool IsActive => RevokedAt == null && DateTime.UtcNow < ExpiresAt;
 
     private RefreshToken() { }
 
