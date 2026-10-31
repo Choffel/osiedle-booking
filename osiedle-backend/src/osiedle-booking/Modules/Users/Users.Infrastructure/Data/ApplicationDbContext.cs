@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.RefreshToken;
+using Users.Domain.Entity.RefreshToken.ValueObjects;
 using Users.Domain.Entity.User;
 using Users.Infrastructure.Identity.Models;
 
@@ -30,10 +31,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
             entity.Property(e => e.Id)
                 .HasConversion<Guid>(
                     id => id.Value,
-                    value => UserId.New())
+                    value => UserId.From(value))
                 .ValueGeneratedNever();
 
-            entity.Property(e => e.FirstName)
+            entity.OwnsOne(e => e.Name, name =>
+            {
+                name.Property(n => n.FirstName).IsRequired();
+                name.Property(n => n.LastName).IsRequired();
+            });
+
+            entity.Property(e => e.Email)
                 .IsRequired();
         });
 
@@ -46,8 +53,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
         modelBuilder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasConversion<Guid>(
+                    id => id.Value,
+                    value => RefreshTokenId.From(value))
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.UserId)
+                .HasConversion<Guid>(
+                    id => id.Value,
+                    value => UserId.From(value))
+                .IsRequired();
+
             entity.Property(e => e.Token).IsRequired();
-            entity.Property(e => e.UserId).IsRequired();
         });
         
     }
