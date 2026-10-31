@@ -34,8 +34,8 @@ public class BusinessService : IBusinessManagementService
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             createBusinessDto.OwnerId, 
-            createBusinessDto.Description, 
-            createBusinessDto.Location);
+            createBusinessDto.Location, 
+            createBusinessDto.Description);
         
         _businessRepository.Add(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -62,8 +62,12 @@ public class BusinessService : IBusinessManagementService
             return Result<BusinessResponseDto>.Failure(BusinessErrors.NotFound);
         }
         
-        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
-        
+       business.UpdateName(updateBusinessInfoDto.NewName);
+       
+       business.UpdateDescription(updateBusinessInfoDto.NewDescription);
+       
+       business.UpdateAddress(updateBusinessInfoDto.NewLocation);
+       
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
