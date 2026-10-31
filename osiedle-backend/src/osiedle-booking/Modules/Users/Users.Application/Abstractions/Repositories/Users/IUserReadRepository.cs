@@ -1,9 +1,9 @@
 using osiedle_booking.BuildingBlocks.ValueObjects;
-using Users.Domain.Entity.User;
+using Users.Application.DTOs;
 
 namespace Users.Application.Abstractions.Repositories.Users;
 
 public interface IUserReadRepository
 {
-    Task<User?> GetByIdAsync(UserId id, CancellationToken ct = default);
+    Task<UserDto?> GetProfileAsync(UserId id, CancellationToken ct = default);
 }

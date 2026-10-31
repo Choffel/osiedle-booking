@@ -1,24 +1,30 @@
 using Microsoft.EntityFrameworkCore;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Repositories.Users;
-using Users.Domain.Entity.User;
+using Users.Application.DTOs;
 using Users.Infrastructure.Data;
 
 namespace Users.Infrastructure.Repositories.Users;
 
 public class UserReadRepository : IUserReadRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _dbContext;
 
-    public UserReadRepository(ApplicationDbContext context)
+    public UserReadRepository(ApplicationDbContext dbContext)
     {
-        _context = context;
+        _dbContext = dbContext;
     }
 
-    public Task<User?> GetByIdAsync(UserId id, CancellationToken ct = default)
+    public Task<UserDto?> GetProfileAsync(UserId id, CancellationToken ct = default)
     {
-        return _context.Users
+        return _dbContext.Users
             .AsNoTracking()
+            .Select(user => new UserDto(
+                user.Id,
+                 user.Name.FirstName,
+                 user.Name.LastName,
+                 user.Email
+            ))
             .FirstOrDefaultAsync(u => u.Id == id, ct);
     }
 }
