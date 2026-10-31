@@ -6,37 +6,40 @@ namespace Users.Domain.Entity.User;
 
 public class User : AggregateRoot<UserId>
 {
-    public Name Name { get; } //TODO вынести имя в VO
-    
+    public Name Name { get; private set; }
     public string Email { get; private set; }
 
-    private User(UserId id, string firstName, string lastName, string email)
+    private User(UserId id, Name name, string email)
+        : base(id)
     {
-        Id = id;
-        Name.Create(firstName, lastName);
+        if (string.IsNullOrEmpty(email))
+            throw new ArgumentException("Email cannot be null or empty", nameof(email));
+        if(name is null)
+            throw new ArgumentNullException(nameof(name));
+        
+        Name = name;
         Email = email;
         CreatedAt = DateTime.UtcNow;
     }
     private User() { }
 
-    public static User Create(UserId id, string firstName, string lastName, string email)
+    public static User Create(UserId id, Name name, string email)
     {
-        if (string.IsNullOrEmpty(email))
-            throw new ArgumentException("Email cannot be null or empty", nameof(email));
-        
         var user = new User(
             id,
-            firstName,
-            lastName,
+            name,
             email
         );
         
         return user;
     }
     
-    public void Update(string firstName, string lastName)
+    public void Update(Name name)
     {
-        Name.Update(firstName, lastName);
+        if(name is null)
+            throw new ArgumentNullException(nameof(name));
+
+        Name = name;
         UpdatedAt = DateTime.UtcNow;
     }
 }
