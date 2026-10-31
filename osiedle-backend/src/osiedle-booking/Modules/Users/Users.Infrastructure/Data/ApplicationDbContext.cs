@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.User;
-using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
 
 namespace Users.Infrastructure.Data;
 
@@ -19,13 +19,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
     
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-        
         
         modelBuilder.Entity<User>(entity =>
         {
@@ -34,10 +31,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
             entity.Property(e => e.Id)
                 .HasConversion<Guid>(
                     id => id.Value,
-                    value => new UserId(value))
+                    value => UserId.New())
                 .ValueGeneratedNever();
 
-            entity.Property(e => e.DisplayName)
+            entity.Property(e => e.FirstName)
                 .IsRequired();
         });
 
