@@ -12,6 +12,7 @@ using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
 using Users.Domain.Entity.User;
+using Users.Domain.Entity.User.ValueObjects;
 using Users.Domain.Errors;
 
 namespace Users.Application.Services;
@@ -54,7 +55,7 @@ public class AuthService : IAuthService
         if (identityResult.IsFailure)
             return Result.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
         
-        var user = User.Create(UserId.From(identityResult.Value.Value), request.FirstName, request.LastName, request.Email);
+        var user = User.Create(UserId.From(identityResult.Value.Value), Name.Create(request.FirstName, request.LastName),  request.Email);
 
         _userRepository.Add(user);
         
@@ -99,13 +100,6 @@ public class AuthService : IAuthService
         
         var token = await _identityCredentialsService.GeneratePasswordResetTokenAsync(UserId.From(user.Value.Id),ct);
         
-        /*
-        if(token.IsFailure)
-        {
-            _logger.LogError(token.Error.Description);
-            return Result.Success();
-        }*/
-
         _logger.LogInformation("Password reset token for user {UserId}: {Token}", user.Value.Id, token); // TODO: удалить логирование токена и перенести его отправку на почту когда появиться сервис нотификации
 
         return Result.Success();
