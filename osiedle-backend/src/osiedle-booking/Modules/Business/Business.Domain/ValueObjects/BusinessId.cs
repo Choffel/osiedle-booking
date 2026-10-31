@@ -16,13 +16,6 @@ public readonly record struct BusinessId
     
     public static BusinessId From(Guid value) => new(value);
     
-    public static BusinessId? FromNullable(Guid? value)
-    {
-        return value.HasValue && value.Value != Guid.Empty
-            ? new BusinessId(value.Value)
-            : null;
-    }
-    
     public static implicit operator Guid(BusinessId businessId) => businessId.Value;
     
     public override string ToString() => Value.ToString();

@@ -92,6 +92,13 @@ public class Employee : AggregateRoot<EmployeeId>
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ChangeReview(string newReview)
+    {
+        EnsureIsNotArchived();
+        Review = newReview;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void ArchiveEmployee()
     {
         EnsureIsNotArchived();
@@ -107,7 +114,7 @@ public class Employee : AggregateRoot<EmployeeId>
             throw new InvalidOperationException("Employee is archived and cannot be modified.");
     }
 
-    private static string NormalizeEmail(string email)
+    public  static string NormalizeEmail(string email)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         var trimmed = email.Trim().ToLowerInvariant();
