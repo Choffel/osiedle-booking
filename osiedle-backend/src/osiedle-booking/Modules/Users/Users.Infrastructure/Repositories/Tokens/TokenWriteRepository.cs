@@ -7,21 +7,21 @@ namespace Users.Infrastructure.Repositories.Tokens;
 
 public class TokenWriteRepository : ITokenWriteRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _dbContext;
 
-    public TokenWriteRepository(ApplicationDbContext context)
+    public TokenWriteRepository(ApplicationDbContext dbContext)
     {
-        _context = context;
+        _dbContext = dbContext;
     }
     
     public Task<RefreshToken?> GetByTokenForUpdateAsync(string token, CancellationToken ct = default)
     {
-        return _context.RefreshTokens
+        return _dbContext.RefreshTokens
             .FirstOrDefaultAsync(rt => rt.Token == token, ct);
     }
 
-    public async Task AddAsync(RefreshToken refreshToken, CancellationToken ct = default)
-    {
-        await _context.RefreshTokens.AddAsync(refreshToken, ct);
+    public void Add(RefreshToken refreshToken, CancellationToken ct = default)
+    { 
+        _dbContext.RefreshTokens.Add(refreshToken);
     }
 }
