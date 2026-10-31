@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Primitives;
 using osiedle_booking.BuildingBlocks;
-using Users.Application.Abstractions.Services;
-using Users.Application.DTOs.Identity;
-using Users.Domain.Errors;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Errors;
+using Users.Domain.Entity.User;
+using Users.Infrastructure.Identity.Models;
 
 namespace Users.Infrastructure.Identity;
 
@@ -17,28 +20,30 @@ public class RoleService : IRoleService
         _userManager = userManager;
     }
 
-    public async Task<bool> RoleExistsAsync(string roleName, CancellationToken ct)
+    public Task<bool> RoleExistsAsync(string roleName, CancellationToken ct = default)
     {
-        var role = await _roleManager.RoleExistsAsync(roleName);
-        return await _roleManager.RoleExistsAsync(roleName);
+        return _roleManager.RoleExistsAsync(roleName);
     }
+
+    /*public Task GetUserRolesAsync(UserId userId, CancellationChangeToken ct = default)
+    {
+        var user = _userManager.FindByIdAsync(userId.ToString());
+        
+        var userRoles = _userManager.GetRolesAsync(user.Result);
+
+        return userRoles;
+    }*/
     
-    public async Task<Result<IdentityUserDto>> AddToRoleAsync(Guid userId, string roleName, CancellationToken ct)
+    public async Task<Result> AddToRoleAsync(UserId userId, string roleName, CancellationToken ct = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
-        if (user == null)
-            return Result<IdentityUserDto>.Failure(UserErrors.NotFound);
+        if (user is null)
+            return Result.Failure(IdentityErrors.NotFound);
 
         var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
-            return Result<IdentityUserDto>.Failure(UserErrors.AddUserToRoleFailed);
+            return Result.Failure(RoleErrors.AddUserToRoleFailed);
 
-        return Result<IdentityUserDto>.Success(new IdentityUserDto(
-            Id: user.Id,
-            UserName: user.UserName,
-            Email: user.Email,
-            EmailConfirmed: user.EmailConfirmed,
-            Succeeded: true
-        ));
+        return Result.Success();
     }
 }
