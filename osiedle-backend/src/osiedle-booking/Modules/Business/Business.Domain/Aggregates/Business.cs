@@ -85,17 +85,47 @@ public class Business : AggregateRoot<BusinessId>
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;
     }
-
-    public void UpdateInfo(string newName, Address newLocation, string? newDescription = null)
+    
+    public void UpdateName(string newName)
     {
         EnsureIsNotArchived();
 
-        if (newLocation.IsEmpty)
-            throw new ArgumentException("New business location cannot be uninitialized.", nameof(newLocation));
+        var validName = EnsureValidName(newName);
+        if (string.Equals(Name, validName, StringComparison.Ordinal))
+            return;
 
-        Name = EnsureValidName(newName);
-        Location = newLocation;
-        Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription.Trim();
+        Name = validName;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateDescription(string? newDescription)
+    {
+        EnsureIsNotArchived();
+
+        var sanitizedDescription = string.IsNullOrWhiteSpace(newDescription) 
+            ? null 
+            : newDescription.Trim();
+
+        if (string.Equals(Description, sanitizedDescription, StringComparison.Ordinal))
+            return;
+
+        Description = sanitizedDescription;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateAddress(Address newAddress)
+    {
+        EnsureIsNotArchived();
+
+        if (newAddress.IsEmpty)
+        {
+            throw new ArgumentException("New business location cannot be uninitialized.", nameof(newAddress));
+        }
+
+        if (Location == newAddress)
+            return;
+
+        Location = newAddress;
         UpdatedAt = DateTime.UtcNow;
     }
 
