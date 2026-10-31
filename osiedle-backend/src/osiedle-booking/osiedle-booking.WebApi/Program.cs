@@ -13,6 +13,7 @@ using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
