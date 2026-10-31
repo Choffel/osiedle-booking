@@ -5,6 +5,7 @@ using Users.Application.Abstractions;
 using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
+using Users.Domain.Entity.User.ValueObjects;
 using Users.Domain.Errors;
 
 namespace Users.Application.Services;
@@ -39,8 +40,7 @@ public class UserService : IUserService
 
         var userProfile = await _userReadRepository.GetProfileAsync(userId, ct);
         
-        domainUser.Update(userProfile.FirstName, userProfile.LastName);
-        //await _identityAccountService.UpdateUserNameAsync(userId, userDto.UserName, ct);
+        domainUser.Update(Name.Create(userProfile.FirstName, userProfile.LastName));
 
         await _unitOfWork.SaveChangesAsync(ct);
 
