@@ -59,43 +59,52 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(BookableServiceId serviceId,
         UpdateBookableServiceDto dto, CancellationToken ct)
     { 
-        
-    var bookableService = await _bookableServiceRepository.GetByIdAsync(serviceId, ct);
-    if (bookableService is null)
-    {
-        return Result.Failure<BookableServiceResponseDto>(
-            BookableServiceErrors.NotFound);
-    }
-    
-    //TODO: Relocate checking to domain layer
-    if (bookableService.EmployeeId != dto.EmployeeId)
-    {
-        return Result.Failure<BookableServiceResponseDto>(
-            BookableServiceErrors.NotFoundOrAccessDenied);
-    }
-    
-    
-    bool isNameChanged = !string.Equals(bookableService.ServiceName, dto.ServiceName, StringComparison.Ordinal);
-    if (isNameChanged)
-    {
-        bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(
-            dto.ServiceName, 
-            dto.EmployeeId, 
-            ct);
-
-        if (isNameTaken)
+        var bookableService = await _bookableServiceRepository.GetByIdAsync(serviceId, ct);
+        if (bookableService is null)
         {
             return Result.Failure<BookableServiceResponseDto>(
-                BookableServiceErrors.NameAlreadyTaken);
+                BookableServiceErrors.NotFound);
         }
-    }
-    
-    bookableService.UpdateDetails();
-    
-    await _unitOfWork.SaveChangesAsync(ct);
-    
-    return Result.Success(bookableService.ToDto());
-    
+        
+        if (bookableService.EmployeeId != dto.EmployeeId)
+        {
+            return Result.Failure<BookableServiceResponseDto>(
+                BookableServiceErrors.NotFoundOrAccessDenied);
+        }
+        
+        bool isNameChanged = !string.Equals(bookableService.ServiceName, dto.ServiceName, StringComparison.Ordinal);
+        if (isNameChanged)
+        {
+            bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(
+                dto.ServiceName, 
+                dto.EmployeeId, 
+                ct);
+
+            if (isNameTaken)
+            {
+                return Result.Failure<BookableServiceResponseDto>(
+                    BookableServiceErrors.NameAlreadyTaken);
+            }
+        }
+        
+        bookableService.UpdateDetails(dto.ServiceName, dto.ServiceDescription);
+        
+        bookableService.ChangePrice(dto.ServicePrice);
+        
+        bookableService.ChangeDuration(dto.ServiceDuration);
+        
+        if (dto.ServiceStatus == ServiceStatus.Active)
+        {
+            bookableService.Activate();
+        }
+        else
+        {
+            bookableService.Deactivate();
+        }
+        
+        await _unitOfWork.SaveChangesAsync(ct);
+        
+        return Result.Success(bookableService.ToDto());
     }
 
     public async Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(BookableServiceId bookableServiceId, 
@@ -117,7 +126,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
                 BookableServiceErrors.AlreadyArchived);
         }
         
-        bookableService.ArchiveService(); 
+        bookableService.Archive(); 
 
         
         await _unitOfWork.SaveChangesAsync(ct);
@@ -141,7 +150,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         }
     
         
-        bookableService.ActivateService();
+        bookableService.Activate();
         
         await _unitOfWork.SaveChangesAsync(ct);
     
@@ -163,7 +172,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
             return Result.Failure(BookableServiceErrors.NotFoundOrAccessDenied);
         }
         
-        bookableService.DeactivateService();
+        bookableService.Deactivate();
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
