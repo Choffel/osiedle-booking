@@ -18,15 +18,26 @@ public class BusinessReadOnlyRepository : IBusinessReadOnlyRepository
     
     public async Task<BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct = default)
     {
-        return await _dbContext.Businesses
+        var business = await _dbContext.Businesses
             .AsNoTracking()
             .Where(b => b.Id == businessId)
-            .Select(b => new BusinessShortInfoDto(
-                b.Id.Value,
-                b.OwnerId.Value,
+            .Select(b => new
+            {
+                b.Id,
+                b.OwnerId,
                 b.Name,
                 b.Description,
-                b.Location.ToString()))
+                b.Location
+            })
             .FirstOrDefaultAsync(ct);
+
+        return business is null
+            ? null
+            : new BusinessShortInfoDto(
+                business.Id.Value,
+                business.OwnerId.Value,
+                business.Name,
+                business.Description,
+                business.Location.ToString());
     }
 }
