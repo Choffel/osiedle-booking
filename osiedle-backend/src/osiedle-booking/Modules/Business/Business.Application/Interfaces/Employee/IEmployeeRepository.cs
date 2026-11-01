@@ -11,9 +11,5 @@ public interface IEmployeeRepository
     
     Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);
     
-    Task<EmployeeStatusDto?> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default);
-    
-    Task<EmployeeShortInfoDto?> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default);
-    
     void AddEmployee(Domain.Aggregates.Employee employee);
 }

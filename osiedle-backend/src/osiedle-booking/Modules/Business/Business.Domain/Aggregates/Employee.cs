@@ -107,6 +107,11 @@ public class Employee : AggregateRoot<EmployeeId>
         DeletedAt = DateTime.UtcNow; 
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public bool CanBeBooked()
+    { 
+        return  Status == EmploymentStatus.Active;
+    }
     
     private void EnsureIsNotArchived()
     {

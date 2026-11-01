@@ -11,33 +11,20 @@ public class EmployeeInternalApi : IEmployeeInternalApi
 {
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IEmployeeWorkingHoursRepository _employeeWorkingHoursRepository;
+    private readonly IEmployeeReadOnlyRepository _employeeReadOnlyRepository;
 
-    public EmployeeInternalApi(IEmployeeRepository employeeRepository, IEmployeeWorkingHoursRepository employeeWorkingHoursRepository)
+    public EmployeeInternalApi(IEmployeeRepository employeeRepository,
+        IEmployeeWorkingHoursRepository employeeWorkingHoursRepository
+        , IEmployeeReadOnlyRepository employeeReadOnlyRepository)
     {
+        _employeeReadOnlyRepository = employeeReadOnlyRepository;
         _employeeRepository = employeeRepository;
         _employeeWorkingHoursRepository = employeeWorkingHoursRepository;
     }
-
-    public Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
-    {
-        return _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
-    }
-
-    public async Task<Result<EmployeeStatusDto>> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default)
-    {
-        var status = await _employeeRepository.GetStatusAsync(employeeId, ct);
-
-        if (status == null)
-        {
-            return Result.Failure<EmployeeStatusDto>(EmployeeErrors.NotFound);
-        }
-
-        return Result.Success(status);
-    }
-
+    
     public async Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
-        var shortInfo = await _employeeRepository.GetShortInfoAsync(employeeId, ct);
+        var shortInfo = await _employeeReadOnlyRepository.GetShortInfoAsync(employeeId, ct);
 
         if (shortInfo == null)
         {
@@ -45,6 +32,16 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         }
 
         return Result.Success(shortInfo);
+    }
+    
+    public async Task<bool> IsAvailableForBookingAsync(EmployeeId employeeId, CancellationToken ct = default)
+    {
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        if (employee is null)
+        {
+            return false;
+        }
+        return employee.CanBeBooked();
     }
     
     public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
@@ -58,7 +55,7 @@ public class EmployeeInternalApi : IEmployeeInternalApi
             return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
         }
         
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, date, ct);
         
         if (workingHours is null)
         {
@@ -69,8 +66,7 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         [
             new WorkingHoursDto(
                 workingHours.Date, 
-                workingHours.StartTime, 
-                workingHours.EndTime)
+                workingHours.Slot)
         ];
 
         return Result.Success(result);
