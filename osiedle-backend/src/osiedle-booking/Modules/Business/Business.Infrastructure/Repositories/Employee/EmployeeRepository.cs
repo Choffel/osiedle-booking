@@ -37,31 +37,6 @@ public class EmployeeRepository : IEmployeeRepository
             .AnyAsync(e => e.Email == email.ToLower().Trim(), ct);
     }
 
-    public async Task<EmployeeStatusDto?> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default)
-    {
-        return await _context.Employees
-            .AsNoTracking()
-            .Where(e => e.Id == employeeId)
-            .Select(e => new EmployeeStatusDto(
-                e.Status,
-                e.BusinessId != null ? e.BusinessId.Value : null
-            ))
-            .SingleOrDefaultAsync(ct);
-    }
-
-    public async Task<EmployeeShortInfoDto?> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default)
-    {
-        return await _context.Employees
-            .AsNoTracking()
-            .Where(e => e.Id == employeeId)
-            .Select(e => new EmployeeShortInfoDto(
-                e.Id.Value,
-                e.EmployeeName,
-                e.Position
-            ))
-            .SingleOrDefaultAsync(ct);
-    }
-
     public void AddEmployee(Domain.Aggregates.Employee employee)
     {
         _context.Employees.Add(employee);
