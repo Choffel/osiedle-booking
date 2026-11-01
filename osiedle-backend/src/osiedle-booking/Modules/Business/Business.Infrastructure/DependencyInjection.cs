@@ -30,7 +30,6 @@ public static class DependencyInjection
         #region Internal API
         services.AddScoped<IBookableServiceInternalApi, BookableServiceInternalApi>();
         services.AddScoped<IEmployeeInternalApi, EmployeeInternalApi>();
-        services.AddScoped<IBusinessInternalApi, BusinessInternalApi>();
         #endregion
 
         #region Repositories
