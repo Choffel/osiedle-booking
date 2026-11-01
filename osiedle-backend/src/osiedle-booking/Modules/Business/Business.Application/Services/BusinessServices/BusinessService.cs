@@ -34,7 +34,7 @@ public class BusinessService : IBusinessManagementService
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             createBusinessDto.OwnerId, 
-            createBusinessDto.Location, 
+            ToAddress(createBusinessDto.Location), 
             createBusinessDto.Description);
         
         _businessRepository.Add(business);
@@ -67,7 +67,7 @@ public class BusinessService : IBusinessManagementService
        
        business.UpdateDescription(updateBusinessInfoDto.NewDescription);
        
-       business.UpdateAddress(updateBusinessInfoDto.NewLocation);
+       business.UpdateAddress(ToAddress(updateBusinessInfoDto.NewLocation));
        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -88,5 +88,10 @@ public class BusinessService : IBusinessManagementService
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return  business.ToResponseDto();
+    }
+
+    private static Address ToAddress(AddressDto address)
+    {
+        return Address.Create(address.Street, address.Number, address.City);
     }
 }

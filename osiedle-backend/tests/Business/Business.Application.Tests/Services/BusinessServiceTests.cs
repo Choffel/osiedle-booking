@@ -14,6 +14,7 @@ namespace Business.Application.Tests.Services;
 public class BusinessServiceTests
 {
     private static readonly Address Location = Address.Create("Main Street", "1", "Warsaw");
+    private static readonly AddressDto LocationDto = new("Main Street", "1", "Warsaw");
 
     private readonly Mock<IBusinessRepository> _businessRepository = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
@@ -27,7 +28,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WithFreeOwner_AddsBusinessAndSaves()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Haircuts and more", Location);
+        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Haircuts and more", LocationDto);
         BusinessAggregate? added = null;
 
         _businessRepository
@@ -47,7 +48,7 @@ public class BusinessServiceTests
         Assert.Equal(dto.Name, added!.Name);
         Assert.Equal(dto.OwnerId, added.OwnerId);
         Assert.Equal(dto.Description, added.Description);
-        Assert.Equal(dto.Location, added.Location);
+        Assert.Equal(Address.Create(dto.Location.Street, dto.Location.Number, dto.Location.City), added.Location);
         Assert.Equal(BusinessStatus.Active, added.Status);
         Assert.Equal(added.Id.Value, result.Value.Id);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -56,7 +57,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WhenOwnerAlreadyHasBusiness_ReturnsConflict()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Description", Location);
+        var dto = new CreateBusinessDto("Beauty Salon", UserId.New(), "Description", LocationDto);
 
         _businessRepository
             .Setup(r => r.ExistsByOwnerIdAsync(dto.OwnerId, It.IsAny<CancellationToken>()))
@@ -103,7 +104,7 @@ public class BusinessServiceTests
     public async Task UpdateBusinessInfoAsync_WhenBusinessExists_UpdatesFieldsAndSaves()
     {
         var business = BusinessAggregate.Create("Old name", UserId.New(), Location, "Old description");
-        var newLocation = Address.Create("New Street", "2", "Krakow");
+        var newLocation = new AddressDto("New Street", "2", "Krakow");
         var dto = new UpdateBusinessInfoDto("New name", "New description", newLocation);
 
         _businessRepository
@@ -118,7 +119,9 @@ public class BusinessServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.NewName, business.Name);
         Assert.Equal(dto.NewDescription, business.Description);
-        Assert.Equal(dto.NewLocation, business.Location);
+        Assert.Equal(newLocation.Street, business.Location.Street);
+        Assert.Equal(newLocation.Number, business.Location.Number);
+        Assert.Equal(newLocation.City, business.Location.City);
         Assert.Equal(dto.NewName, result.Value.Name);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -131,7 +134,7 @@ public class BusinessServiceTests
             .ReturnsAsync((BusinessAggregate?)null);
 
         var result = await _sut.UpdateBusinessInfoAsync(
-            BusinessId.New(), new UpdateBusinessInfoDto("New name", "New description", Location));
+            BusinessId.New(), new UpdateBusinessInfoDto("New name", "New description", LocationDto));
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);
