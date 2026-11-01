@@ -3,29 +3,25 @@ namespace Business.Domain.ValueObjects;
 //TODO: add postal code
 public readonly record struct Address
 {
-    private string Street { get; }
-    private string Number { get; }
-    private string City { get; }
+    public string Street { get; }
+    public string Number { get; }
+    public string City { get; }
     
-    private Address(string street, string number, string city)
-    {
-        Street = street;
-        Number = number;
-        City = city;
-    }
-
-
-    public static Address Create(string street, string number, string city)
+    public Address(string street, string number, string city)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(street);
         ArgumentException.ThrowIfNullOrWhiteSpace(number);
         ArgumentException.ThrowIfNullOrWhiteSpace(city);
         
-        var normalizedStreet = street.Trim();
-        var normalizedNumber = number.Trim();
-        var normalizedCity = city.Trim();
-        
-        return new Address(normalizedStreet, normalizedNumber, normalizedCity);
+        Street = street.Trim();
+        Number = number.Trim();
+        City = city.Trim();
+    }
+
+
+    public static Address Create(string street, string number, string city)
+    {
+        return new Address(street, number, city);
     }
     
     public bool IsEmpty => string.IsNullOrEmpty(Street);
