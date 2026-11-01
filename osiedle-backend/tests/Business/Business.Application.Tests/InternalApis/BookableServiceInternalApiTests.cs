@@ -30,19 +30,6 @@ public class BookableServiceInternalApiTests
     }
 
     [Fact]
-    public async Task BelongsToEmployeeAsync_DelegatesToRepository()
-    {
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        var result = await _sut.BelongsToEmployeeAsync(BookableServiceId.New(), EmployeeId.New());
-
-        Assert.False(result);
-    }
-
-    [Fact]
     public async Task GetServiceInfoAsync_WhenServiceExists_ReturnsShortInfo()
     {
         var serviceInfo = new ServiceShortInfoDto(

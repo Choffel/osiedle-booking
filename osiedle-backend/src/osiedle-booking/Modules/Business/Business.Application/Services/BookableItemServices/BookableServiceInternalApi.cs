@@ -20,12 +20,7 @@ public class BookableServiceInternalApi : IBookableServiceInternalApi
     {
         return _bookableServiceRepository.ExistsAsync(id, ct);
     }
-
-    public Task<bool> BelongsToEmployeeAsync(BookableServiceId id, EmployeeId employeeId, CancellationToken ct = default)
-    {
-        return _bookableServiceRepository.BelongsToEmployeeAsync(id, employeeId, ct);
-    }
-
+    
     public async Task<Result<ServiceShortInfoDto>> GetServiceInfoAsync(BookableServiceId id, CancellationToken ct = default)
     {
         var serviceInfo = await _bookableServiceRepository.GetBasicInfoByIdAsync(id, ct);
