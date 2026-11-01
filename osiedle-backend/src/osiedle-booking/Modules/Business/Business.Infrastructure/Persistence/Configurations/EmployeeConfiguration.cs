@@ -24,14 +24,19 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
                 id => id != null ? id.Value : (Guid?)null,
                 value => value.HasValue ? BusinessId.From(value.Value) : null);
         
-        builder.Property(e => e.FirstName)
-            .HasMaxLength(50) 
-            .IsRequired();
-        
-        builder.Property(e => e.LastName)
-            .HasMaxLength(50)
-            .IsRequired();
+        builder.ComplexProperty(e => e.EmployeeName, nameBuilder =>
+        {
+            nameBuilder.Property(n => n.FirstName)
+                .HasColumnName("first_name")
+                .HasMaxLength(100)
+                .IsRequired();
 
+            nameBuilder.Property(n => n.LastName)
+                .HasColumnName("last_name")
+                .HasMaxLength(100)
+                .IsRequired();
+        });
+            
         builder.Property(e => e.Position)
             .HasMaxLength(100)
             .IsRequired();

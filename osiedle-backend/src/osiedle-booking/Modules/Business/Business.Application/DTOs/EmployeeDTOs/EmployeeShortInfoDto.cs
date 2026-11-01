@@ -1,8 +1,9 @@
+using Business.Domain.ValueObjects;
+
 namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record EmployeeShortInfoDto(
     Guid EmployeeId,
-    string FirstName,
-    string LastName,
+    EmployeeName EmployeeName,
     string Position
     );

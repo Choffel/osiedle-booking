@@ -1,6 +1,5 @@
  using Business.Application.DTOs.EmployeeDTOs;
  using Business.Domain.Aggregates;
- using Business.Domain.Entities;
 
  namespace Business.Application.ExtensionMethods;
 
@@ -11,8 +10,7 @@
          return new EmployeeResponseDto(
              employee.Id,
              employee.BusinessId,
-             employee.FirstName,
-             employee.LastName,
+             employee.EmployeeName,
              employee.Position,
              employee.Review,
              employee.Email

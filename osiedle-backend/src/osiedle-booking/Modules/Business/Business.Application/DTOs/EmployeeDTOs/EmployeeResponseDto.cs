@@ -1,10 +1,11 @@
-﻿namespace Business.Application.DTOs.EmployeeDTOs;
+﻿using Business.Domain.ValueObjects;
+
+namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record EmployeeResponseDto(
     Guid Id,
     Guid? BusinessId,
-    string FirstName,
-    string LastName,
+    EmployeeName Name,
     string Position,
     string? Review,
     string Email

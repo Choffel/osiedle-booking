@@ -56,8 +56,7 @@ public class EmployeeRepository : IEmployeeRepository
             .Where(e => e.Id == employeeId)
             .Select(e => new EmployeeShortInfoDto(
                 e.Id.Value,
-                e.FirstName,
-                e.LastName,
+                e.EmployeeName,
                 e.Position
             ))
             .SingleOrDefaultAsync(ct);

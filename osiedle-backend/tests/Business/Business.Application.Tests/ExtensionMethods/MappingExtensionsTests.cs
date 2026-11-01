@@ -15,7 +15,11 @@ public class MappingExtensionsTests
     public void ToResponseDto_MapsBusinessFields()
     {
         var ownerId = UserId.New();
-        var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", "Location");
+        var business = BusinessAggregate.Create(
+            "Beauty Salon",
+            ownerId,
+            Address.Create("Main Street", "1", "Warsaw"),
+            "Description");
 
         var dto = business.ToResponseDto();
 
@@ -23,7 +27,7 @@ public class MappingExtensionsTests
         Assert.Equal(ownerId.Value, dto.OwnerId);
         Assert.Equal(business.Name, dto.Name);
         Assert.Equal(business.Description, dto.Description);
-        Assert.Equal(business.Location, dto.Location);
+        Assert.Equal(business.Location.ToString(), dto.Location);
         Assert.Equal(nameof(BusinessStatus.Active), dto.Status);
         Assert.Equal(business.CreatedAt, dto.CreatedAt);
         Assert.Equal(business.UpdatedAt, dto.UpdatedAt);
@@ -34,14 +38,18 @@ public class MappingExtensionsTests
     {
         var businessId = BusinessId.New();
         var employee = EmployeeAggregate.Create(
-            businessId, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+            businessId,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "jan@example.com");
 
         var dto = employee.ToResponseDto();
 
         Assert.Equal(employee.Id.Value, dto.Id);
         Assert.Equal(businessId.Value, dto.BusinessId);
-        Assert.Equal(employee.FirstName, dto.FirstName);
-        Assert.Equal(employee.LastName, dto.LastName);
+        Assert.Equal("Jan", dto.Name.FirstName);
+        Assert.Equal("Kowalski", dto.Name.LastName);
         Assert.Equal(employee.Position, dto.Position);
         Assert.Equal(employee.Review, dto.Review);
     }
