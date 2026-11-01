@@ -3,7 +3,6 @@ using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Aggregates;
-using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
@@ -26,7 +25,7 @@ public class EmployeeService : IEmployeeManagementService
         _businessRepository = businessRepository;
     }
     
-    public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
+   public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
     {
         if (dto.BusinessId is not null)
         {
@@ -59,19 +58,17 @@ public class EmployeeService : IEmployeeManagementService
             return Result.Failure(EmployeeErrors.NotFound);
         }
         
-        var normalizedEmail = Employee.NormalizeEmail(dto.Email);
-        bool isEmailChanged = !string.Equals(employee.Email, normalizedEmail, StringComparison.Ordinal);
-
-        if (isEmailChanged)
+        if (!string.Equals(employee.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
         {
-            bool isEmailTaken = await _employeeRepository.ExistsByEmailAsync(normalizedEmail, ct);
+            bool isEmailTaken = await _employeeRepository.ExistsByEmailAsync(dto.Email, ct);
             if (isEmailTaken)
             {
                 return Result.Failure(EmployeeErrors.AlreadyExists);
             }
 
-            employee.ChangeEmail(normalizedEmail);
+            employee.ChangeEmail(dto.Email);
         }
+        
         
         var newName = EmployeeName.Create(dto.FirstName, dto.LastName);
         if (employee.EmployeeName != newName)
@@ -84,9 +81,9 @@ public class EmployeeService : IEmployeeManagementService
             employee.ChangePosition(dto.Position);
         }
         
+        
         employee.ChangeReview(dto.Review);
-
-        // 5. Сохранение изменений
+        
         await _unitOfWork.SaveChangesAsync(ct);
 
         return Result.Success();
@@ -95,13 +92,12 @@ public class EmployeeService : IEmployeeManagementService
     public async Task<Result> DeactivateEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
         var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
-        
         if (employee == null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
+        employee.ArchiveEmployee();
         
-        employee.ChangeStatus(EmploymentStatus.Terminated);
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }

@@ -29,12 +29,13 @@ public class EmployeeServiceTests
     public async Task CreateEmployeeAsync_WithNewEmail_AddsNormalizedEmployeeAndSaves()
     {
         var dto = new EmployeeCreateDto(
-            null, "Jan", "Kowalski", "Barber", "Great", "  Jan.Kowalski@Example.COM  ");
+            null,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "  Jan.Kowalski@Example.COM  ");
         EmployeeAggregate? added = null;
 
-        _employeeRepository
-            .Setup(r => r.ExistsByEmailAsync("jan.kowalski@example.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
         _employeeRepository
             .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
             .Callback<EmployeeAggregate>(employee => added = employee);
@@ -46,44 +47,27 @@ public class EmployeeServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(added);
-        Assert.Equal(dto.FirstName, added!.FirstName);
-        Assert.Equal(dto.LastName, added.LastName);
+        Assert.Equal("Jan", added!.EmployeeName.FirstName);
+        Assert.Equal("Kowalski", added.EmployeeName.LastName);
         Assert.Equal(dto.Position, added.Position);
         Assert.Equal(dto.Review, added.Review);
+        Assert.Equal("jan.kowalski@example.com", added.Email);
         Assert.Equal(added.Id, result.Value);
-        _employeeRepository.Verify(
-            r => r.ExistsByEmailAsync("jan.kowalski@example.com", It.IsAny<CancellationToken>()),
-            Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task CreateEmployeeAsync_WhenEmailAlreadyExists_ReturnsConflict()
-    {
-        var dto = new EmployeeCreateDto(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
-
-        _employeeRepository
-            .Setup(r => r.ExistsByEmailAsync(dto.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        var result = await _sut.CreateEmployeeAsync(dto);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(EmployeeErrors.AlreadyExists, result.Error);
-        _employeeRepository.Verify(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()), Times.Never);
-        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task CreateEmployeeAsync_WithBusinessId_PassesBusinessIdToAggregate()
     {
         var businessId = BusinessId.New();
-        var dto = new EmployeeCreateDto(businessId, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var dto = new EmployeeCreateDto(
+            businessId,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "jan@example.com");
         EmployeeAggregate? added = null;
 
-        _employeeRepository
-            .Setup(r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
         _businessRepository
             .Setup(r => r.ExistsByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -104,11 +88,13 @@ public class EmployeeServiceTests
     public async Task CreateEmployeeAsync_WithUnknownBusinessId_ReturnsValidationError()
     {
         var businessId = BusinessId.New();
-        var dto = new EmployeeCreateDto(businessId, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var dto = new EmployeeCreateDto(
+            businessId,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "jan@example.com");
 
-        _employeeRepository
-            .Setup(r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
         _businessRepository
             .Setup(r => r.ExistsByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -124,12 +110,14 @@ public class EmployeeServiceTests
     [Fact]
     public async Task CreateEmployeeAsync_WithoutReview_CreatesEmployeeWithNullReview()
     {
-        var dto = new EmployeeCreateDto(null, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var dto = new EmployeeCreateDto(
+            null,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            null,
+            "jan@example.com");
         EmployeeAggregate? added = null;
 
-        _employeeRepository
-            .Setup(r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
         _employeeRepository
             .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
             .Callback<EmployeeAggregate>(employee => added = employee);
@@ -147,8 +135,7 @@ public class EmployeeServiceTests
     [Fact]
     public async Task UpdateProfileAsync_WhenEmailBelongsToAnotherEmployee_ReturnsConflict()
     {
-        var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
         var dto = new UpdateEmployeeProfileDto("Jan", "Kowalski", "Barber", "Great", "taken@example.com");
 
         _employeeRepository
@@ -169,9 +156,8 @@ public class EmployeeServiceTests
     [Fact]
     public async Task UpdateProfileAsync_WhenEmailIsUnchanged_DoesNotCheckEmailAvailability()
     {
-        var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
-        var dto = new UpdateEmployeeProfileDto("Jan", "Kowalski", "Barber", "Great", "  JAN@Example.COM  ");
+        var employee = CreateEmployee();
+        var dto = new UpdateEmployeeProfileDto("Jan", "Kowalski", "Barber", "Great", "JAN@Example.COM");
 
         _employeeRepository
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -192,8 +178,7 @@ public class EmployeeServiceTests
     [Fact]
     public async Task UpdateProfileAsync_WhenEmployeeExists_UpdatesFieldsAndSaves()
     {
-        var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
         var dto = new UpdateEmployeeProfileDto("Adam", "Nowak", "Stylist", "Very good", "adam@example.com");
 
         _employeeRepository
@@ -206,8 +191,8 @@ public class EmployeeServiceTests
         var result = await _sut.UpdateProfileAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(dto.FirstName, employee.FirstName);
-        Assert.Equal(dto.LastName, employee.LastName);
+        Assert.Equal(dto.FirstName, employee.EmployeeName.FirstName);
+        Assert.Equal(dto.LastName, employee.EmployeeName.LastName);
         Assert.Equal(dto.Position, employee.Position);
         Assert.Equal(dto.Review, employee.Review);
         Assert.NotNull(employee.UpdatedAt);
@@ -230,10 +215,9 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public async Task DeactivateEmployeeAsync_WhenEmployeeExists_TerminatesEmployeeAndSaves()
+    public async Task DeactivateEmployeeAsync_WhenEmployeeExists_ArchivesEmployeeAndSaves()
     {
-        var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
 
         _employeeRepository
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -245,7 +229,7 @@ public class EmployeeServiceTests
         var result = await _sut.DeactivateEmployeeAsync(employee.Id);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(EmploymentStatus.Terminated, employee.Status);
+        Assert.Equal(EmploymentStatus.Archived, employee.Status);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -261,5 +245,15 @@ public class EmployeeServiceTests
         Assert.True(result.IsFailure);
         Assert.Equal(EmployeeErrors.NotFound, result.Error);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static EmployeeAggregate CreateEmployee()
+    {
+        return EmployeeAggregate.Create(
+            null,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "jan@example.com");
     }
 }
