@@ -11,10 +11,9 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
     {
         builder.ToTable("WorkingHours", t =>
         {
-            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "\"EndTime\" > \"StartTime\"");
+            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "end_time > start_time");
         });
 
-        
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
@@ -22,14 +21,12 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
                 id => id.Value,
                 value => WorkingHoursId.From(value));
         
-        
         builder.Property(x => x.EmployeeId)
             .HasConversion(
                 id => id.Value,
                 value => EmployeeId.From(value))
             .IsRequired();
 
-        
         builder.Property(x => x.Date)
             .HasColumnType("date")
             .IsRequired();
@@ -38,7 +35,7 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
         {
             slotBuilder.Property(s => s.StartTime)
                 .HasColumnName("start_time")
-                .HasColumnType("time") // Явное указание типа SQL
+                .HasColumnType("time") 
                 .IsRequired();
 
             slotBuilder.Property(s => s.EndTime)

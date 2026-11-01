@@ -11,7 +11,6 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     {
         builder.ToTable("Employees");
 
-        
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
@@ -47,18 +46,18 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(e => e.Email)
             .IsRequired()
             .HasMaxLength(256);
-
-        builder.HasIndex(e => e.Email).IsUnique().HasFilter("deleted at IS NULL");
+        
+        builder.HasIndex(e => e.Email)
+            .IsUnique()
+            .HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(e => e.Status)
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        
         builder.HasQueryFilter(e => e.DeletedAt == null);
 
-        
         builder.HasMany(e => e.BookableServices)
             .WithOne() 
             .HasForeignKey(s => s.EmployeeId)

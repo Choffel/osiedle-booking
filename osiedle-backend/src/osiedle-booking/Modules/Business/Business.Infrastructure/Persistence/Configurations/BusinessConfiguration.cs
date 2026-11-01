@@ -28,7 +28,7 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
         
         builder.HasIndex(b => b.OwnerId)
             .IsUnique()
-            .HasFilter("DeletedAt IS NULL");
+            .HasFilter("\"DeletedAt\" IS NULL");
 
         
         builder.Property(b => b.Name)

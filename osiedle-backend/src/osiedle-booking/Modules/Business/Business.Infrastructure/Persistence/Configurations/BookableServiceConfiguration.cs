@@ -11,7 +11,6 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
     {
         builder.ToTable("BookableServices");
 
-
         builder.HasKey(x => x.Id);
         
         builder.Property(s => s.Id)
@@ -26,15 +25,32 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
                 value => EmployeeId.From(value)
             )
             .IsRequired();
+            
+        builder.Property(x => x.ServiceName)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(x => x.Price)
+            .IsRequired()
+            .HasColumnType("numeric(18,2)");
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+        
+        builder.Property(x => x.Duration)
+            .HasColumnType("interval")
+            .IsRequired();
+
+        builder.Property(x => x.Status)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.CreatedAt)
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedAt);
         
         builder.HasIndex(s => s.EmployeeId);
-        
-        builder.Property(x => x.ServiceName).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Price).IsRequired().HasColumnType("numeric(18,2)");
-        builder.Property(x => x.Description).HasMaxLength(500);
-        builder.Property(x => x.Duration).HasColumnType("interval").IsRequired();
-        builder.Property(x => x.Status).IsRequired().HasConversion<string>().HasMaxLength(50);
-        builder.Property(x => x.CreatedAt).IsRequired();
-        builder.Property(x => x.UpdatedAt);
     }
 }
