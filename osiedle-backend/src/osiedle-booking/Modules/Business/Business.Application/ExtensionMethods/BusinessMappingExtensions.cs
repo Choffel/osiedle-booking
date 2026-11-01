@@ -11,7 +11,7 @@ public static class BusinessMappingExtensions
             business.OwnerId.Value,
             business.Name,
             business.Description,
-            business.,
+            business.Location.ToString(),
             business.Status.ToString(),
             business.CreatedAt,
             business.UpdatedAt
