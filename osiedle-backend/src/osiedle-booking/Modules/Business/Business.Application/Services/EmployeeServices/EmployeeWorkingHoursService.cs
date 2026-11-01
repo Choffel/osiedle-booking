@@ -33,12 +33,12 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
             return Result.Failure(EmployeeErrors.NotFound);
         }
 
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(dto.WorkingHoursId,employeeId, dto.Date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, dto.Date, ct);
 
         if (workingHours is null)
         {
             var newWorkingHours = WorkingHours.Create(employeeId, dto.Date, dto.Slot);
-            _employeeWorkingHoursRepository.AddWorkingHours(newWorkingHours);
+            _employeeWorkingHoursRepository.Add(newWorkingHours);
         }
         else
         {
@@ -51,13 +51,13 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
 
     public async Task<Result> ClearWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
     {
-        var employee
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, date, ct);
         
         if (workingHours != null)
         {
-            _employeeWorkingHoursRepository.RemoveWorkingHours(workingHours);
+            _employeeWorkingHoursRepository.Remove(workingHours);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         

@@ -17,41 +17,36 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
         _dbContext = dbContext;
     }
 
+    
+    public async Task<WorkingHours?> GetByDateAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
+    {
+        return await _dbContext.WorkingHours
+            .FirstOrDefaultAsync(w => w.EmployeeId == employeeId && w.Date == date, ct);
+    }
 
-    public async  Task<IReadOnlyCollection<WorkingHoursDto>> GetWorkingHoursForRangeAsync(WorkingHoursId workingHoursId,EmployeeId employeeId, DateOnly startDate, DateOnly endDate,
-        CancellationToken ct)
+    public async Task<IReadOnlyCollection<WorkingHoursDto>> GetForRangeAsync(
+        EmployeeId employeeId, 
+        DateOnly startDate, 
+        DateOnly endDate, 
+        CancellationToken ct = default)
     {
         return await _dbContext.WorkingHours
             .AsNoTracking()
-            .Where(w => w.EmployeeId == employeeId
-                        && w.Date >= startDate
+            .Where(w => w.EmployeeId == employeeId 
+                        && w.Date >= startDate 
                         && w.Date <= endDate)
             .Select(w => new WorkingHoursDto(
                 w.Date,
-                w.StartTime,
-                w.EndTime))
+                w.Slot))
             .ToListAsync(ct);
     }
-
-    public async  Task<WorkingHours?> GetWorkingHoursByDateAsync(WorkingHoursId workingHoursId,EmployeeId employeeId, DateOnly date, CancellationToken ct)
-    {
-        //&& workinghourid
-        return await _dbContext.WorkingHours
-            .Where(w => w.EmployeeId == employeeId && 
-                        )
-    }
-
-    public void AddWorkingHours(WorkingHours workingHours)
+    
+    public void Add(WorkingHours workingHours)
     {
         _dbContext.WorkingHours.Add(workingHours);
     }
-
-    public void UpdateWorkingHours(WorkingHours workingHours)
-    {
-        _dbContext.WorkingHours.Update(workingHours);
-    }
-
-    public void RemoveWorkingHours(WorkingHours workingHours)
+    
+    public void Remove(WorkingHours workingHours)
     {
         _dbContext.WorkingHours.Remove(workingHours);
     }

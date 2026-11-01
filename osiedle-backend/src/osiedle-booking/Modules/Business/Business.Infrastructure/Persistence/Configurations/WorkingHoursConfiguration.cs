@@ -34,14 +34,18 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
             .HasColumnType("date")
             .IsRequired();
 
-        builder.Property(x => x.StartTime)
-            .HasColumnType("time")
-            .IsRequired();
+        builder.ComplexProperty(s => s.Slot, slotBuilder =>
+        {
+            slotBuilder.Property(s => s.StartTime)
+                .HasColumnName("start_time")
+                .HasColumnType("time") // Явное указание типа SQL
+                .IsRequired();
 
-        builder.Property(x => x.EndTime)
-            .HasColumnType("time")
-            .IsRequired();
-
+            slotBuilder.Property(s => s.EndTime)
+                .HasColumnName("end_time")
+                .HasColumnType("time")
+                .IsRequired();
+        });
         
         builder.HasIndex(x => new { x.EmployeeId, x.Date })
             .IsUnique();

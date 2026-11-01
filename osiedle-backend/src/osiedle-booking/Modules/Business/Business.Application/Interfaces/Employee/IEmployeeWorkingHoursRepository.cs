@@ -7,22 +7,14 @@ namespace Business.Application.Interfaces.Employee;
 
 public interface IEmployeeWorkingHoursRepository
 {
-    Task<IReadOnlyCollection<WorkingHoursDto>> GetWorkingHoursForRangeAsync(
-        WorkingHoursId workingHoursId,
+    Task<WorkingHours?> GetByDateAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default);
+    Task<IReadOnlyCollection<WorkingHoursDto>> GetForRangeAsync(
         EmployeeId employeeId, 
         DateOnly startDate, 
         DateOnly endDate, 
-        CancellationToken ct);
-
- 
-    Task<WorkingHours?> GetWorkingHoursByDateAsync(
-        WorkingHoursId workingHoursId,
-        EmployeeId employeeId, 
-        DateOnly date, 
-        CancellationToken ct);
+        CancellationToken ct = default);
     
+    void Add(WorkingHours workingHours);
     
-    void AddWorkingHours(WorkingHours workingHours);
-    
-    void RemoveWorkingHours(WorkingHours workingHours);
+    void Remove(WorkingHours workingHours);
 }
