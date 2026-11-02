@@ -2,13 +2,13 @@ using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.DTOs;
 
-namespace Users.Application.Abstractions.Services;
+namespace Users.Application.Abstractions.Services.Tokens;
 
 public interface ITokenService
 {
     Task<Result<TokenResponseDto>> GenerateTokensAsync(UserId userId, string email, IReadOnlyCollection<string> roles,
         CancellationToken ct = default);
-    Task<Result<TokenResponseDto>> GenerateTokensAsync(string currentRefreshToken, CancellationToken ct = default);
+    Task<Result<TokenResponseDto>> GenerateTokensByRefreshTokenAsync(string currentRefreshToken, CancellationToken ct = default);
     //Task<Result<TokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken ct = default);
     //Task<Result> RevokeRefreshTokenAsync(string refreshToken, CancellationToken ct = default);
     
