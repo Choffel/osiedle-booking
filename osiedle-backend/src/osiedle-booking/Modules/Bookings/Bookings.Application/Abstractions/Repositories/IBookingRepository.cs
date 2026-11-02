@@ -5,12 +5,7 @@ namespace Bookings.Application.Abstractions.Repositories;
 
 public interface IBookingRepository
 {
-    Task<IReadOnlyList<Booking>> GetBookingsBydDateAsync(DateOnly date, StaffId staffId, CancellationToken ct);
-    Task<bool> HasOverlappingAsync(StaffId staffId, TimeSlot slot, CancellationToken ct);
-    Task<Booking> CreateBookingAsync(Booking booking, CancellationToken ct);
-    Task<IReadOnlyCollection<Booking>> FindBookingsByClientIdIdAsync(ClientId id,CancellationToken ct);
-    Task<IReadOnlyCollection<Booking>> GetBookingsByClientIdIdAsync(ClientId id,CancellationToken ct);
-    Task<Booking?> FindBookingByIdAsync(BookingId id, CancellationToken ct);
-    Task<Booking?> GetBookingByIdAsync(BookingId id, CancellationToken ct);
-    Task<Booking> Update(Booking booking, CancellationToken ct);
+    Task<Booking?> GetByIdAsync(BookingId id, CancellationToken ct = default);
+    Task<bool> HasOverlappingAsync(StaffId staffId, TimeSlot slot, CancellationToken ct = default);
+    void Add(Booking booking);
 }
