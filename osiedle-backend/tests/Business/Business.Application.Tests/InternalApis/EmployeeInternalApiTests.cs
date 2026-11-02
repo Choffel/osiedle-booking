@@ -28,7 +28,7 @@ public class EmployeeInternalApiTests
     [Fact]
     public async Task GetShortInfoAsync_WhenEmployeeExists_ReturnsShortInfo()
     {
-        var shortInfo = new EmployeeShortInfoDto(Guid.NewGuid(), EmployeeName.Create("Jan", "Kowalski"), "Barber");
+        var shortInfo = new EmployeeShortInfoDto(Guid.NewGuid(), "Jan", "Kowalski", "Barber");
         _employeeReadOnlyRepository
             .Setup(r => r.GetShortInfoAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shortInfo);
@@ -61,7 +61,8 @@ public class EmployeeInternalApiTests
 
         var result = await _sut.IsAvailableForBookingAsync(EmployeeId.New());
 
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value);
     }
 
     [Fact]
@@ -74,7 +75,8 @@ public class EmployeeInternalApiTests
 
         var result = await _sut.IsAvailableForBookingAsync(employee.Id);
 
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value);
     }
 
     [Fact]
@@ -88,7 +90,8 @@ public class EmployeeInternalApiTests
 
         var result = await _sut.IsAvailableForBookingAsync(employee.Id);
 
-        Assert.False(result);
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value);
     }
 
     [Fact]
@@ -142,8 +145,8 @@ public class EmployeeInternalApiTests
         Assert.True(result.IsSuccess);
         var item = Assert.Single(result.Value);
         Assert.Equal(Date, item.Date);
-        Assert.Equal(new TimeOnly(9, 0), item.TimeSlot.StartTime);
-        Assert.Equal(new TimeOnly(17, 0), item.TimeSlot.EndTime);
+        Assert.Equal(new TimeOnly(9, 0), item.StartTime);
+        Assert.Equal(new TimeOnly(17, 0), item.EndTime);
     }
 
     private static EmployeeAggregate CreateEmployee()

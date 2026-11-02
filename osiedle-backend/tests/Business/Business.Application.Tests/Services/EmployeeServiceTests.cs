@@ -30,7 +30,8 @@ public class EmployeeServiceTests
     {
         var dto = new EmployeeCreateDto(
             null,
-            EmployeeName.Create("Jan", "Kowalski"),
+            "Jan",
+            "Kowalski",
             "Barber",
             "Great",
             "  Jan.Kowalski@Example.COM  ");
@@ -61,8 +62,9 @@ public class EmployeeServiceTests
     {
         var businessId = BusinessId.New();
         var dto = new EmployeeCreateDto(
-            businessId,
-            EmployeeName.Create("Jan", "Kowalski"),
+            businessId.Value,
+            "Jan",
+            "Kowalski",
             "Barber",
             "Great",
             "jan@example.com");
@@ -89,8 +91,9 @@ public class EmployeeServiceTests
     {
         var businessId = BusinessId.New();
         var dto = new EmployeeCreateDto(
-            businessId,
-            EmployeeName.Create("Jan", "Kowalski"),
+            businessId.Value,
+            "Jan",
+            "Kowalski",
             "Barber",
             "Great",
             "jan@example.com");
@@ -112,7 +115,8 @@ public class EmployeeServiceTests
     {
         var dto = new EmployeeCreateDto(
             null,
-            EmployeeName.Create("Jan", "Kowalski"),
+            "Jan",
+            "Kowalski",
             "Barber",
             null,
             "jan@example.com");

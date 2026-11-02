@@ -31,7 +31,7 @@ public class EmployeeWorkingHoursServiceTests
     public async Task SetWorkingHoursAsync_WhenEmployeeMissing_ReturnsNotFound()
     {
         var employeeId = EmployeeId.New();
-        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, Slot);
+        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, Slot.StartTime, Slot.EndTime);
         _employeeRepository
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
@@ -47,7 +47,7 @@ public class EmployeeWorkingHoursServiceTests
     public async Task SetWorkingHoursAsync_WhenNoEntryForDate_AddsWorkingHoursAndSaves()
     {
         var employee = CreateEmployee();
-        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, Slot);
+        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, Slot.StartTime, Slot.EndTime);
         WorkingHours? added = null;
 
         _employeeRepository
@@ -69,8 +69,8 @@ public class EmployeeWorkingHoursServiceTests
         Assert.NotNull(added);
         Assert.Equal(employee.Id, added!.EmployeeId);
         Assert.Equal(Date, added.Date);
-        Assert.Equal(dto.Slot.StartTime, added.Slot.StartTime);
-        Assert.Equal(dto.Slot.EndTime, added.Slot.EndTime);
+        Assert.Equal(dto.StartTime, added.Slot.StartTime);
+        Assert.Equal(dto.EndTime, added.Slot.EndTime);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -81,7 +81,7 @@ public class EmployeeWorkingHoursServiceTests
         var existing = WorkingHours.Create(
             employee.Id, Date, TimeSlot.Create(new TimeOnly(8, 0), new TimeOnly(16, 0)));
         var newSlot = TimeSlot.Create(new TimeOnly(10, 0), new TimeOnly(18, 0));
-        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, newSlot);
+        var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, newSlot.StartTime, newSlot.EndTime);
 
         _employeeRepository
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -96,8 +96,8 @@ public class EmployeeWorkingHoursServiceTests
         var result = await _sut.SetWorkingHoursAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(dto.Slot.StartTime, existing.Slot.StartTime);
-        Assert.Equal(dto.Slot.EndTime, existing.Slot.EndTime);
+        Assert.Equal(dto.StartTime, existing.Slot.StartTime);
+        Assert.Equal(dto.EndTime, existing.Slot.EndTime);
         _workingHoursRepository.Verify(r => r.Add(It.IsAny<WorkingHours>()), Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

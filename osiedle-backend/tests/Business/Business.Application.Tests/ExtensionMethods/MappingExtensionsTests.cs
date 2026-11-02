@@ -48,8 +48,8 @@ public class MappingExtensionsTests
 
         Assert.Equal(employee.Id.Value, dto.Id);
         Assert.Equal(businessId.Value, dto.BusinessId);
-        Assert.Equal("Jan", dto.Name.FirstName);
-        Assert.Equal("Kowalski", dto.Name.LastName);
+        Assert.Equal("Jan", dto.FirstName);
+        Assert.Equal("Kowalski", dto.LastName);
         Assert.Equal(employee.Position, dto.Position);
         Assert.Equal(employee.Review, dto.Review);
     }
