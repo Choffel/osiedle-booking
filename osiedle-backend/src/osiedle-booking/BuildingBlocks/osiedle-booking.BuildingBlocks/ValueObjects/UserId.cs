@@ -2,7 +2,7 @@ namespace osiedle_booking.BuildingBlocks.ValueObjects;
 
 public sealed record UserId
 {
-    public Guid Value { get; }
+    public Guid Value { get; init; }
     
     public UserId()
     {
@@ -20,9 +20,6 @@ public sealed record UserId
     public static UserId New() => new(Guid.NewGuid());
     public static UserId From(Guid value)
     {
-        if (value == Guid.Empty)
-            throw new ArgumentException("UserId cannot be empty.", nameof(value));
-            
         return new(value);
     }
     
