@@ -4,28 +4,29 @@ using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
 using Users.Infrastructure.Identity;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Errors;
+using Users.Infrastructure.Identity.Models;
 
 namespace UserModule.Integration;
 
 public class PasswordRecoveryFlowTests : IntegrationTestBase
 {
-    private const string GenericForgotPasswordMessage =
-        "If this email address exists in the system, instructions have been sent to the email.";
-
     [Fact]
-    public async Task ForgotPassword_ShouldReturnGenericMessage_ForUnknownEmail()
+    public async Task ForgotPassword_ShouldStayGeneric_ForUnknownEmail()
     {
         using var scope = CreateScope();
         var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.ForgotPasswordAsync(new ForgotPasswordRequest("ghost@example.com"));
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(GenericForgotPasswordMessage);
+        // No message payload anymore: the endpoint only answers success/failure,
+        // and it must answer success either way to avoid account enumeration.
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
     }
 
     [Fact]
-    public async Task ForgotPassword_ShouldReturnSameGenericMessage_ForKnownEmail()
+    public async Task ForgotPassword_ShouldStayGeneric_ForKnownEmail()
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
@@ -34,9 +35,8 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
 
         var result = await userService.ForgotPasswordAsync(new ForgotPasswordRequest(email));
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(GenericForgotPasswordMessage,
-            "ответ не должен раскрывать, зарегистрирован ли email");
+        // Ответ не должен раскрывать, зарегистрирован ли email — оба кейса успешны.
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
     }
 
     [Fact]
@@ -57,11 +57,10 @@ public class PasswordRecoveryFlowTests : IntegrationTestBase
             new ResetPasswordDto(email, token, newPassword));
 
         resetResult.IsSuccess.Should().BeTrue(resetResult.Error.Description);
-        resetResult.Value.Should().Be("Password reset successfully");
 
         var oldPasswordAuth = await userService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
         oldPasswordAuth.IsSuccess.Should().BeFalse();
-        oldPasswordAuth.Error.Should().Be(UserErrors.InvalidCredentials);
+        oldPasswordAuth.Error.Should().Be(IdentityErrors.InvalidCredentials);
 
         var newPasswordAuth = await userService.AuthenticateAsync(new AuthRequest(email, newPassword));
         newPasswordAuth.IsSuccess.Should().BeTrue(newPasswordAuth.Error.Description);

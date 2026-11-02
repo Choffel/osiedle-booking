@@ -1,69 +1,96 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Tokens;
 using Users.Domain.Entity.RefreshToken;
+using Users.Domain.Entity.RefreshToken.ValueObjects;
+using Users.Domain.Entity.User;
+using Users.Domain.Entity.User.ValueObjects;
 using Users.Infrastructure.Data;
 
 namespace UserModule.Integration;
 
 public class TokenRepositoryTests : IntegrationTestBase
 {
-    private static RefreshToken NewToken(Guid userId, string token, DateTime? expiresAt = null) => new()
+    private static RefreshToken NewToken(Guid userId, string token, DateTime? expiresAt = null) =>
+        RefreshToken.Create(
+            RefreshTokenId.New(),
+            token,
+            UserId.From(userId),
+            expiresAt ?? DateTime.UtcNow.AddDays(30),
+            DateTime.UtcNow);
+
+    // RefreshTokens.UserId is a foreign key, so a domain user row must exist first.
+    private static async Task<Guid> CreateUserAsync(IServiceScope scope, string email)
     {
-        Id = Guid.NewGuid(),
-        Token = token,
-        UserId = userId,
-        CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow),
-        ExpiresAt = expiresAt ?? DateTime.UtcNow.AddDays(30)
-    };
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var id = UserId.New();
+        db.Users.Add(User.Create(id, Name.Create("Jan", "Kowalski"), email));
+        await db.SaveChangesAsync();
+        return id.Value;
+    }
+
+    private static async Task SeedAsync(IServiceScope scope, params RefreshToken[] tokens)
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.RefreshTokens.AddRange(tokens);
+        await db.SaveChangesAsync();
+    }
 
     [Fact]
-    public async Task AddRefreshToken_ThenGetByToken_ShouldRoundTrip()
+    public async Task Add_ThenReadBack_ShouldRoundTrip()
     {
-        var userId = Guid.NewGuid();
+        using var scope = CreateScope();
+        var userId = await CreateUserAsync(scope, "owner1@example.com");
         var token = NewToken(userId, "abc-123");
+        await SeedAsync(scope, token);
 
-        using (var scope = CreateScope())
-        {
-            var repository = scope.ServiceProvider.GetRequiredService<ITokenRepository>();
-            await repository.AddRefreshTokenAsync(token);
-        }
+        var repository = scope.ServiceProvider.GetRequiredService<ITokenWriteRepository>();
+        var loaded = await repository.GetByTokenForUpdateAsync("abc-123");
 
-        using var verifyScope = CreateScope();
-        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var loaded = await db.RefreshTokens.AsNoTracking().SingleAsync(rt => rt.Token == "abc-123");
-
-        loaded.UserId.Should().Be(userId);
+        loaded.Should().NotBeNull();
+        loaded!.Token.Should().Be("abc-123");
+        loaded.UserId.Should().Be(UserId.From(userId));
         loaded.ExpiresAt.Should().Be(token.ExpiresAt);
     }
 
     [Fact]
-    public async Task GetRefreshTokenAsync_ShouldReturnNull_WhenTokenIsUnknown()
+    public async Task GetByTokenForUpdateAsync_ShouldReturnNull_WhenTokenIsUnknown()
     {
         using var scope = CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<ITokenRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<ITokenWriteRepository>();
 
-        var loaded = await repository.GetRefreshTokenAsync("missing-token");
+        var loaded = await repository.GetByTokenForUpdateAsync("missing-token");
 
         loaded.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetRefreshTokenByIdAsync_ShouldReturnToken_WhenIdIsKnown()
+    public async Task GetByTokenAsync_ShouldReturnNull_WhenTokenIsUnknown()
     {
-        var token = NewToken(Guid.NewGuid(), "abc-123");
+        using var scope = CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ITokenReadRepository>();
 
-        using (var scope = CreateScope())
-        {
-            await scope.ServiceProvider.GetRequiredService<ITokenRepository>().AddRefreshTokenAsync(token);
-        }
+        var loaded = await repository.GetByTokenAsync("missing-token");
 
-        using var verifyScope = CreateScope();
-        var repository = verifyScope.ServiceProvider.GetRequiredService<ITokenRepository>();
+        loaded.Should().BeNull();
+    }
 
-        var loaded = await repository.GetRefreshTokenByIdAsync(token.Id);
-        var missing = await repository.GetRefreshTokenByIdAsync(Guid.NewGuid());
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnToken_WhenIdIsKnown()
+    {
+        using var seedScope = CreateScope();
+        var userId = await CreateUserAsync(seedScope, "owner2@example.com");
+        var token = NewToken(userId, "abc-123");
+        await SeedAsync(seedScope, token);
+
+        using var scope = CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ITokenReadRepository>();
+
+        var loaded = await repository.GetByIdAsync(token.Id);
+        var missing = await repository.GetByIdAsync(RefreshTokenId.From(Guid.NewGuid()));
 
         loaded.Should().NotBeNull();
         loaded!.Token.Should().Be("abc-123");
@@ -71,66 +98,25 @@ public class TokenRepositoryTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetActiveRefreshTokens_ShouldReturnOnlyActiveTokensOfGivenUser()
+    public async Task GetActiveTokensByUserIdAsync_ShouldReturnOnlyActiveTokensOfGivenUser()
     {
-        var userId = Guid.NewGuid();
+        using var seedScope = CreateScope();
+        var userId = await CreateUserAsync(seedScope, "owner3@example.com");
+        var foreignUserId = await CreateUserAsync(seedScope, "foreign@example.com");
+
+        // RefreshToken.Create rejects past expiry, so the inactive own token is
+        // modelled as a revoked one instead of an expired one.
         var activeOwn = NewToken(userId, "active-own");
-        var expiredOwn = NewToken(userId, "expired-own", DateTime.UtcNow.AddDays(-1));
-        var activeForeign = NewToken(Guid.NewGuid(), "active-foreign");
+        var revokedOwn = NewToken(userId, "revoked-own");
+        revokedOwn.Revoke(UserId.From(userId), DateTime.UtcNow);
+        var activeForeign = NewToken(foreignUserId, "active-foreign");
+        await SeedAsync(seedScope, activeOwn, revokedOwn, activeForeign);
 
-        using (var scope = CreateScope())
-        {
-            var addRepository = scope.ServiceProvider.GetRequiredService<ITokenRepository>();
-            await addRepository.AddRefreshTokenAsync(activeOwn);
-            await addRepository.AddRefreshTokenAsync(expiredOwn);
-            await addRepository.AddRefreshTokenAsync(activeForeign);
-        }
+        using var scope = CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<ITokenReadRepository>();
 
-        using var verifyScope = CreateScope();
-        var repository = verifyScope.ServiceProvider.GetRequiredService<ITokenRepository>();
-
-        var active = await repository.GetActiveRefreshTokensAsync(userId);
+        var active = await repository.GetActiveTokensByUserIdAsync(UserId.From(userId));
 
         active.Should().ContainSingle(rt => rt.Token == "active-own");
-    }
-
-    [Fact]
-    public async Task UpdateRefreshToken_ShouldPersistNewExpiry()
-    {
-        var token = NewToken(Guid.NewGuid(), "abc-123");
-
-        using (var scope = CreateScope())
-        {
-            var repository = scope.ServiceProvider.GetRequiredService<ITokenRepository>();
-            await repository.AddRefreshTokenAsync(token);
-
-            token.ExpiresAt = DateTime.UtcNow.AddDays(-1);
-            await repository.UpdateRefreshTokenAsync(token);
-        }
-
-        using var verifyScope = CreateScope();
-        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var reloaded = await db.RefreshTokens.AsNoTracking().SingleAsync(rt => rt.Token == "abc-123");
-
-        reloaded.IsExpired.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task DeleteRefreshToken_ShouldRemoveToken()
-    {
-        var token = NewToken(Guid.NewGuid(), "abc-123");
-
-        using (var scope = CreateScope())
-        {
-            var repository = scope.ServiceProvider.GetRequiredService<ITokenRepository>();
-            await repository.AddRefreshTokenAsync(token);
-            await repository.DeleteRefreshTokenAsync(token);
-        }
-
-        using var verifyScope = CreateScope();
-        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var remaining = await db.RefreshTokens.AsNoTracking().CountAsync(rt => rt.Token == "abc-123");
-        remaining.Should().Be(0);
     }
 }

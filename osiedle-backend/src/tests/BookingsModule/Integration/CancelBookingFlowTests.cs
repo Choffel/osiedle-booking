@@ -1,5 +1,7 @@
 using Bookings.Application.Abstractions.Services;
+using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Enum;
+using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Infrastructure.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -12,16 +14,14 @@ public class CancelBookingFlowTests : IntegrationTestBase
     [Fact]
     public async Task CancelBooking_ByOwner_SetsCancelledStatusAndCancellationInfo()
     {
-        UserContext.UserId = Client;
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var bookingId = await CreateBookingAsync(bookingService, At(10, 0), At(10, 30));
 
         var result = await bookingService.CancelBookingAsync(
-            new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
+            new CancelBookingRequest(bookingId), ClientId.From(Client), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        result.Value.Should().BeTrue();
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -37,13 +37,12 @@ public class CancelBookingFlowTests : IntegrationTestBase
     [Fact]
     public async Task CancelBooking_ByAnotherUser_FailsAndKeepsBookingIntact()
     {
-        UserContext.UserId = OtherClient;
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var bookingId = await CreateBookingAsync(bookingService, At(10, 0), At(10, 30));
 
         var result = await bookingService.CancelBookingAsync(
-            new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
+            new CancelBookingRequest(bookingId), ClientId.From(OtherClient), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(BookingError.NotOwnedByClient);
@@ -59,12 +58,11 @@ public class CancelBookingFlowTests : IntegrationTestBase
     [Fact]
     public async Task CancelBooking_UnknownId_Fails()
     {
-        UserContext.UserId = Client;
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
         var result = await bookingService.CancelBookingAsync(
-            new Bookings.Application.DTOs.CancelBookingRequest(Guid.NewGuid()), CancellationToken.None);
+            new CancelBookingRequest(Guid.NewGuid()), ClientId.From(Client), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(BookingError.NotFound);
@@ -73,13 +71,12 @@ public class CancelBookingFlowTests : IntegrationTestBase
     [Fact]
     public async Task CancelBooking_FreesSlot_ForAvailabilityAndRebooking()
     {
-        UserContext.UserId = Client;
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var bookingId = await CreateBookingAsync(bookingService, At(10, 0), At(10, 30));
 
         var cancelResult = await bookingService.CancelBookingAsync(
-            new Bookings.Application.DTOs.CancelBookingRequest(bookingId), CancellationToken.None);
+            new CancelBookingRequest(bookingId), ClientId.From(Client), CancellationToken.None);
         cancelResult.IsSuccess.Should().BeTrue(cancelResult.Error.Description);
 
         // The cancelled booking must no longer block the slot:

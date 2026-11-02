@@ -1,31 +1,63 @@
 using FluentAssertions;
 using Users.Domain.Entity.RefreshToken;
+using Users.Domain.Entity.RefreshToken.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace UserModule.Domain;
 
 public class RefreshTokenTests
 {
-    [Fact]
-    public void IsExpired_ShouldBeFalse_WhenExpiresAtInFuture()
-    {
-        var token = new RefreshToken { ExpiresAt = DateTime.UtcNow.AddMinutes(5) };
+    private static RefreshToken CreateToken(DateTime expiresAt, DateTime? utcNow = null) =>
+        RefreshToken.Create(
+            RefreshTokenId.New(),
+            $"token-{Guid.NewGuid():N}",
+            UserId.New(),
+            expiresAt,
+            utcNow ?? DateTime.UtcNow);
 
-        token.IsExpired.Should().BeFalse();
+    [Fact]
+    public void IsActive_ShouldBeTrue_WhenNotRevokedAndNotExpired()
+    {
+        var token = CreateToken(DateTime.UtcNow.AddMinutes(5));
+
+        token.IsActive.Should().BeTrue();
     }
 
     [Fact]
-    public void IsExpired_ShouldBeTrue_WhenExpiresAtInPast()
+    public void Create_ShouldRejectExpirationInPast()
     {
-        var token = new RefreshToken { ExpiresAt = DateTime.UtcNow.AddMinutes(-5) };
+        var now = DateTime.UtcNow;
 
-        token.IsExpired.Should().BeTrue();
+        var act = () => CreateToken(now.AddSeconds(-1), now);
+
+        act.Should().Throw<ArgumentException>();
     }
 
     [Fact]
-    public void IsExpired_ShouldBeTrue_WhenExpiresAtJustPassed()
+    public void Revoke_ShouldDeactivateToken_AndKeepFirstRevocation()
     {
-        var token = new RefreshToken { ExpiresAt = DateTime.UtcNow.AddSeconds(-1) };
+        var owner = UserId.New();
+        var token = RefreshToken.Create(
+            RefreshTokenId.New(), "some-token", owner, DateTime.UtcNow.AddMinutes(5), DateTime.UtcNow);
+        var revokedAt = DateTime.UtcNow;
 
-        token.IsExpired.Should().BeTrue();
+        token.Revoke(owner, revokedAt);
+
+        token.IsActive.Should().BeFalse();
+        token.RevokedAt.Should().Be(revokedAt);
+
+        // A second revoke must be a no-op and keep the original timestamp.
+        token.Revoke(owner, revokedAt.AddMinutes(1));
+        token.RevokedAt.Should().Be(revokedAt);
+    }
+
+    [Fact]
+    public void Revoke_ShouldThrow_WhenTokenBelongsToAnotherUser()
+    {
+        var token = CreateToken(DateTime.UtcNow.AddMinutes(5));
+
+        var act = () => token.Revoke(UserId.New(), DateTime.UtcNow);
+
+        act.Should().Throw<ArgumentException>();
     }
 }

@@ -6,7 +6,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Errors;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
 
 namespace UserModule.Infrastructure.Identity;
 
@@ -50,10 +55,9 @@ public class IdentityCredentialsServiceTests
             .Setup(m => m.CheckPasswordSignInAsync(user, "Password1", true))
             .ReturnsAsync(SignInResult.Success);
 
-        var result = await _sut.CheckPasswordAsync(user.Id, "Password1", CancellationToken.None);
+        var result = await _sut.CheckPasswordAsync(UserId.From(user.Id), "Password1", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("Password is correct");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
     }
 
     [Fact]
@@ -63,10 +67,10 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(userId.ToString()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.CheckPasswordAsync(userId, "Password1", CancellationToken.None);
+        var result = await _sut.CheckPasswordAsync(UserId.From(userId), "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
         _signInManagerMock.Verify(
             m => m.CheckPasswordSignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<bool>()),
             Times.Never);
@@ -81,10 +85,10 @@ public class IdentityCredentialsServiceTests
             .Setup(m => m.CheckPasswordSignInAsync(user, "Password1", true))
             .ReturnsAsync(SignInResult.LockedOut);
 
-        var result = await _sut.CheckPasswordAsync(user.Id, "Password1", CancellationToken.None);
+        var result = await _sut.CheckPasswordAsync(UserId.From(user.Id), "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.LockedOut);
+        result.Error.Should().Be(IdentityErrors.LockedOut);
     }
 
     [Fact]
@@ -96,10 +100,10 @@ public class IdentityCredentialsServiceTests
             .Setup(m => m.CheckPasswordSignInAsync(user, "WrongPassword", true))
             .ReturnsAsync(SignInResult.Failed);
 
-        var result = await _sut.CheckPasswordAsync(user.Id, "WrongPassword", CancellationToken.None);
+        var result = await _sut.CheckPasswordAsync(UserId.From(user.Id), "WrongPassword", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidCredentials);
+        result.Error.Should().Be(IdentityErrors.InvalidCredentials);
     }
 
     [Fact]
@@ -108,10 +112,10 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.GeneratePasswordResetTokenAsync(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.GeneratePasswordResetTokenAsync(UserId.From(Guid.NewGuid()), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
     }
 
     [Fact]
@@ -122,10 +126,10 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.GeneratePasswordResetTokenAsync(user))
             .ReturnsAsync("reset-token");
 
-        var result = await _sut.GeneratePasswordResetTokenAsync(user.Id, CancellationToken.None);
+        var result = await _sut.GeneratePasswordResetTokenAsync(UserId.From(user.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("reset-token");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        ((Result<string>)result).Value.Should().Be("reset-token");
     }
 
     [Fact]
@@ -134,10 +138,10 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.ResetPasswordAsync(Guid.NewGuid(), "token", "NewPassword1", CancellationToken.None);
+        var result = await _sut.ResetPasswordAsync(UserId.From(Guid.NewGuid()), "token", "NewPassword1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
         _userManagerMock.Verify(
             m => m.ResetPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
@@ -151,10 +155,10 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.ResetPasswordAsync(user, "bad-token", "NewPassword1"))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Invalid token" }));
 
-        var result = await _sut.ResetPasswordAsync(user.Id, "bad-token", "NewPassword1", CancellationToken.None);
+        var result = await _sut.ResetPasswordAsync(UserId.From(user.Id), "bad-token", "NewPassword1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.ResetPasswordFailed);
+        result.Error.Should().Be(IdentityErrors.FromIdentityResult("Invalid token"));
     }
 
     [Fact]
@@ -169,12 +173,15 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.ResetPasswordAsync(user, "good-token", "NewPassword1"))
             .ReturnsAsync(IdentityResult.Success);
+        _userManagerMock.Setup(m => m.GetRolesAsync(user))
+            .ReturnsAsync(new List<string> { "User" });
 
-        var result = await _sut.ResetPasswordAsync(user.Id, "good-token", "NewPassword1", CancellationToken.None);
+        var result = await _sut.ResetPasswordAsync(UserId.From(user.Id), "good-token", "NewPassword1", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Id.Should().Be(user.Id);
-        result.Value.UserName.Should().Be("jan");
-        result.Value.Email.Should().Be("jan@example.com");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        var dto = ((Result<Users.Application.DTOs.Identity.IdentityUserDto>)result).Value;
+        dto.Id.Should().Be(user.Id);
+        dto.Email.Should().Be("jan@example.com");
+        dto.Roles.Should().Contain("User");
     }
 }

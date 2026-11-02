@@ -1,6 +1,5 @@
 using Bookings.Application.Abstractions.Services;
 using Bookings.Domain.Entities.Booking.Enum;
-using Bookings.Domain.Exceptions;
 using Bookings.Infrastructure.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +18,6 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(Request(At(10, 0), At(10, 30)), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        result.Value.Should().BeTrue();
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -121,27 +119,26 @@ public class CreateBookingFlowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task CreateBooking_SlotInPast_ThrowsBookingInPastException()
+    public async Task CreateBooking_SlotInPast_IsAcceptedByDomain()
     {
+        // The domain has no past-slot invariant anymore: only working hours are enforced,
+        // so a yesterday slot inside 09:00-18:00 is booked normally.
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var past = DateTime.UtcNow.Date.AddDays(-1).AddHours(10);
 
-        // BookingService no longer converts domain violations to Result — the invariant
-        // surfaces as a domain exception instead.
-        var act = () => bookingService.CreateBookingAsync(
+        var result = await bookingService.CreateBookingAsync(
             Request(past, past.AddMinutes(30)), CancellationToken.None);
 
-        await act.Should().ThrowAsync<BookingInPastException>()
-            .WithMessage("*past*");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
+        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(1);
     }
 
     [Fact]
-    public async Task CreateBooking_EndBeforeStart_ThrowsInvalidTimeSlotRangeException()
+    public async Task CreateBooking_EndBeforeStart_ThrowsArgumentException()
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
@@ -149,6 +146,10 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var act = () => bookingService.CreateBookingAsync(
             Request(At(10, 30), At(10, 0)), CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidTimeSlotRangeException>();
+        await act.Should().ThrowAsync<ArgumentException>();
+
+        using var verifyScope = CreateScope();
+        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
     }
 }

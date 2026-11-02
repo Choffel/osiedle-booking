@@ -24,7 +24,15 @@ public class UserIdTests
     {
         var guid = Guid.NewGuid();
 
-        new UserId(guid).Should().Be(new UserId(guid));
-        new UserId(guid).Should().NotBe(new UserId(Guid.NewGuid()));
+        UserId.From(guid).Should().Be(UserId.From(guid));
+        UserId.From(guid).Should().NotBe(UserId.From(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void From_ShouldRejectEmptyGuid()
+    {
+        var act = () => UserId.From(Guid.Empty);
+
+        act.Should().Throw<ArgumentException>();
     }
 }

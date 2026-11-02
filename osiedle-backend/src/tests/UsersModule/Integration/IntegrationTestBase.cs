@@ -4,16 +4,31 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
+using osiedle_booking.BuildingBlocks.Roles;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
 using Users.Application.Abstractions.Repositories;
+using Users.Application.Abstractions.Repositories.Tokens;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
 using Users.Application.Services;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
+using Users.Infrastructure.Options;
 using Users.Infrastructure.Repositories;
+using Users.Infrastructure.Repositories.Tokens;
+using Users.Infrastructure.Repositories.Users;
 using Users.Infrastructure.Services;
+using Users.Infrastructure.Services.Tokens;
+using Users.Infrastructure.UnitOtWork;
 
 namespace UserModule.Integration;
 
@@ -42,9 +57,11 @@ public abstract class IntegrationTestBase : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"] = new string('s', 64),
-                ["JWT_TOKEN_SETTINGS:VALID_ISSUER"] = "test-issuer",
-                ["JWT_TOKEN_SETTINGS:VALID_AUDIENCE"] = "test-audience"
+                ["JwtSettings:Secret"] = new string('s', 64),
+                ["JwtSettings:Issuer"] = "test-issuer",
+                ["JwtSettings:Audience"] = "test-audience",
+                ["JwtSettings:AccessTokenExpiryMinutes"] = "15",
+                ["JwtSettings:RefreshTokenExpiryDays"] = "7"
             })
             .Build();
 
@@ -68,14 +85,21 @@ public abstract class IntegrationTestBase : IDisposable
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        services.AddOptions<JwtSettings>().Bind(configuration.GetSection(JwtSettings.SectionName));
+
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ITokenRepository, TokenRepository>();
+        services.AddScoped<IUserReadRepository, UserReadRepository>();
+        services.AddScoped<ITokenReadRepository, TokenReadRepository>();
+        services.AddScoped<ITokenWriteRepository, TokenWriteRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IIdentityAccountService, IdentityAccountService>();
         services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
         services.AddScoped<IIdentityEmailService, IdentityEmailService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserSessionService, UserSessionService>();
         services.AddScoped<IUserService, UserService>();
 
         Provider = services.BuildServiceProvider();
@@ -84,7 +108,7 @@ public abstract class IntegrationTestBase : IDisposable
         scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreated();
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleIdentity>>();
-        RoleInitData.InitializeAsync(roleManager).GetAwaiter().GetResult();
+        RoleInitData.InitializeAsync(new[] { UserRoles.User }, roleManager).GetAwaiter().GetResult();
     }
 
     protected IServiceScope CreateScope() => Provider.CreateScope();
@@ -96,7 +120,8 @@ public abstract class IntegrationTestBase : IDisposable
             new RegisterUserRequest(firstName, "Kowalski", email, password), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue("registration must succeed, error: {0}", result.Error.Description);
-        return result.Value;
+        // RegisterAsync boxes the created id as Result<UserId>.
+        return ((Result<UserId>)result).Value.Value;
     }
 
     protected async Task ConfirmEmailAsync(IServiceScope scope, string email)

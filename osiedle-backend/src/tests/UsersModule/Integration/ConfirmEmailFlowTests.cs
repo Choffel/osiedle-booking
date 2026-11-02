@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
 using Users.Infrastructure.Identity;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Errors;
+using Users.Infrastructure.Identity.Models;
 
 namespace UserModule.Integration;
 
@@ -24,7 +27,6 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        result.Value.Should().Be("Email confirmed");
 
         var confirmedUser = await userManager.FindByEmailAsync(email);
         confirmedUser!.EmailConfirmed.Should().BeTrue();
@@ -63,7 +65,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ConfirmEmail_ShouldFail_WhenUserRoleIsMissing()
+    public async Task ConfirmEmail_ShouldFail_WhenRoleIsMissing()
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
@@ -78,9 +80,11 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
         var identityUser = await userManager.FindByEmailAsync(email);
         var token = await userManager.GenerateEmailConfirmationTokenAsync(identityUser!);
 
+        // RoleService checks RoleExistsAsync first, so a missing role answers a
+        // Result failure instead of letting Identity throw.
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.RoleNotFound);
+        result.Error.Should().Be(RoleErrors.AddUserToRoleFailed);
     }
 }

@@ -3,9 +3,14 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
+using Users.Application.Errors;
 using Users.Application.Services;
 using Users.Domain.Entity.User;
 
@@ -21,6 +26,8 @@ public class RegisterTests
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IUserContext> _userContextMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock = new();
     private readonly AuthService _authService;
 
     public RegisterTests()
@@ -32,11 +39,18 @@ public class RegisterTests
         _identityCredentialsMock.Object,
         _identityAccountMock.Object,
         _identityEmailMock.Object,
-        _userRepositoryMock.Object,
         _loggerMock.Object,
         _roleServiceMock.Object,
         _tokenServiceMock.Object,
-        _userContextMock.Object);
+        _userContextMock.Object,
+        _unitOfWorkMock.Object,
+        _userRepositoryMock.Object,
+        _jwtTokenGeneratorMock.Object);
+
+    // RegisterAsync returns the non-generic Result whose runtime payload is
+    // Result<UserId> — unwrap it exactly the way the service boxes it.
+    private static Guid RegisteredUserId(Result result) =>
+        ((Result<UserId>)result).Value.Value;
 
     [Fact]
     public async Task RegisterAsync_ShouldSucceed_WhenIdentityIsCreated()
@@ -46,20 +60,24 @@ public class RegisterTests
 
         _identityAccountMock
             .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Guid>.Success(identityId));
+            .ReturnsAsync(Result<UserId>.Success(UserId.From(identityId)));
         _identityEmailMock
-            .Setup(s => s.GenerateEmailConfirmationTokenAsync(identityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<string>.Success("confirm-token"));
+            .Setup(s => s.GenerateEmailConfirmationTokenAsync(UserId.From(identityId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("confirm-token"));
 
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(identityId);
-        _userRepositoryMock.Verify(r => r.AddAsync(
-            It.Is<User>(u => u.Id.Value == identityId && u.DisplayName == request.FirstName),
-            It.IsAny<CancellationToken>()), Times.Once);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        RegisteredUserId(result).Should().Be(identityId);
+        _userRepositoryMock.Verify(r => r.Add(
+            It.Is<User>(u =>
+                u.Id.Value == identityId &&
+                u.Name.FirstName == request.FirstName &&
+                u.Name.LastName == request.LastName &&
+                u.Email == request.Email)), Times.Once);
         _identityEmailMock.Verify(
-            s => s.GenerateEmailConfirmationTokenAsync(identityId, It.IsAny<CancellationToken>()), Times.Once);
+            s => s.GenerateEmailConfirmationTokenAsync(UserId.From(identityId), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -69,14 +87,15 @@ public class RegisterTests
 
         _identityAccountMock
             .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Guid>.Failure(UserErrors.RegistrationFailed));
+            .ReturnsAsync(Result<UserId>.Failure(UserErrors.RegistrationFailed));
 
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.RegistrationFailed);
-        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userRepositoryMock.Verify(r => r.Add(It.IsAny<User>()), Times.Never);
         _identityEmailMock.Verify(
-            s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

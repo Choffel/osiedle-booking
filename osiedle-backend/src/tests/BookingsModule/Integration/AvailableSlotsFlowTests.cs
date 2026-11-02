@@ -85,9 +85,10 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+        scope.ServiceProvider.GetRequiredService<FakeBookableServiceApi>().Duration = TimeSpan.Zero;
 
         var act = () => bookingService.GetAvailableSlotsAsync(
-            new Bookings.Application.DTOs.GetAvailableSlotsRequest(Staff, new TimeOnly(0, 0), TestDate),
+            new Bookings.Application.DTOs.GetAvailableSlotsRequest(Staff, Service, TestDate),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();

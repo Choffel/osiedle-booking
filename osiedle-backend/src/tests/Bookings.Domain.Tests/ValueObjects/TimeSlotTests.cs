@@ -1,5 +1,4 @@
 using Bookings.Domain.Entities.Booking.Value_objects;
-using Bookings.Domain.Exceptions;
 
 namespace Bookings.Domain.Tests.ValueObjects;
 
@@ -18,20 +17,20 @@ public class TimeSlotTests
     }
 
     [Fact]
-    public void Create_EndEqualsStart_Throws()
+    public void Create_EndEqualsStart_ThrowsArgumentException()
     {
         var start = new DateTime(2026, 10, 15, 9, 0, 0);
 
-        Assert.Throws<InvalidTimeSlotRangeException>(() => TimeSlot.Create(start, start));
+        Assert.Throws<ArgumentException>(() => TimeSlot.Create(start, start));
     }
 
     [Fact]
-    public void Create_EndBeforeStart_Throws()
+    public void Create_EndBeforeStart_ThrowsArgumentException()
     {
         var start = new DateTime(2026, 10, 15, 10, 0, 0);
         var end = new DateTime(2026, 10, 15, 9, 0, 0);
 
-        Assert.Throws<InvalidTimeSlotRangeException>(() => TimeSlot.Create(start, end));
+        Assert.Throws<ArgumentException>(() => TimeSlot.Create(start, end));
     }
 
     [Fact]

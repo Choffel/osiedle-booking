@@ -1,380 +1,125 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Tokens;
+using Users.Application.Abstractions.Repositories.Users;
+using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
+using Users.Application.DTOs.Identity;
 using Users.Domain.Entity.RefreshToken;
-using Users.Infrastructure.Identity;
-using Users.Infrastructure.Services;
+using Users.Domain.Entity.User;
+using Users.Domain.Entity.User.ValueObjects;
+using Users.Infrastructure.Options;
+using Users.Infrastructure.Services.Tokens;
 
 namespace UserModule.Infrastructure.Services;
 
 public class TokenServiceTests
 {
-    private readonly Mock<ITokenRepository> _tokenRepositoryMock = new();
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly Mock<IUserContext> _userContextMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtGeneratorMock = new();
+    private readonly Mock<ITokenWriteRepository> _tokenWriteMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IIdentityAccountService> _identityAccountMock = new();
+    private readonly Mock<IUserReadRepository> _userReadMock = new();
     private readonly TokenService _sut;
 
     public TokenServiceTests()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"] = new string('k', 64),
-                ["JWT_TOKEN_SETTINGS:VALID_ISSUER"] = "test-issuer",
-                ["JWT_TOKEN_SETTINGS:VALID_AUDIENCE"] = "test-audience"
-            })
-            .Build();
-
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-            Mock.Of<IUserStore<ApplicationUser>>(),
-            Options.Create(new IdentityOptions()),
-            Mock.Of<IPasswordHasher<ApplicationUser>>(),
-            Array.Empty<IUserValidator<ApplicationUser>>(),
-            Array.Empty<IPasswordValidator<ApplicationUser>>(),
-            Mock.Of<ILookupNormalizer>(),
-            new IdentityErrorDescriber(),
-            Mock.Of<IServiceProvider>(),
-            Mock.Of<ILogger<UserManager<ApplicationUser>>>());
+        _jwtGeneratorMock
+            .Setup(g => g.GenerateAccessToken(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>()))
+            .Returns("access-token");
+        _jwtGeneratorMock.Setup(g => g.GenerateRefreshToken()).Returns("refresh-token");
 
         _sut = new TokenService(
-            configuration,
-            _tokenRepositoryMock.Object,
-            _userManagerMock.Object,
-            Mock.Of<ILogger<TokenService>>(),
-            _userContextMock.Object);
+            _jwtGeneratorMock.Object,
+            _tokenWriteMock.Object,
+            _unitOfWorkMock.Object,
+            Options.Create(new JwtSettings
+            {
+                Secret = new string('k', 64),
+                Issuer = "test-issuer",
+                Audience = "test-audience",
+                AccessTokenExpiryMinutes = 15,
+                RefreshTokenExpiryDays = 7
+            }),
+            _identityAccountMock.Object,
+            _userReadMock.Object);
     }
 
-    private void SetupUserLookup(Guid userId)
-    {
-        var user = new ApplicationUser
-        {
-            Id = userId,
-            UserName = "jan",
-            Email = "jan@example.com"
-        };
-        _userManagerMock.Setup(m => m.FindByIdAsync(userId.ToString())).ReturnsAsync(user);
-        _userManagerMock.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new List<string>());
-    }
+    private static IdentityUserDto IdentityUser(Guid id, string email) =>
+        new(id, email, new[] { "User" });
 
     [Fact]
-    public async Task GetTokens_ShouldReturnTokens_AndStoreRefreshToken()
+    public async Task GenerateTokensAsync_Success_ReturnsTokens_AndPersistsRefreshToken()
     {
         var userId = Guid.NewGuid();
-        SetupUserLookup(userId);
-        var userDto = new UserDto(userId, "jan", "jan@example.com");
+        const string email = "jan@example.com";
+        _identityAccountMock
+            .Setup(s => s.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(IdentityUser(userId, email)));
 
-        var tokens = await _sut.GetTokens(userDto, CancellationToken.None);
+        var result = await _sut.GenerateTokensAsync(
+            UserId.From(userId), email, new[] { "User" }, CancellationToken.None);
 
-        tokens.AccessToken.Should().NotBeNullOrWhiteSpace();
-        tokens.AccessToken.Split('.').Should().HaveCount(3);
-        tokens.RefreshToken.Should().NotBeNullOrWhiteSpace();
-        _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(
-            It.Is<RefreshToken>(rt => rt.UserId == userId && rt.Token == tokens.RefreshToken)), Times.Once);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.RefreshToken.Should().Be("refresh-token");
+
+        _tokenWriteMock.Verify(r => r.Add(
+            It.Is<RefreshToken>(rt =>
+                rt.Token == "refresh-token" &&
+                rt.UserId == UserId.From(userId) &&
+                rt.ExpiresAt > DateTime.UtcNow),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task RevokeRefreshToken_ShouldFail_WhenTokenIsUnknown()
-    {
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("missing-token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("missing-token"))
-            .ReturnsAsync((RefreshToken?)null);
-
-        var result = await _sut.RevokeRefreshTokenAsync();
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-        _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task RevokeRefreshToken_ShouldFail_WhenTokenBelongsToAnotherUser()
-    {
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("token");
-        _userContextMock.SetupGet(c => c.UserId).Returns(Guid.NewGuid());
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("token"))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "token",
-                UserId = Guid.NewGuid(),
-                ExpiresAt = DateTime.UtcNow.AddDays(10)
-            });
-
-        var result = await _sut.RevokeRefreshTokenAsync();
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-    }
-
-    [Fact]
-    public async Task RevokeRefreshToken_ShouldFail_WhenTokenIsExpired()
-    {
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("token");
-        var currentUserId = Guid.NewGuid();
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("token"))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "token",
-                UserId = currentUserId,
-                ExpiresAt = DateTime.UtcNow.AddDays(-1)
-            });
-
-        var result = await _sut.RevokeRefreshTokenAsync();
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-    }
-
-    [Fact]
-    public async Task RevokeRefreshToken_ShouldExpireToken_WhenTokenIsValid()
-    {
-        var currentUserId = Guid.NewGuid();
-        var refreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = "token",
-            UserId = currentUserId,
-            ExpiresAt = DateTime.UtcNow.AddDays(10)
-        };
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("token");
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("token")).ReturnsAsync(refreshToken);
-
-        var result = await _sut.RevokeRefreshTokenAsync();
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeTrue();
-        refreshToken.ExpiresAt.Should().BeOnOrBefore(DateTime.UtcNow);
-        _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(refreshToken), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetNewAccessToken_ShouldFail_WhenTokenIsUnknown()
-    {
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("missing-token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("missing-token"))
-            .ReturnsAsync((RefreshToken?)null);
-
-        var result = await _sut.GetNewAccessTokenAsync();
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-        _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task GetNewAccessToken_ShouldFail_WhenTokenIsExpired()
-    {
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("token"))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "token",
-                UserId = Guid.NewGuid(),
-                ExpiresAt = DateTime.UtcNow.AddDays(-1)
-            });
-
-        var result = await _sut.GetNewAccessTokenAsync();
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-    }
-
-    [Fact]
-    public async Task GetNewAccessToken_ShouldFailWithoutSideEffects_WhenUserIsMissing()
+    public async Task GenerateTokensAsync_UsesRefreshTokenExpiryFromSettings()
     {
         var userId = Guid.NewGuid();
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("token"))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "token",
-                UserId = userId,
-                ExpiresAt = DateTime.UtcNow.AddDays(10)
-            });
-        _userManagerMock.Setup(m => m.FindByIdAsync(userId.ToString()))
-            .ReturnsAsync((ApplicationUser?)null);
+        const string email = "jan@example.com";
+        _identityAccountMock
+            .Setup(s => s.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(IdentityUser(userId, email)));
 
-        var result = await _sut.GetNewAccessTokenAsync();
+        await _sut.GenerateTokensAsync(UserId.From(userId), email, new[] { "User" }, CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
-        _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
-        _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
+        // JwtSettings.RefreshTokenExpiryDays = 7 in this fixture.
+        _tokenWriteMock.Verify(r => r.Add(
+            It.Is<RefreshToken>(rt =>
+                rt.ExpiresAt >= DateTime.UtcNow.AddDays(7).AddSeconds(-5)),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GetNewAccessToken_ShouldRotateTokens_WhenTokenIsValid()
+    public async Task GenerateTokensByRefreshTokenAsync_Success_RotatesTokens_AndPersistsNewRefreshToken()
     {
         var userId = Guid.NewGuid();
-        var oldToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = "old-token",
-            UserId = userId,
-            ExpiresAt = DateTime.UtcNow.AddDays(10)
-        };
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("old-token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenAsync("old-token")).ReturnsAsync(oldToken);
-        SetupUserLookup(userId);
+        const string email = "jan@example.com";
+        var domainUser = User.Create(UserId.From(userId), Name.Create("Jan", "Kowalski"), email);
+        _userReadMock
+            .Setup(r => r.GetUserByRefreshTokenAsync("old-token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(domainUser);
+        _identityAccountMock
+            .Setup(s => s.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(IdentityUser(userId, email)));
 
-        var result = await _sut.GetNewAccessTokenAsync();
+        var result = await _sut.GenerateTokensByRefreshTokenAsync("old-token", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.AccessToken.Split('.').Should().HaveCount(3);
-        result.Value.RefreshToken.Should().NotBeNullOrWhiteSpace();
-        result.Value.RefreshToken.Should().NotBe("old-token");
-        oldToken.ExpiresAt.Should().BeOnOrBefore(DateTime.UtcNow);
-        _tokenRepositoryMock.Verify(r => r.UpdateRefreshTokenAsync(oldToken), Times.Once);
-        _tokenRepositoryMock.Verify(r => r.AddRefreshTokenAsync(
-            It.Is<RefreshToken>(rt => rt.UserId == userId && rt.Token == result.Value.RefreshToken)), Times.Once);
-    }
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.RefreshToken.Should().Be("refresh-token");
 
-    [Fact]
-    public async Task GetActiveSessions_ShouldMarkCurrentSession()
-    {
-        var currentUserId = Guid.NewGuid();
-        var currentToken = Guid.NewGuid();
-        var otherToken = Guid.NewGuid();
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("current-token");
-        _tokenRepositoryMock.Setup(r => r.GetActiveRefreshTokensAsync(currentUserId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<RefreshToken>
-            {
-                new()
-                {
-                    Id = currentToken,
-                    Token = "current-token",
-                    UserId = currentUserId,
-                    CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow),
-                    ExpiresAt = DateTime.UtcNow.AddDays(10)
-                },
-                new()
-                {
-                    Id = otherToken,
-                    Token = "other-token",
-                    UserId = currentUserId,
-                    CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow),
-                    ExpiresAt = DateTime.UtcNow.AddDays(10)
-                }
-            });
-
-        var result = await _sut.GetActiveSessionsAsync();
-
-        result.IsSuccess.Should().BeTrue();
-        var sessions = result.Value!.ToList();
-        sessions.Should().HaveCount(2);
-        sessions.Single(s => s.TokenId == currentToken).IsCurrentSession.Should().BeTrue();
-        sessions.Single(s => s.TokenId == otherToken).IsCurrentSession.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task RevokeSession_ShouldFail_WhenSessionIsUnknown()
-    {
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RefreshToken?)null);
-
-        var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-        _tokenRepositoryMock.Verify(r => r.DeleteRefreshTokenAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task RevokeSession_ShouldFail_WhenSessionBelongsToAnotherUser()
-    {
-        _userContextMock.SetupGet(c => c.UserId).Returns(Guid.NewGuid());
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "foreign-token",
-                UserId = Guid.NewGuid(),
-                ExpiresAt = DateTime.UtcNow.AddDays(10)
-            });
-
-        var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-    }
-
-    [Fact]
-    public async Task RevokeSession_ShouldFail_WhenSessionIsExpired()
-    {
-        var currentUserId = Guid.NewGuid();
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = Guid.NewGuid(),
-                Token = "expired-token",
-                UserId = currentUserId,
-                ExpiresAt = DateTime.UtcNow.AddDays(-1)
-            });
-
-        var result = await _sut.RevokeSessionAsync(Guid.NewGuid());
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.InvalidRefreshToken);
-    }
-
-    [Fact]
-    public async Task RevokeSession_ShouldFail_WhenTryingToRevokeCurrentSession()
-    {
-        var currentUserId = Guid.NewGuid();
-        var tokenId = Guid.NewGuid();
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("current-token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenByIdAsync(tokenId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RefreshToken
-            {
-                Id = tokenId,
-                Token = "current-token",
-                UserId = currentUserId,
-                ExpiresAt = DateTime.UtcNow.AddDays(10)
-            });
-
-        var result = await _sut.RevokeSessionAsync(tokenId);
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.CannotRevokeCurrentSession);
-        _tokenRepositoryMock.Verify(r => r.DeleteRefreshTokenAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task RevokeSession_ShouldDeleteSession_WhenSessionIsValid()
-    {
-        var currentUserId = Guid.NewGuid();
-        var tokenId = Guid.NewGuid();
-        var session = new RefreshToken
-        {
-            Id = tokenId,
-            Token = "other-token",
-            UserId = currentUserId,
-            ExpiresAt = DateTime.UtcNow.AddDays(10)
-        };
-        _userContextMock.SetupGet(c => c.UserId).Returns(currentUserId);
-        _userContextMock.SetupGet(c => c.RefreshToken).Returns("current-token");
-        _tokenRepositoryMock.Setup(r => r.GetRefreshTokenByIdAsync(tokenId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(session);
-
-        var result = await _sut.RevokeSessionAsync(tokenId);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("Session revoked successfully.");
-        _tokenRepositoryMock.Verify(r => r.DeleteRefreshTokenAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenWriteMock.Verify(r => r.Add(
+            It.Is<RefreshToken>(rt =>
+                rt.Token == "refresh-token" &&
+                rt.UserId == UserId.From(userId)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

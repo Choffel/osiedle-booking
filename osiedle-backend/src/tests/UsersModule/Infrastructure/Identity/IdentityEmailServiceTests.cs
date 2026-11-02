@@ -4,7 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Errors;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
 
 namespace UserModule.Infrastructure.Identity;
 
@@ -37,10 +42,10 @@ public class IdentityEmailServiceTests
         _userManagerMock.Setup(m => m.GenerateEmailConfirmationTokenAsync(user))
             .ReturnsAsync("confirm-token");
 
-        var result = await _sut.GenerateEmailConfirmationTokenAsync(user.Id, CancellationToken.None);
+        var result = await _sut.GenerateEmailConfirmationTokenAsync(UserId.From(user.Id), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("confirm-token");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        ((Result<string>)result).Value.Should().Be("confirm-token");
     }
 
     [Fact]
@@ -49,10 +54,10 @@ public class IdentityEmailServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.GenerateEmailConfirmationTokenAsync(Guid.NewGuid(), CancellationToken.None);
+        var result = await _sut.GenerateEmailConfirmationTokenAsync(UserId.From(Guid.NewGuid()), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
     }
 
     [Fact]
@@ -63,10 +68,9 @@ public class IdentityEmailServiceTests
         _userManagerMock.Setup(m => m.ConfirmEmailAsync(user, "good-token"))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _sut.ConfirmEmailAsync(user.Id, "good-token", CancellationToken.None);
+        var result = await _sut.ConfirmEmailAsync(UserId.From(user.Id), "good-token", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("Email confirmed");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
     }
 
     [Fact]
@@ -77,10 +81,10 @@ public class IdentityEmailServiceTests
         _userManagerMock.Setup(m => m.ConfirmEmailAsync(user, "bad-token"))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Invalid token" }));
 
-        var result = await _sut.ConfirmEmailAsync(user.Id, "bad-token", CancellationToken.None);
+        var result = await _sut.ConfirmEmailAsync(UserId.From(user.Id), "bad-token", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
+        result.Error.Should().Be(IdentityErrors.EmailConfirmationFailed);
     }
 
     [Fact]
@@ -89,10 +93,10 @@ public class IdentityEmailServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.ConfirmEmailAsync(Guid.NewGuid(), "token", CancellationToken.None);
+        var result = await _sut.ConfirmEmailAsync(UserId.From(Guid.NewGuid()), "token", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
         _userManagerMock.Verify(
             m => m.ConfirmEmailAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
     }

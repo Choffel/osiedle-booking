@@ -5,8 +5,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.DTOs.Identity;
+using Users.Application.Errors;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
 
 namespace UserModule.Infrastructure.Identity;
 
@@ -46,11 +50,11 @@ public class IdentityAccountServiceTests
 
         var result = await _sut.CreateIdentityAsync(email, userName, password, CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().NotBeEmpty();
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.Value.Should().NotBeEmpty();
         created!.Email.Should().Be(email);
         created.UserName.Should().Be(userName);
-        result.Value.Should().Be(created.Id);
+        result.Value.Value.Should().Be(created.Id);
     }
 
     [Fact]
@@ -63,7 +67,7 @@ public class IdentityAccountServiceTests
         var result = await _sut.CreateIdentityAsync("jan@example.com", "jan", "Password1", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.RegistrationFailed);
+        result.Error.Should().Be(IdentityErrors.FromIdentityResult("Email is already taken"));
     }
 
     [Fact]
@@ -77,15 +81,14 @@ public class IdentityAccountServiceTests
             EmailConfirmed = true
         };
         _userManagerMock.Setup(m => m.FindByEmailAsync("jan@example.com")).ReturnsAsync(user);
+        _userManagerMock.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new List<string> { "User" });
 
         var result = await _sut.FindByEmailAsync("jan@example.com", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Id.Should().Be(user.Id);
-        result.Value.UserName.Should().Be("jan");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.Id.Should().Be(user.Id);
         result.Value.Email.Should().Be("jan@example.com");
-        result.Value.EmailConfirmed.Should().BeTrue();
-        result.Value.Succeeded.Should().BeTrue();
+        result.Value.Roles.Should().Contain("User");
     }
 
     [Fact]
@@ -97,7 +100,7 @@ public class IdentityAccountServiceTests
         var result = await _sut.FindByEmailAsync("ghost@example.com", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
     }
 
     [Fact]
@@ -107,10 +110,10 @@ public class IdentityAccountServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var result = await _sut.UpdateUserNameAsync(user.Id, "nowy-nick", CancellationToken.None);
+        var result = await _sut.UpdateUserNameAsync(UserId.From(user.Id), "nowy-nick", CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("nowy-nick");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        ((Result<string>)result).Value.Should().Be("nowy-nick");
         user.UserName.Should().Be("nowy-nick");
     }
 
@@ -120,10 +123,10 @@ public class IdentityAccountServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _sut.UpdateUserNameAsync(Guid.NewGuid(), "nowy-nick", CancellationToken.None);
+        var result = await _sut.UpdateUserNameAsync(UserId.From(Guid.NewGuid()), "nowy-nick", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.NotFound);
+        result.Error.Should().Be(IdentityErrors.NotFound);
     }
 
     [Fact]
@@ -135,9 +138,9 @@ public class IdentityAccountServiceTests
             .ReturnsAsync(IdentityResult.Failed(
                 new IdentityError { Description = "Usernames cannot contain spaces." }));
 
-        var result = await _sut.UpdateUserNameAsync(user.Id, "zla nazwa", CancellationToken.None);
+        var result = await _sut.UpdateUserNameAsync(UserId.From(user.Id), "zla nazwa", CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(UserErrors.UpdateFailed);
+        result.Error.Should().Be(IdentityErrors.FromIdentityResult("Usernames cannot contain spaces."));
     }
 }

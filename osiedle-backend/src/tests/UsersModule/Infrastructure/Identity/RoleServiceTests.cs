@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
 
 namespace UserModule.Infrastructure.Identity;
 

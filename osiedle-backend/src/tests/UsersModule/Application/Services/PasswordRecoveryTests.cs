@@ -3,10 +3,15 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
+using Users.Application.Errors;
 using Users.Application.Services;
 
 namespace UserModule.Application.Services;
@@ -20,6 +25,8 @@ public class PasswordRecoveryTests
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IUserContext> _userContextMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock = new();
     private readonly AuthService _authService;
 
     public PasswordRecoveryTests()
@@ -28,52 +35,53 @@ public class PasswordRecoveryTests
             _identityCredentialsMock.Object,
             _identityAccountMock.Object,
             _identityEmailMock.Object,
-            _userRepositoryMock.Object,
             Mock.Of<ILogger<AuthService>>(),
             _roleServiceMock.Object,
             _tokenServiceMock.Object,
-            _userContextMock.Object);
+            _userContextMock.Object,
+            _unitOfWorkMock.Object,
+            _userRepositoryMock.Object,
+            _jwtTokenGeneratorMock.Object);
     }
 
     private static IdentityUserDto KnownUser(Guid id, string email) =>
-        new(id, "jan", email, true, true);
+        new(id, email, new[] { "User" });
 
     [Fact]
-    public async Task ForgotPassword_ShouldReturnGenericMessage_WhenUserDoesNotExist()
+    public async Task ForgotPassword_ShouldStayGeneric_WhenUserDoesNotExist()
     {
         var request = new ForgotPasswordRequest("ghost@example.com");
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
+            .ReturnsAsync(Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
 
         var result = await _authService.ForgotPasswordAsync(request);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Contain("If this email address exists in the system");
+        // The endpoint must answer success regardless of whether the email exists.
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         _identityCredentialsMock.Verify(
-            s => s.GeneratePasswordResetTokenAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+            s => s.GeneratePasswordResetTokenAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ForgotPassword_ShouldReturnSameGenericMessage_WhenUserExists()
+    public async Task ForgotPassword_ShouldStayGeneric_WhenUserExists()
     {
         var userId = Guid.NewGuid();
         var request = new ForgotPasswordRequest("jan@example.com");
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Success(KnownUser(userId, request.Email)));
+            .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId, request.Email)));
         _identityCredentialsMock
-            .Setup(s => s.GeneratePasswordResetTokenAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<string>.Success("reset-token"));
+            .Setup(s => s.GeneratePasswordResetTokenAsync(UserId.From(userId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("reset-token"));
 
         var result = await _authService.ForgotPasswordAsync(request);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Contain("If this email address exists in the system");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         _identityCredentialsMock.Verify(
-            s => s.GeneratePasswordResetTokenAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+            s => s.GeneratePasswordResetTokenAsync(UserId.From(userId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -83,14 +91,14 @@ public class PasswordRecoveryTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Failure(UserErrors.NotFound));
+            .ReturnsAsync(Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
 
         var result = await _authService.ResetPasswordAsync(request);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.EmailNotRegistered);
         _identityCredentialsMock.Verify(
-            s => s.ResetPasswordAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
+            s => s.ResetPasswordAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -102,13 +110,14 @@ public class PasswordRecoveryTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Success(KnownUser(userId, request.Email)));
+            .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId, request.Email)));
         _identityCredentialsMock
-            .Setup(s => s.ResetPasswordAsync(userId, request.Token, request.NewPassword!, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto>.Failure(UserErrors.ResetPasswordFailed));
+            .Setup(s => s.ResetPasswordAsync(UserId.From(userId), request.Token, request.NewPassword!, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(IdentityErrors.FromIdentityResult("Invalid token.")));
 
         var result = await _authService.ResetPasswordAsync(request);
 
+        // AuthService maps any credentials failure to a single domain error.
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.PasswordResetFailed);
     }
@@ -121,16 +130,15 @@ public class PasswordRecoveryTests
 
         _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<IdentityUserDto?>.Success(KnownUser(userId, request.Email)));
-        _identityCredentialsMock
-            .Setup(s => s.ResetPasswordAsync(userId, request.Token, request.NewPassword!, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId, request.Email)));
+        _identityCredentialsMock
+            .Setup(s => s.ResetPasswordAsync(UserId.From(userId), request.Token, request.NewPassword!, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
 
         var result = await _authService.ResetPasswordAsync(request);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("Password reset successfully");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         _identityCredentialsMock.Verify(
-            s => s.ResetPasswordAsync(userId, request.Token, "NewPassword1", It.IsAny<CancellationToken>()), Times.Once);
+            s => s.ResetPasswordAsync(UserId.From(userId), request.Token, "NewPassword1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }
