@@ -16,13 +16,13 @@ public class IdentityEmailService : IIdentityEmailService
         _userManager = userManager;
     }
     
-    public async Task<Result> GenerateEmailConfirmationTokenAsync(UserId userId, CancellationToken ct = default)
+    public async Task<Result<string>> GenerateEmailConfirmationTokenAsync(UserId userId, CancellationToken ct = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null)
-            return Result.Failure(IdentityErrors.NotFound);
+            return Result<string>.Failure(IdentityErrors.NotFound);
         
-        return Result.Success(await _userManager.GenerateEmailConfirmationTokenAsync(user));
+        return Result<string>.Success(await _userManager.GenerateEmailConfirmationTokenAsync(user));
     }
     
     public async Task<Result> ConfirmEmailAsync(UserId userId, string token, CancellationToken ct = default)

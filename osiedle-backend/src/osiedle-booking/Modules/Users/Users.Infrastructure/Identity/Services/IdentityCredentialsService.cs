@@ -38,13 +38,13 @@ public class IdentityCredentialsService : IIdentityCredentialsService
         return Result.Failure(IdentityErrors.InvalidCredentials);
     }
     
-    public async Task<Result> GeneratePasswordResetTokenAsync(UserId userId, CancellationToken ct = default)
+    public async Task<Result<string>> GeneratePasswordResetTokenAsync(UserId userId, CancellationToken ct = default)
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null)
-            return Result.Failure(IdentityErrors.NotFound);
+            return Result<string>.Failure(IdentityErrors.NotFound);
 
-        return Result.Success(await _userManager.GeneratePasswordResetTokenAsync(user));
+        return Result<string>.Success(await _userManager.GeneratePasswordResetTokenAsync(user));
     }
     
     public async Task<Result> ResetPasswordAsync(UserId userId, string token, string newPassword,

@@ -9,10 +9,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Bookings.Infrastructure.Data.Migrations
+namespace Bookings.Infrastructure.Data.Mifrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261007141537_Initial")]
+    [Migration("20261102192303_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -36,11 +36,11 @@ namespace Bookings.Infrastructure.Data.Migrations
                     b.Property<Guid>("ClientId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("DeletedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uuid");
@@ -52,8 +52,8 @@ namespace Bookings.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly>("UpdatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -75,7 +75,11 @@ namespace Bookings.Infrastructure.Data.Migrations
                                 .HasColumnType("timestamp with time zone")
                                 .HasColumnName("Cancellation_CancelledAt");
 
+                            b1.Property<Guid>("CancelledById")
+                                .HasColumnType("uuid");
+
                             b1.Property<string>("Reason")
+                                .IsRequired()
                                 .HasColumnType("text")
                                 .HasColumnName("Cancellation_Reason");
 

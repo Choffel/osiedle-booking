@@ -154,6 +154,8 @@ namespace Users.Infrastructure.Data.Mifrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("RefreshTokens");
                 });
 
@@ -323,6 +325,15 @@ namespace Users.Infrastructure.Data.Mifrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Users.Domain.Entity.RefreshToken.RefreshToken", b =>
+                {
+                    b.HasOne("Users.Domain.Entity.User.User", null)
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Users.Domain.Entity.User.User", b =>
                 {
                     b.OwnsOne("Users.Domain.Entity.User.ValueObjects.Name", "Name", b1 =>
@@ -348,6 +359,11 @@ namespace Users.Infrastructure.Data.Mifrations
 
                     b.Navigation("Name")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Users.Domain.Entity.User.User", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 
             modelBuilder.Entity("Users.Infrastructure.Identity.Models.RoleIdentity", b =>

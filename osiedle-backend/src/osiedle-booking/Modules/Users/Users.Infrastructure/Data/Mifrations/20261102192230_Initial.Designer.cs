@@ -12,8 +12,8 @@ using Users.Infrastructure.Data;
 namespace Users.Infrastructure.Data.Mifrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261021211045_ChangeUsersAuditColumnsToDateTime")]
-    partial class ChangeUsersAuditColumnsToDateTime
+    [Migration("20261102192230_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -131,29 +131,33 @@ namespace Users.Infrastructure.Data.Mifrations
             modelBuilder.Entity("Users.Domain.Entity.RefreshToken.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("DeletedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly>("UpdatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
                 });
@@ -169,7 +173,7 @@ namespace Users.Infrastructure.Data.Mifrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DisplayName")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -181,7 +185,7 @@ namespace Users.Infrastructure.Data.Mifrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Users.Infrastructure.Identity.ApplicationUser", b =>
+            modelBuilder.Entity("Users.Infrastructure.Identity.Models.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -246,7 +250,7 @@ namespace Users.Infrastructure.Data.Mifrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Users.Infrastructure.Identity.RoleIdentity", b =>
+            modelBuilder.Entity("Users.Infrastructure.Identity.Models.RoleIdentity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -275,7 +279,7 @@ namespace Users.Infrastructure.Data.Mifrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Users.Infrastructure.Identity.RoleIdentity", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.RoleIdentity", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -284,7 +288,7 @@ namespace Users.Infrastructure.Data.Mifrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Users.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -293,7 +297,7 @@ namespace Users.Infrastructure.Data.Mifrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Users.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -302,13 +306,13 @@ namespace Users.Infrastructure.Data.Mifrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("Users.Infrastructure.Identity.RoleIdentity", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.RoleIdentity", null)
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Users.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -317,14 +321,55 @@ namespace Users.Infrastructure.Data.Mifrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Users.Infrastructure.Identity.ApplicationUser", null)
+                    b.HasOne("Users.Infrastructure.Identity.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Users.Infrastructure.Identity.RoleIdentity", b =>
+            modelBuilder.Entity("Users.Domain.Entity.RefreshToken.RefreshToken", b =>
+                {
+                    b.HasOne("Users.Domain.Entity.User.User", null)
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Users.Domain.Entity.User.User", b =>
+                {
+                    b.OwnsOne("Users.Domain.Entity.User.ValueObjects.Name", "Name", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("FirstName")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("LastName")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("UserId");
+
+                            b1.ToTable("Users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Users.Domain.Entity.User.User", b =>
+                {
+                    b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Users.Infrastructure.Identity.Models.RoleIdentity", b =>
                 {
                     b.Navigation("UserRoles");
                 });
