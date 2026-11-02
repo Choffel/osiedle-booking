@@ -37,7 +37,7 @@ public class UserSessionService : IUserSessionService
         return Result.Success(activeSessions);
     }
 
-    public async Task<Result> RevokeSessionAsync(UserId userId, RefreshTokenId tokenId, string currentRefreshToken,
+    public async Task<Result> RevokeSessionAsync(UserId userId, string currentRefreshToken,
         CancellationToken ct = default)
     {
         var refreshToken = await _tokenReadRepository.GetByTokenAsync(currentRefreshToken, ct);
