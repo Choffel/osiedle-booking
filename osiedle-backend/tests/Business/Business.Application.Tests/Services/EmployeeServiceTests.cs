@@ -13,6 +13,7 @@ namespace Business.Application.Tests.Services;
 public class EmployeeServiceTests
 {
     private readonly Mock<IEmployeeRepository> _employeeRepository = new();
+    private readonly Mock<IEmployeeReadOnlyRepository> _employeeReadOnlyRepository = new();
     private readonly Mock<IBusinessRepository> _businessRepository = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly EmployeeService _sut;
@@ -20,6 +21,7 @@ public class EmployeeServiceTests
     public EmployeeServiceTests()
     {
         _sut = new EmployeeService(
+            _employeeReadOnlyRepository.Object,
             _employeeRepository.Object,
             _businessRepository.Object,
             _unitOfWork.Object);
@@ -38,7 +40,7 @@ public class EmployeeServiceTests
         EmployeeAggregate? added = null;
 
         _employeeRepository
-            .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
+            .Setup(r => r.Add(It.IsAny<EmployeeAggregate>()))
             .Callback<EmployeeAggregate>(employee => added = employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -74,7 +76,7 @@ public class EmployeeServiceTests
             .Setup(r => r.ExistsByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _employeeRepository
-            .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
+            .Setup(r => r.Add(It.IsAny<EmployeeAggregate>()))
             .Callback<EmployeeAggregate>(employee => added = employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -106,7 +108,7 @@ public class EmployeeServiceTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(EmployeeErrors.BusinessNotFound, result.Error);
-        _employeeRepository.Verify(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()), Times.Never);
+        _employeeRepository.Verify(r => r.Add(It.IsAny<EmployeeAggregate>()), Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -123,7 +125,7 @@ public class EmployeeServiceTests
         EmployeeAggregate? added = null;
 
         _employeeRepository
-            .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
+            .Setup(r => r.Add(It.IsAny<EmployeeAggregate>()))
             .Callback<EmployeeAggregate>(employee => added = employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -143,9 +145,9 @@ public class EmployeeServiceTests
         var dto = new UpdateEmployeeProfileDto("Jan", "Kowalski", "Barber", "Great", "taken@example.com");
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
-        _employeeRepository
+        _employeeReadOnlyRepository
             .Setup(r => r.ExistsByEmailAsync("taken@example.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -164,7 +166,7 @@ public class EmployeeServiceTests
         var dto = new UpdateEmployeeProfileDto("Jan", "Kowalski", "Barber", "Great", "JAN@Example.COM");
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -173,7 +175,7 @@ public class EmployeeServiceTests
         var result = await _sut.UpdateProfileAsync(employee.Id, dto);
 
         Assert.True(result.IsSuccess);
-        _employeeRepository.Verify(
+        _employeeReadOnlyRepository.Verify(
             r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -186,7 +188,7 @@ public class EmployeeServiceTests
         var dto = new UpdateEmployeeProfileDto("Adam", "Nowak", "Stylist", "Very good", "adam@example.com");
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -207,7 +209,7 @@ public class EmployeeServiceTests
     public async Task UpdateProfileAsync_WhenEmployeeMissing_ReturnsNotFound()
     {
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
         var result = await _sut.UpdateProfileAsync(EmployeeId.New(),
@@ -224,7 +226,7 @@ public class EmployeeServiceTests
         var employee = CreateEmployee();
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -241,7 +243,7 @@ public class EmployeeServiceTests
     public async Task DeactivateEmployeeAsync_WhenEmployeeMissing_ReturnsNotFound()
     {
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
         var result = await _sut.DeactivateEmployeeAsync(EmployeeId.New());

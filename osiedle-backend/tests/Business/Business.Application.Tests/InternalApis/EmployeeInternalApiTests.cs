@@ -56,7 +56,7 @@ public class EmployeeInternalApiTests
     public async Task IsAvailableForBookingAsync_WhenEmployeeMissing_ReturnsFalse()
     {
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
         var result = await _sut.IsAvailableForBookingAsync(EmployeeId.New());
@@ -70,7 +70,7 @@ public class EmployeeInternalApiTests
     {
         var employee = CreateEmployee();
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
 
         var result = await _sut.IsAvailableForBookingAsync(employee.Id);
@@ -85,7 +85,7 @@ public class EmployeeInternalApiTests
         var employee = CreateEmployee();
         employee.ArchiveEmployee();
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
 
         var result = await _sut.IsAvailableForBookingAsync(employee.Id);
@@ -95,46 +95,26 @@ public class EmployeeInternalApiTests
     }
 
     [Fact]
-    public async Task GetWorkingHoursAsync_WhenEmployeeMissing_ReturnsNotFound()
+    public async Task GetWorkingHoursAsync_WhenNoEntry_ReturnsNotFound()
     {
-        _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        var result = await _sut.GetWorkingHoursAsync(EmployeeId.New(), Date);
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(EmployeeErrors.NotFound, result.Error);
-    }
-
-    [Fact]
-    public async Task GetWorkingHoursAsync_WhenNoEntry_ReturnsEmptyCollection()
-    {
-        var employeeId = EmployeeId.New();
-        _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _workingHoursRepository
             .Setup(r => r.GetByDateAsync(
                 It.IsAny<EmployeeId>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((WorkingHours?)null);
 
-        var result = await _sut.GetWorkingHoursAsync(employeeId, Date);
+        var result = await _sut.GetWorkingHoursAsync(EmployeeId.New(), Date);
 
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value);
+        Assert.True(result.IsFailure);
+        Assert.Equal(WorkingHoursErrors.NotFound, result.Error);
     }
 
     [Fact]
-    public async Task GetWorkingHoursAsync_WhenEntryExists_ReturnsSingleWorkingHours()
+    public async Task GetWorkingHoursAsync_WhenEntryExists_ReturnsWorkingHours()
     {
         var employeeId = EmployeeId.New();
         var workingHours = WorkingHours.Create(
             employeeId, Date, TimeSlot.Create(new TimeOnly(9, 0), new TimeOnly(17, 0)));
 
-        _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _workingHoursRepository
             .Setup(r => r.GetByDateAsync(
                 It.IsAny<EmployeeId>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
@@ -143,10 +123,9 @@ public class EmployeeInternalApiTests
         var result = await _sut.GetWorkingHoursAsync(employeeId, Date);
 
         Assert.True(result.IsSuccess);
-        var item = Assert.Single(result.Value);
-        Assert.Equal(Date, item.Date);
-        Assert.Equal(new TimeOnly(9, 0), item.StartTime);
-        Assert.Equal(new TimeOnly(17, 0), item.EndTime);
+        Assert.Equal(Date, result.Value.Date);
+        Assert.Equal(new TimeOnly(9, 0), result.Value.StartTime);
+        Assert.Equal(new TimeOnly(17, 0), result.Value.EndTime);
     }
 
     private static EmployeeAggregate CreateEmployee()

@@ -33,7 +33,7 @@ public class EmployeeWorkingHoursServiceTests
         var employeeId = EmployeeId.New();
         var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, Slot.StartTime, Slot.EndTime);
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
         var result = await _sut.SetWorkingHoursAsync(employeeId, dto);
@@ -51,7 +51,7 @@ public class EmployeeWorkingHoursServiceTests
         WorkingHours? added = null;
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _workingHoursRepository
             .Setup(r => r.GetByDateAsync(It.IsAny<EmployeeId>(), Date, It.IsAny<CancellationToken>()))
@@ -84,7 +84,7 @@ public class EmployeeWorkingHoursServiceTests
         var dto = new SetWorkingHoursDto(WorkingHoursId.New(), Date, newSlot.StartTime, newSlot.EndTime);
 
         _employeeRepository
-            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _workingHoursRepository
             .Setup(r => r.GetByDateAsync(It.IsAny<EmployeeId>(), Date, It.IsAny<CancellationToken>()))
