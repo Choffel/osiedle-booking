@@ -9,6 +9,7 @@ using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Application.Abstractions.Services.Tokens;
+using Users.Application.Errors;
 using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
@@ -74,7 +75,7 @@ public class AuthService : IAuthService
         var user = await _identityAccountService.FindByEmailAsync(request.Email, ct);
 
         if (user.IsFailure)
-            return Result.Failure(user.Error);
+            return Result.Failure(IdentityErrors.InvalidCredentials); // одинаково с неверным паролем — без утечки enumeration
         
 
         var isPasswordCorrect = await _identityCredentialsService.CheckPasswordAsync(UserId.From(user.Value.Id),

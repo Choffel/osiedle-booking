@@ -40,6 +40,10 @@ public class RoleService : IRoleService
         if (user is null)
             return Result.Failure(IdentityErrors.NotFound);
 
+        // UserManager.AddToRoleAsync бросает InvalidOperationException, если роли нет в БД.
+        if (!await _roleManager.RoleExistsAsync(roleName))
+            return Result.Failure(RoleErrors.AddUserToRoleFailed);
+
         var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
             return Result.Failure(RoleErrors.AddUserToRoleFailed);

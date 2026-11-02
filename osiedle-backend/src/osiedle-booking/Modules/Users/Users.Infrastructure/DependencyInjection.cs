@@ -10,12 +10,14 @@ using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Repositories.Tokens;
 using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.Services;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
 using Users.Infrastructure.Identity.Services;
 using Users.Infrastructure.Options;
+using Users.Infrastructure.Services.Tokens;
 using Users.Infrastructure.Repositories.Tokens;
 using Users.Infrastructure.Repositories.Users;
 using Users.Infrastructure.UnitOtWork;
@@ -64,6 +66,9 @@ public static class DependencyInjection
         services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
         services.AddScoped<IIdentityEmailService, IdentityEmailService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserSessionService, UserSessionService>();
         #endregion
 
         #region Repositories

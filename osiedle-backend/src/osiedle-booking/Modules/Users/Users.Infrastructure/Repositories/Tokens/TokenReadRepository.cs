@@ -36,7 +36,9 @@ public class TokenReadRepository : ITokenReadRepository
     {
         return await _dbContext.RefreshTokens
             .AsNoTracking()
-            .Where(t => t.UserId == userId && t.RevokedAt == null && t.IsActive)
+            // IsActive is an unmapped computed property, so its predicate is spelled
+            // out in a translatable form (RevokedAt == null && UtcNow < ExpiresAt).
+            .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > DateTime.UtcNow)
             .ToListAsync(ct);
     }
 }

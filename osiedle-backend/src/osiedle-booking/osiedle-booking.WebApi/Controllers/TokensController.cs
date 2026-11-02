@@ -32,7 +32,7 @@ public class TokensController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
         
-        var result = await _userSessionService.RevokeSessionAsync(UserId.From(userId),  refreshToken, ct);
+        var result = await _userSessionService.RevokeCurrentSessionAsync(UserId.From(userId), refreshToken, ct);
         return result.ToActionResult();
     }
 
@@ -43,7 +43,8 @@ public class TokensController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
         
-        var result = await _userSessionService.RevokeSessionAsync(UserId.From(userId),  refreshToken, ct);
+        var result = await _userSessionService.RevokeSessionAsync(
+            UserId.From(userId), RefreshTokenId.From(tokenId), refreshToken, ct);
         return result.ToActionResult();
     }
 

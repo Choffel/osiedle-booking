@@ -7,6 +7,7 @@ using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Application.Abstractions.Services.Tokens;
+using Users.Application.Errors;
 using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
@@ -60,12 +61,16 @@ internal sealed class TokenService : ITokenService
     public async Task<Result<TokenResponseDto>> GenerateTokensByRefreshTokenAsync(string currentRefreshToken, CancellationToken ct = default)
     {
         var user = await _userReadRepository.GetUserByRefreshTokenAsync(currentRefreshToken, ct);
-        
-        var userRoles = await _identityAccountService.FindByEmailAsync(user.Email);
-        
+        if (user is null)
+            return Result<TokenResponseDto>.Failure(TokenErrors.InvalidRefreshToken);
+
+        var userRoles = await _identityAccountService.FindByEmailAsync(user.Email, ct);
+        if (userRoles.IsFailure)
+            return Result<TokenResponseDto>.Failure(userRoles.Error);
+
         var accessToken = _jwtTokenGenerator.GenerateAccessToken(user.Id, userRoles.Value.Email, userRoles.Value.Roles);
         var refreshToken = _jwtTokenGenerator.GenerateRefreshToken();
-        
+
         var refreshTokenEntity = RefreshToken.Create(
             RefreshTokenId.New(),
             refreshToken,
@@ -73,10 +78,14 @@ internal sealed class TokenService : ITokenService
             DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays),
             DateTime.UtcNow
         );
-        
+
+        // Ротация: использованный токен перестаёт действовать.
+        var usedToken = await _tokenWriteRepository.GetByTokenForUpdateAsync(currentRefreshToken, ct);
+        usedToken?.Revoke(user.Id, DateTime.UtcNow);
+
         _tokenWriteRepository.Add(refreshTokenEntity, ct);
         await _unitOfWork.SaveChangesAsync(ct);
-        
+
         return Result.Success(new TokenResponseDto(accessToken, refreshToken));
     }
 }

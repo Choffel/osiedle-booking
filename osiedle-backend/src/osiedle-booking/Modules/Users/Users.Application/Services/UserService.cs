@@ -34,13 +34,12 @@ public class UserService : IUserService
             return Result.Failure(UserErrors.NotFound);
 
         var domainUser = await _userRepository.GetByIdAsync(userId, ct);
-
         if (domainUser is null)
             return Result.Failure(UserErrors.NotFound);
 
-        var userProfile = await _userReadRepository.GetProfileAsync(userId, ct);
-        
-        domainUser.Update(Name.Create(userProfile.FirstName, userProfile.LastName));
+        var updateResult = await _identityAccountService.UpdateUserNameAsync(userId, userDto.UserName, ct);
+        if (updateResult.IsFailure)
+            return Result.Failure(UserErrors.UpdateFailed);
 
         await _unitOfWork.SaveChangesAsync(ct);
 

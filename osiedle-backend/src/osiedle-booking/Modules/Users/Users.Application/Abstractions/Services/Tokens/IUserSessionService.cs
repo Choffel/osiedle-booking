@@ -10,6 +10,9 @@ public interface IUserSessionService
     Task<Result> GetActiveSessionsAsync(UserId userId, string currentRefreshToken,
         CancellationToken ct = default);
     
-    Task<Result> RevokeSessionAsync(UserId userId, string currentRefreshToken,
+    Task<Result> RevokeSessionAsync(UserId userId, RefreshTokenId tokenId, string currentRefreshToken,
+        CancellationToken ct = default);
+
+    Task<Result> RevokeCurrentSessionAsync(UserId userId, string currentRefreshToken,
         CancellationToken ct = default);
 }

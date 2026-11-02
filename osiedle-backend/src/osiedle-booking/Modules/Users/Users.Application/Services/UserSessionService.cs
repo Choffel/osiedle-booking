@@ -12,11 +12,14 @@ namespace Users.Application.Services;
 public class UserSessionService : IUserSessionService 
 {
     private readonly ITokenReadRepository _tokenReadRepository;
+    private readonly ITokenWriteRepository _tokenWriteRepository;
     private readonly IUnitOfWork _unitOfWork;
     
-    public UserSessionService(ITokenReadRepository tokenReadRepository, IUnitOfWork unitOfWork)
+    public UserSessionService(ITokenReadRepository tokenReadRepository,
+        ITokenWriteRepository tokenWriteRepository, IUnitOfWork unitOfWork)
     {
         _tokenReadRepository = tokenReadRepository;
+        _tokenWriteRepository = tokenWriteRepository;
         _unitOfWork = unitOfWork;
     }
     
@@ -37,10 +40,11 @@ public class UserSessionService : IUserSessionService
         return Result.Success(activeSessions);
     }
 
-    public async Task<Result> RevokeSessionAsync(UserId userId, string currentRefreshToken,
-        CancellationToken ct = default)
+    public async Task<Result> RevokeSessionAsync(UserId userId, RefreshTokenId tokenId,
+        string currentRefreshToken, CancellationToken ct = default)
     {
-        var refreshToken = await _tokenReadRepository.GetByTokenAsync(currentRefreshToken, ct);
+        // Грузим отслеживаемую строку (write-repo): мутация Revoke должна попасть в SaveChanges.
+        var refreshToken = await _tokenWriteRepository.GetByIdForUpdateAsync(tokenId, ct);
 
         if (refreshToken == null || refreshToken.UserId != userId || !refreshToken.IsActive)
             return Result.Failure(TokenErrors.InvalidRefreshToken);
@@ -50,6 +54,21 @@ public class UserSessionService : IUserSessionService
         
         refreshToken.Revoke(userId, DateTime.UtcNow);
         
+        await _unitOfWork.SaveChangesAsync(ct);
+        
+        return Result.Success();
+    }
+
+    public async Task<Result> RevokeCurrentSessionAsync(UserId userId, string currentRefreshToken,
+        CancellationToken ct = default)
+    {
+        var refreshToken = await _tokenWriteRepository.GetByTokenForUpdateAsync(currentRefreshToken, ct);
+
+        if (refreshToken == null || refreshToken.UserId != userId || !refreshToken.IsActive)
+            return Result.Failure(TokenErrors.InvalidRefreshToken);
+
+        refreshToken.Revoke(userId, DateTime.UtcNow);
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         return Result.Success();

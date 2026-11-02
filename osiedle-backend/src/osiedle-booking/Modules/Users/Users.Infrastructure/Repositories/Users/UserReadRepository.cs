@@ -20,13 +20,14 @@ public class UserReadRepository : IUserReadRepository
     {
         return _dbContext.Users
             .AsNoTracking()
+            .Where(user => user.Id == id)
             .Select(user => new UserDto(
                 user.Id,
-                 user.Name.FirstName,
-                 user.Name.LastName,
-                 user.Email
+                user.Name.FirstName,
+                user.Name.LastName,
+                user.Email
             ))
-            .FirstOrDefaultAsync(u => u.Id == id, ct);
+            .FirstOrDefaultAsync(ct);
     }
     
     public async Task<User> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken ct = default)

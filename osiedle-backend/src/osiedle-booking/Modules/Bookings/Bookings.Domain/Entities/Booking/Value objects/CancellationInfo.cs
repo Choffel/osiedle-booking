@@ -28,7 +28,8 @@ public sealed record CancellationInfo
 
     public static CancellationInfo ByClient(ClientId clientId, DateTime cancelledAt)
     {
-        return new CancellationInfo(CancelledBy.Client, clientId.Value, string.Empty, cancelledAt);
+        // The domain requires a non-empty reason for every cancellation kind.
+        return new CancellationInfo(CancelledBy.Client, clientId.Value, "Cancelled by client", cancelledAt);
     }
     
     public static CancellationInfo ByStaff(StaffId staffId, string reason, DateTime cancelledAt)
