@@ -1,11 +1,12 @@
-using Business.Domain.ValueObjects;
+using Business.Domain.Enums;
 
 namespace Business.Application.DTOs.BookableServiceDTOs;
 
 public record UpdateBookableServiceDto(
-    EmployeeId EmployeeId,
+    Guid EmployeeId,
     string ServiceName,
     string ServiceDescription,
     decimal ServicePrice,
-    TimeSpan ServiceDuration
+    TimeSpan ServiceDuration,
+    ServiceStatus ServiceStatus
     );

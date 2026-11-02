@@ -1,4 +1,3 @@
-using Bookings.Infrastructure;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
@@ -7,14 +6,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Roles;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
-using Users.Infrastructure.Identity.Models;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +24,6 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 #region DI
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
-builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -101,6 +97,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -129,7 +126,7 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
     await businessDbContext.Database.MigrateAsync();
 
-    await RoleInitData.InitializeAsync(UserRoles.All, roleManager);
+    await RoleInitData.InitializeAsync(roleManager);
 }
 
 app.MapControllers();

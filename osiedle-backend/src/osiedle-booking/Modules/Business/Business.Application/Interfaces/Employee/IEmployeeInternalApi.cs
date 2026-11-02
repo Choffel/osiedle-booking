@@ -1,17 +1,13 @@
 using Business.Application.DTOs.EmployeeDTOs;
-using Business.Domain.ValueObjects;
+using Business.Application.DTOs.WorkingHoursDTOs;
 using osiedle_booking.BuildingBlocks;
 
 namespace Business.Application.Interfaces.Employee;
 
 public interface IEmployeeInternalApi
 {
-    Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default);
+    Task<Result<bool>> IsAvailableForBookingAsync(Guid employeeId, CancellationToken ct = default);
+    Task<Result<WorkingHoursDto>> GetWorkingHoursAsync(Guid employeeId, DateOnly date, CancellationToken ct = default);
     
-    Task<Result<EmployeeStatusDto>> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default);
-    
-    Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default);
-    
-    Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct);
-    
+    Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(Guid employeeId, CancellationToken ct = default);
 }

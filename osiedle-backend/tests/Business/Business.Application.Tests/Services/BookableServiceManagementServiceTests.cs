@@ -104,7 +104,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45), ServiceStatus.Active);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -120,11 +120,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenServiceMissing_ReturnsNotFound()
     {
         var dto = new UpdateBookableServiceDto(
-            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45), ServiceStatus.Active);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BookableService?)null);
@@ -142,12 +138,8 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30), ServiceStatus.Active);
 
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -170,12 +162,8 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30), ServiceStatus.Active);
 
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -203,12 +191,8 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, "Haircut", "New description", 60m, TimeSpan.FromMinutes(30), ServiceStatus.Active);
 
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -244,7 +228,7 @@ public class BookableServiceManagementServiceTests
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
-        service.ArchiveService();
+        service.Archive();
 
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
@@ -298,12 +282,8 @@ public class BookableServiceManagementServiceTests
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
-        service.DeactivateService();
+        service.Deactivate();
 
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -341,10 +321,6 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
 
-        _bookableServiceRepository
-            .Setup(r => r.BelongsToEmployeeAsync(
-                It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);

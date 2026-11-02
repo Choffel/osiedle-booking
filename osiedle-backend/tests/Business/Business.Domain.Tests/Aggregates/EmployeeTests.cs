@@ -6,18 +6,36 @@ namespace Business.Domain.Tests.Aggregates;
 
 public class EmployeeTests
 {
+    private static Employee CreateEmployee(
+        BusinessId? businessId = null,
+        string? review = "Great",
+        string email = "jan@example.com")
+    {
+        return Employee.Create(
+            businessId,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            review,
+            email);
+    }
+
     [Fact]
     public void Create_WithValidData_InitializesActiveAggregate()
     {
         var businessId = BusinessId.New();
         var before = DateTime.UtcNow;
 
-        var employee = Employee.Create(businessId, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = Employee.Create(
+            businessId,
+            EmployeeName.Create("Jan", "Kowalski"),
+            "Barber",
+            "Great",
+            "jan@example.com");
 
         Assert.NotEqual(Guid.Empty, employee.Id.Value);
         Assert.Equal(businessId, employee.BusinessId);
-        Assert.Equal("Jan", employee.FirstName);
-        Assert.Equal("Kowalski", employee.LastName);
+        Assert.Equal("Jan", employee.EmployeeName.FirstName);
+        Assert.Equal("Kowalski", employee.EmployeeName.LastName);
         Assert.Equal("Barber", employee.Position);
         Assert.Equal("Great", employee.Review);
         Assert.Equal(EmploymentStatus.Active, employee.Status);
@@ -29,7 +47,7 @@ public class EmployeeTests
     [Fact]
     public void Create_NormalizesEmailToLowerCaseAndTrims()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "  Jan.Kowalski@Example.COM  ");
+        var employee = CreateEmployee(email: "  Jan.Kowalski@Example.COM  ");
 
         Assert.Equal("jan.kowalski@example.com", employee.Email);
     }
@@ -37,7 +55,7 @@ public class EmployeeTests
     [Fact]
     public void Create_WithoutBusiness_LeavesBusinessIdNull()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
 
         Assert.Null(employee.BusinessId);
     }
@@ -55,7 +73,12 @@ public class EmployeeTests
         string email)
     {
         Assert.Throws<ArgumentException>(() =>
-            Employee.Create(null, firstName, lastName, position, review, email));
+            Employee.Create(
+                null,
+                EmployeeName.Create(firstName, lastName),
+                position,
+                review,
+                email));
     }
 
     [Theory]
@@ -64,20 +87,23 @@ public class EmployeeTests
     [InlineData("   ")]
     public void Create_WithoutReview_LeavesReviewEmpty(string? review)
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", review, "jan@example.com");
+        var employee = CreateEmployee(review: review);
 
         Assert.Null(employee.Review);
     }
 
     [Fact]
-    public void UpdateInfo_UpdatesFieldsAndSetsUpdatedAt()
+    public void UpdateProfile_UpdatesFieldsAndSetsUpdatedAt()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
 
-        employee.UpdateInfo("Adam", "Nowak", "Stylist", "Very good", "Adam.Nowak@Example.COM");
+        employee.UpdateEmployeeName(EmployeeName.Create("Adam", "Nowak"));
+        employee.ChangePosition("Stylist");
+        employee.ChangeReview("Very good");
+        employee.ChangeEmail("Adam.Nowak@Example.COM");
 
-        Assert.Equal("Adam", employee.FirstName);
-        Assert.Equal("Nowak", employee.LastName);
+        Assert.Equal("Adam", employee.EmployeeName.FirstName);
+        Assert.Equal("Nowak", employee.EmployeeName.LastName);
         Assert.Equal("Stylist", employee.Position);
         Assert.Equal("Very good", employee.Review);
         Assert.Equal("adam.nowak@example.com", employee.Email);
@@ -87,7 +113,7 @@ public class EmployeeTests
     [Fact]
     public void ChangeStatus_SetsNewStatus()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
 
         employee.ChangeStatus(EmploymentStatus.OnLeave);
 
@@ -97,7 +123,7 @@ public class EmployeeTests
     [Fact]
     public void ChangeStatus_ToTheSameStatus_DoesNotThrow()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
 
         employee.ChangeStatus(EmploymentStatus.Active);
 
@@ -107,9 +133,20 @@ public class EmployeeTests
     [Fact]
     public void ChangeStatus_FromTerminated_Throws()
     {
-        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+        var employee = CreateEmployee();
         employee.ChangeStatus(EmploymentStatus.Terminated);
 
         Assert.Throws<InvalidOperationException>(() => employee.ChangeStatus(EmploymentStatus.Active));
+    }
+
+    [Fact]
+    public void ArchiveEmployee_SetsArchivedStatusAndDeletedAt()
+    {
+        var employee = CreateEmployee();
+
+        employee.ArchiveEmployee();
+
+        Assert.Equal(EmploymentStatus.Archived, employee.Status);
+        Assert.NotNull(employee.DeletedAt);
     }
 }
