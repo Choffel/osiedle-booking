@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.DTOs;
+using Users.Domain.Entity.User;
 using Users.Infrastructure.Data;
 
 namespace Users.Infrastructure.Repositories.Users;
@@ -26,5 +27,12 @@ public class UserReadRepository : IUserReadRepository
                  user.Email
             ))
             .FirstOrDefaultAsync(u => u.Id == id, ct);
+    }
+    
+    public async Task<User> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken ct = default)
+    {
+        return await _dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), ct);
     }
 }
