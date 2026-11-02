@@ -16,19 +16,14 @@ public class BookableServiceInternalApi : IBookableServiceInternalApi
         _bookableServiceRepository = bookableServiceRepository;
     }
 
-    public Task<bool> ExistsAsync(BookableServiceId id, CancellationToken ct = default)
+    public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)
     {
-        return _bookableServiceRepository.ExistsAsync(id, ct);
+        return _bookableServiceRepository.ExistsAsync(BookableServiceId.From(id), ct);
     }
-
-    public Task<bool> BelongsToEmployeeAsync(BookableServiceId id, EmployeeId employeeId, CancellationToken ct = default)
+    
+    public async Task<Result<ServiceShortInfoDto>> GetServiceInfoAsync(Guid id, CancellationToken ct = default)
     {
-        return _bookableServiceRepository.BelongsToEmployeeAsync(id, employeeId, ct);
-    }
-
-    public async Task<Result<ServiceShortInfoDto>> GetServiceInfoAsync(BookableServiceId id, CancellationToken ct = default)
-    {
-        var serviceInfo = await _bookableServiceRepository.GetBasicInfoByIdAsync(id, ct);
+        var serviceInfo = await _bookableServiceRepository.GetBasicInfoByIdAsync(BookableServiceId.From(id), ct);
 
         if (serviceInfo == null)
         {
@@ -38,9 +33,9 @@ public class BookableServiceInternalApi : IBookableServiceInternalApi
         return Result.Success(serviceInfo);
     }
 
-    public async Task<Result<IReadOnlyCollection<ServiceShortInfoDto>>> GetServicesByEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyCollection<ServiceShortInfoDto>>> GetServicesByEmployeeAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var services = await _bookableServiceRepository.GetShortInfosByEmployeeIdAsync(employeeId, ct);
+        var services = await _bookableServiceRepository.GetShortInfosByEmployeeIdAsync(EmployeeId.From(employeeId), ct);
 
         return Result.Success<IReadOnlyCollection<ServiceShortInfoDto>>(services);
     }

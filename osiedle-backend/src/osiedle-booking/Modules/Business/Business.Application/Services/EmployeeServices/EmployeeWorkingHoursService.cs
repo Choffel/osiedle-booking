@@ -1,4 +1,4 @@
-using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Entities;
@@ -24,37 +24,39 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> SetWorkingHoursAsync(EmployeeId employeeId, SetWorkingHoursDto dto, CancellationToken ct = default)
+    public async Task<Result> SetWorkingHoursAsync(Guid employeeId,
+        SetWorkingHoursDto dto, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        var employee = await _employeeRepository.GetByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee is null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
 
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, dto.Date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(EmployeeId.From(employeeId), dto.Date, ct);
+        var slot = TimeSlot.Create(dto.StartTime, dto.EndTime);
 
         if (workingHours is null)
         {
-            var newWorkingHours = WorkingHours.Create(employeeId, dto.Date, dto.StartTime, dto.EndTime);
-            _employeeWorkingHoursRepository.AddWorkingHours(newWorkingHours);
+            var newWorkingHours = WorkingHours.Create(EmployeeId.From(employeeId), dto.Date, slot);
+            _employeeWorkingHoursRepository.Add(newWorkingHours);
         }
         else
         {
-            workingHours.UpdateTime(dto.StartTime, dto.EndTime);
+            workingHours.UpdateSlot(slot);
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    public async Task<Result> ClearWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
+    public async Task<Result> ClearWorkingHoursAsync(Guid employeeId, DateOnly date, CancellationToken ct = default)
     {
-        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(EmployeeId.From(employeeId), date, ct);
         
         if (workingHours != null)
         {
-            _employeeWorkingHoursRepository.RemoveWorkingHours(workingHours);
+            _employeeWorkingHoursRepository.Remove(workingHours);
             await _unitOfWork.SaveChangesAsync(ct);
         }
         

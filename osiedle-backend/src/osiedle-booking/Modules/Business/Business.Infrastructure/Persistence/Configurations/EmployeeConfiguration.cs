@@ -11,7 +11,6 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     {
         builder.ToTable("Employees");
 
-        
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
@@ -24,14 +23,19 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
                 id => id != null ? id.Value : (Guid?)null,
                 value => value.HasValue ? BusinessId.From(value.Value) : null);
         
-        builder.Property(e => e.FirstName)
-            .HasMaxLength(50) 
-            .IsRequired();
-        
-        builder.Property(e => e.LastName)
-            .HasMaxLength(50)
-            .IsRequired();
+        builder.ComplexProperty(e => e.EmployeeName, nameBuilder =>
+        {
+            nameBuilder.Property(n => n.FirstName)
+                .HasColumnName("first_name")
+                .HasMaxLength(100)
+                .IsRequired();
 
+            nameBuilder.Property(n => n.LastName)
+                .HasColumnName("last_name")
+                .HasMaxLength(100)
+                .IsRequired();
+        });
+            
         builder.Property(e => e.Position)
             .HasMaxLength(100)
             .IsRequired();
@@ -42,18 +46,18 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(e => e.Email)
             .IsRequired()
             .HasMaxLength(256);
-
-        builder.HasIndex(e => e.Email).IsUnique().HasFilter("deleted at IS NULL");
+        
+        builder.HasIndex(e => e.Email)
+            .IsUnique()
+            .HasFilter("\"DeletedAt\" IS NULL");
 
         builder.Property(e => e.Status)
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        
         builder.HasQueryFilter(e => e.DeletedAt == null);
 
-        
         builder.HasMany(e => e.BookableServices)
             .WithOne() 
             .HasForeignKey(s => s.EmployeeId)

@@ -11,10 +11,9 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
     {
         builder.ToTable("WorkingHours", t =>
         {
-            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "\"EndTime\" > \"StartTime\"");
+            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "end_time > start_time");
         });
 
-        
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
@@ -22,26 +21,28 @@ public class WorkingHoursConfiguration : IEntityTypeConfiguration<WorkingHours>
                 id => id.Value,
                 value => WorkingHoursId.From(value));
         
-        
         builder.Property(x => x.EmployeeId)
             .HasConversion(
                 id => id.Value,
                 value => EmployeeId.From(value))
             .IsRequired();
 
-        
         builder.Property(x => x.Date)
             .HasColumnType("date")
             .IsRequired();
 
-        builder.Property(x => x.StartTime)
-            .HasColumnType("time")
-            .IsRequired();
+        builder.ComplexProperty(s => s.Slot, slotBuilder =>
+        {
+            slotBuilder.Property(s => s.StartTime)
+                .HasColumnName("start_time")
+                .HasColumnType("time") 
+                .IsRequired();
 
-        builder.Property(x => x.EndTime)
-            .HasColumnType("time")
-            .IsRequired();
-
+            slotBuilder.Property(s => s.EndTime)
+                .HasColumnName("end_time")
+                .HasColumnType("time")
+                .IsRequired();
+        });
         
         builder.HasIndex(x => new { x.EmployeeId, x.Date })
             .IsUnique();

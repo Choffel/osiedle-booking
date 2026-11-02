@@ -2,12 +2,11 @@ using Business.Application.Interfaces;
 using Business.Application.Interfaces.BookableService;
 using Business.Application.Interfaces.Business;
 using Business.Application.Interfaces.Employee;
-using Business.Application.Services;
 using Business.Application.Services.BookableItemServices;
 using Business.Application.Services.BusinessServices;
 using Business.Application.Services.EmployeeServices;
 using Business.Infrastructure.Persistence;
-using Business.Infrastructure.Repositories;
+using Business.Infrastructure.Repositories.BookableService;
 using Business.Infrastructure.Repositories.Business;
 using Business.Infrastructure.Repositories.Employee;
 using Business.Infrastructure.UnitOtWork;
@@ -16,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Business.Infrastructure;
 
-//TODO: Add another services and repos to DI and rigister all in general Host  
 public static class DependencyInjection
 {
     public static IServiceCollection AddBusinessInfrastructure(this IServiceCollection services, string connectionString)
@@ -29,12 +27,12 @@ public static class DependencyInjection
         #region Internal API
         services.AddScoped<IBookableServiceInternalApi, BookableServiceInternalApi>();
         services.AddScoped<IEmployeeInternalApi, EmployeeInternalApi>();
-        services.AddScoped<IBusinessInternalApi, BusinessInternalApi>();
         #endregion
 
         #region Repositories
         services.AddScoped<IBookableServiceRepository, BookableServiceRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IEmployeeReadOnlyRepository, EmployeeReadOnlyRepository>();
         services.AddScoped<IEmployeeWorkingHoursRepository, EmployeeWorkingHoursRepository>();
         services.AddScoped<IBusinessRepository, BusinessRepository>();
         #endregion
