@@ -7,7 +7,7 @@ namespace Bookings.Application.Abstractions.Services;
 public interface IBookingService
 {
     Task<Result<IReadOnlyList<TimeSlot>>> GetAvailableSlotsAsync(GetAvailableSlotsRequest request, CancellationToken ct);
-    Task<Result<bool>> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct);
-    Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct);
-    Task<Result<bool>> CancelBookingAsync(CancelBookingRequest request, CancellationToken ct);
+    Task<Result> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct);
+    Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(ClientId clientId, CancellationToken ct);
+    Task<Result> CancelBookingAsync(CancelBookingRequest request, ClientId clientId, CancellationToken ct);
 }
