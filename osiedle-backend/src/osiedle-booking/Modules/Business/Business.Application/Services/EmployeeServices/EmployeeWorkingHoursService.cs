@@ -24,36 +24,35 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> SetWorkingHoursAsync(EmployeeId employeeId,
+    public async Task<Result> SetWorkingHoursAsync(Guid employeeId,
         SetWorkingHoursDto dto, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee is null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
 
-        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, dto.Date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(EmployeeId.From(employeeId), dto.Date, ct);
+        var slot = TimeSlot.Create(dto.StartTime, dto.EndTime);
 
         if (workingHours is null)
         {
-            var newWorkingHours = WorkingHours.Create(employeeId, dto.Date, dto.Slot);
+            var newWorkingHours = WorkingHours.Create(EmployeeId.From(employeeId), dto.Date, slot);
             _employeeWorkingHoursRepository.Add(newWorkingHours);
         }
         else
         {
-            workingHours.UpdateSlot(dto.Slot);
+            workingHours.UpdateSlot(slot);
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    public async Task<Result> ClearWorkingHoursAsync(EmployeeId employeeId, DateOnly date, CancellationToken ct = default)
+    public async Task<Result> ClearWorkingHoursAsync(Guid employeeId, DateOnly date, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
-        
-        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(EmployeeId.From(employeeId), date, ct);
         
         if (workingHours != null)
         {

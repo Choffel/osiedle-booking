@@ -6,6 +6,7 @@ using Business.Application.Interfaces.Business;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Services.BusinessServices;
 
@@ -22,8 +23,10 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken = default)
     {
+        var ownerId = UserId.From(createBusinessDto.OwnerId);
+
         var existingBusiness = await _businessRepository.ExistsByOwnerIdAsync(
-            createBusinessDto.OwnerId, 
+            ownerId,
             cancellationToken);
         
         if (existingBusiness)
@@ -33,8 +36,11 @@ public class BusinessService : IBusinessManagementService
         
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
-            createBusinessDto.OwnerId, 
-            ToAddress(createBusinessDto.Location), 
+            ownerId, 
+            Address.Create(
+                createBusinessDto.Street,
+                createBusinessDto.Number,
+                createBusinessDto.City),
             createBusinessDto.Description);
         
         _businessRepository.Add(business);
@@ -44,19 +50,19 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId,
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(Guid businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
 
         if (business is null)
         {
@@ -67,17 +73,20 @@ public class BusinessService : IBusinessManagementService
        
        business.UpdateDescription(updateBusinessInfoDto.NewDescription);
        
-       business.UpdateAddress(ToAddress(updateBusinessInfoDto.NewLocation));
+       business.UpdateAddress(Address.Create(
+           updateBusinessInfoDto.NewStreet,
+           updateBusinessInfoDto.NewNumber,
+           updateBusinessInfoDto.NewCity));
        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(Guid businessId, CancellationToken cancellationToken = default)
     {
         
-        var business = await _businessRepository.GetByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;
@@ -88,10 +97,5 @@ public class BusinessService : IBusinessManagementService
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return  business.ToResponseDto();
-    }
-
-    private static Address ToAddress(AddressDto address)
-    {
-        return Address.Create(address.Street, address.Number, address.City);
     }
 }

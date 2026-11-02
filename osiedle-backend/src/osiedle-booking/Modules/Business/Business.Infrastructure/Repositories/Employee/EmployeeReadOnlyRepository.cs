@@ -22,7 +22,8 @@ public class EmployeeReadOnlyRepository : IEmployeeReadOnlyRepository
             .Where(e => e.Id == employeeId)
             .Select(e => new EmployeeShortInfoDto(
                 e.Id.Value,
-                e.EmployeeName,
+                e.EmployeeName.FirstName,
+                e.EmployeeName.LastName,
                 e.Position
             ))
             .FirstOrDefaultAsync(ct);

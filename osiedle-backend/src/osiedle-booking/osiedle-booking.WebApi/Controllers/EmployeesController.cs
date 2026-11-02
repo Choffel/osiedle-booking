@@ -1,7 +1,6 @@
 using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces.Employee;
-using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.WebApi.Extensions;
 
@@ -23,7 +22,7 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<EmployeeId>> CreateEmployeeAsync(
+    public async Task<ActionResult<Guid>> CreateEmployeeAsync(
         [FromBody] EmployeeCreateDto dto,
         CancellationToken ct = default)
     {
@@ -36,9 +35,7 @@ public class EmployeesController : ControllerBase
         [FromBody] UpdateEmployeeProfileDto dto,
         CancellationToken ct = default)
     {
-        var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeManagementService.UpdateProfileAsync(employee, dto, ct))
+        return (await _employeeManagementService.UpdateProfileAsync(employeeId, dto, ct))
             .ToActionResult();
     }
 
@@ -47,9 +44,7 @@ public class EmployeesController : ControllerBase
         Guid employeeId,
         CancellationToken ct = default)
     {
-        var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeManagementService.DeactivateEmployeeAsync(employee, ct))
+        return (await _employeeManagementService.DeactivateEmployeeAsync(employeeId, ct))
             .ToActionResult();
     }
 
@@ -59,9 +54,7 @@ public class EmployeesController : ControllerBase
         [FromBody] SetWorkingHoursDto dto,
         CancellationToken ct = default)
     {
-        var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(employee, dto, ct)).ToActionResult();
+        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(employeeId, dto, ct)).ToActionResult();
     }
 
     [HttpDelete("{employeeId:guid}/working-hours")]
@@ -70,8 +63,6 @@ public class EmployeesController : ControllerBase
         [FromQuery] DateOnly date,
         CancellationToken ct = default)
     {
-        var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(employee, date, ct)).ToActionResult();
+        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(employeeId, date, ct)).ToActionResult();
     }
 }

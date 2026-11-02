@@ -37,7 +37,8 @@ public class EmployeeWorkingHoursRepository : IEmployeeWorkingHoursRepository
                         && w.Date <= endDate)
             .Select(w => new WorkingHoursDto(
                 w.Date,
-                w.Slot))
+                w.Slot.StartTime,
+                w.Slot.EndTime))
             .ToListAsync(ct);
     }
     

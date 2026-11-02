@@ -56,17 +56,22 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success(bookableService.ToDto());
     }
 
-    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(BookableServiceId serviceId,
+    public async Task<Result<BookableServiceResponseDto>> UpdateBookableServiceAsync(Guid serviceId,
         UpdateBookableServiceDto dto, CancellationToken ct)
-    { 
-        var bookableService = await _bookableServiceRepository.GetByIdAsync(serviceId, ct);
+    {
+
+        var service = BookableServiceId.From(serviceId);
+            
+        var bookableService = await _bookableServiceRepository.GetByIdAsync(service, ct);
         if (bookableService is null)
         {
             return Result.Failure<BookableServiceResponseDto>(
                 BookableServiceErrors.NotFound);
         }
+
+        var employeeId = EmployeeId.From(dto.EmployeeId);
         
-        if (bookableService.EmployeeId != dto.EmployeeId)
+        if (bookableService.EmployeeId != employeeId)
         {
             return Result.Failure<BookableServiceResponseDto>(
                 BookableServiceErrors.NotFoundOrAccessDenied);
@@ -77,7 +82,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         {
             bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(
                 dto.ServiceName, 
-                dto.EmployeeId, 
+                employeeId, 
                 ct);
 
             if (isNameTaken)
@@ -107,11 +112,11 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success(bookableService.ToDto());
     }
 
-    public async Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(BookableServiceId bookableServiceId, 
+    public async Task<Result<BookableServiceResponseDto>> DeleteBookableServiceAsync(Guid bookableServiceId, 
         CancellationToken ct)
     {
         
-        var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
+        var bookableService = await _bookableServiceRepository.GetByIdAsync(BookableServiceId.From(bookableServiceId), ct);
     
      
         if (bookableService is null)
@@ -134,17 +139,17 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success(bookableService.ToDto());
     }
 
-    public  async Task<Result> ActivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, 
+    public  async Task<Result> ActivateBookableServiceAsync(Guid employeeId, Guid bookableServiceId, 
         CancellationToken ct)
     {
-        var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
+        var bookableService = await _bookableServiceRepository.GetByIdAsync(BookableServiceId.From(bookableServiceId), ct);
         if (bookableService is null)
         {
             return Result.Failure(BookableServiceErrors.NotFound);
         }
     
         
-        if (bookableService.EmployeeId != employeeId)
+        if (bookableService.EmployeeId != EmployeeId.From(employeeId))
         {
             return Result.Failure(BookableServiceErrors.NotFoundOrAccessDenied);
         }
@@ -157,17 +162,17 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateBookableServiceAsync(EmployeeId employeeId, BookableServiceId bookableServiceId, 
+    public async Task<Result> DeactivateBookableServiceAsync(Guid employeeId, Guid bookableServiceId, 
         CancellationToken ct)
     {
-        var bookableService = await _bookableServiceRepository.GetByIdAsync(bookableServiceId, ct);
+        var bookableService = await _bookableServiceRepository.GetByIdAsync(BookableServiceId.From(bookableServiceId), ct);
         
         if (bookableService is null)
         {
             return Result.Failure(BookableServiceErrors.NotFound);
         }
 
-        if (bookableService.EmployeeId != employeeId)
+        if (bookableService.EmployeeId != EmployeeId.From(employeeId))
         {
             return Result.Failure(BookableServiceErrors.NotFoundOrAccessDenied);
         }

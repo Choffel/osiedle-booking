@@ -25,20 +25,24 @@ public class EmployeeService : IEmployeeManagementService
         _businessRepository = businessRepository;
     }
     
-   public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
+   public async Task<Result<Guid>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
     {
-        if (dto.BusinessId is not null)
+        var businessId = dto.BusinessId is null
+            ? (BusinessId?)null
+            : BusinessId.From(dto.BusinessId.Value);
+
+        if (businessId is not null)
         {
-            bool businessExists = await _businessRepository.ExistsByIdAsync(dto.BusinessId.Value, ct);
+            bool businessExists = await _businessRepository.ExistsByIdAsync(businessId.Value, ct);
             if (!businessExists)
             {
-                return Result.Failure<EmployeeId>(EmployeeErrors.BusinessNotFound);
+                return Result.Failure<Guid>(EmployeeErrors.BusinessNotFound);
             }
         }
         
         var employee = Employee.Create(
-            dto.BusinessId,
-            dto.Name,
+            businessId,
+            EmployeeName.Create(dto.FirstName, dto.LastName),
             dto.Position,
             dto.Review,
             dto.Email
@@ -47,12 +51,12 @@ public class EmployeeService : IEmployeeManagementService
         _employeeRepository.AddEmployee(employee);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return Result.Success(employee.Id);
+        return Result.Success(employee.Id.Value);
     }
     
-    public async Task<Result> UpdateProfileAsync(EmployeeId employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateProfileAsync(Guid employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee == null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
@@ -89,10 +93,10 @@ public class EmployeeService : IEmployeeManagementService
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public async Task<Result> DeactivateEmployeeAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
-        if (employee == null)
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
+        if (employee is null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }

@@ -10,7 +10,8 @@
          return new EmployeeResponseDto(
              employee.Id,
              employee.BusinessId,
-             employee.EmployeeName,
+             employee.EmployeeName.FirstName,
+             employee.EmployeeName.LastName,
              employee.Position,
              employee.Review,
              employee.Email

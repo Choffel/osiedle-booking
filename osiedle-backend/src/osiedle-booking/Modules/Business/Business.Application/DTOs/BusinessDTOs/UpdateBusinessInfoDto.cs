@@ -3,5 +3,7 @@
 public record UpdateBusinessInfoDto(
     string NewName,
     string NewDescription,
-    AddressDto NewLocation
+    string NewStreet,
+    string NewNumber,
+    string NewCity
     );

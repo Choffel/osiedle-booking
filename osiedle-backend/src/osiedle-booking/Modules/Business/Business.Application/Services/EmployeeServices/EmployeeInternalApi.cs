@@ -22,9 +22,9 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         _employeeWorkingHoursRepository = employeeWorkingHoursRepository;
     }
     
-    public async Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public async Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var shortInfo = await _employeeReadOnlyRepository.GetShortInfoAsync(employeeId, ct);
+        var shortInfo = await _employeeReadOnlyRepository.GetShortInfoAsync(EmployeeId.From(employeeId), ct);
 
         if (shortInfo == null)
         {
@@ -34,9 +34,9 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         return Result.Success(shortInfo);
     }
     
-    public async Task<bool> IsAvailableForBookingAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public async Task<Result<bool>> IsAvailableForBookingAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee is null)
         {
             return false;
@@ -45,17 +45,19 @@ public class EmployeeInternalApi : IEmployeeInternalApi
     }
     
     public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
-        EmployeeId employeeId, 
+        Guid employeeId, 
         DateOnly date, 
         CancellationToken ct = default)
     {
-        var employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+        var id = EmployeeId.From(employeeId);
+        
+        var employeeExists = await _employeeRepository.ExistsEmployeeAsync(id, ct);
         if (!employeeExists)
         {
             return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
         }
         
-        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(employeeId, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(id, date, ct);
         
         if (workingHours is null)
         {
@@ -66,7 +68,8 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         [
             new WorkingHoursDto(
                 workingHours.Date, 
-                workingHours.Slot)
+                workingHours.Slot.StartTime,
+                workingHours.Slot.EndTime)
         ];
 
         return Result.Success(result);
