@@ -8,6 +8,7 @@ public interface ITokenService
 {
     Task<Result<TokenResponseDto>> GenerateTokensAsync(UserId userId, string email, IReadOnlyCollection<string> roles,
         CancellationToken ct = default);
+    Task<Result<TokenResponseDto>> GenerateTokensAsync(string currentRefreshToken, CancellationToken ct = default);
     //Task<Result<TokenResponseDto>> RefreshTokenAsync(string refreshToken, CancellationToken ct = default);
     //Task<Result> RevokeRefreshTokenAsync(string refreshToken, CancellationToken ct = default);
     
