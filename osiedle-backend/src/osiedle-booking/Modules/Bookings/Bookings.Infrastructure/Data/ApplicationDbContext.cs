@@ -23,27 +23,27 @@ public class ApplicationDbContext : DbContext
             booking.Property(x => x.Id)
                 .HasConversion(
                     id => id.Value,
-                    value => new BookingId(value));
+                    value => BookingId.From(value));
 
             booking.Property(x => x.BusinessId)
                 .HasConversion(
                     id => id.Value,
-                    value => new BusinessId(value));
+                    value => BusinessId.From(value));
 
             booking.Property(x => x.StaffId)
                 .HasConversion(
                     id => id.Value,
-                    value => new StaffId(value));
+                    value => StaffId.From(value));
 
             booking.Property(x => x.ClientId)
                 .HasConversion(
                     id => id.Value,
-                    value => new ClientId(value));
+                    value => ClientId.From(value));
 
             booking.Property(x => x.ServiceId)
                 .HasConversion(
                     id => id.Value,
-                    value => new ServiceId(value));
+                    value => ServiceId.From(value));
 
             booking.Property(x => x.Status)
                 .HasConversion<string>();
