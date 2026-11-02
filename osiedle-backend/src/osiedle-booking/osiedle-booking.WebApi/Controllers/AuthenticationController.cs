@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.WebApi.Extensions;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
 
 namespace osiedle_booking.WebApi.Controllers;
@@ -15,37 +17,37 @@ public class AuthenticationController : ControllerBase
     }
     
     [HttpPost("register")]
-    public async Task<Result<Guid>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
     {
         var result = await _authService.RegisterAsync(createUserDto, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 
     [HttpPost("login")]
-    public async Task<Result<TokenResponseDto>> LoginAsync([FromBody] AuthRequest request, CancellationToken cancellationToken) 
+    public async Task<IActionResult> LoginAsync([FromBody] AuthRequest request, CancellationToken cancellationToken) 
     {
         var result = await _authService.AuthenticateAsync(request, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 
     [HttpPost("ForgotPassword")]
-    public async Task<Result<string>> ForgotPasswordAsync([FromBody ]ForgotPasswordRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> ForgotPasswordAsync([FromBody ]ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await _authService.ForgotPasswordAsync(request, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 
     [HttpPost("ResetPassword")]
-    public async Task<Result<string>> ResetPasswordAsync([FromBody] ResetPasswordDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> ResetPasswordAsync([FromBody] ResetPasswordDto request, CancellationToken cancellationToken)
     {
         var result = await _authService.ResetPasswordAsync(request, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 
     [HttpPost("ConfirmEmail")]
-    public async Task<Result<string>> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
     {
         var result = await _authService.ConfirmEmailAsync(request, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 }

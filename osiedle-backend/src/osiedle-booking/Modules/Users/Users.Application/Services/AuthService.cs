@@ -8,6 +8,7 @@ using Users.Application.Abstractions.Repositories;
 using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
 using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
