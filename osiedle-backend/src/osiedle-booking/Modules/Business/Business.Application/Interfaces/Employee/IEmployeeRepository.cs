@@ -5,11 +5,9 @@ namespace Business.Application.Interfaces.Employee;
 
 public interface IEmployeeRepository
 {
-    Task<Domain.Aggregates.Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default);
+    Task<Domain.Aggregates.Employee?> GetByIdAsync(EmployeeId employeeId, CancellationToken ct = default);
     
     Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default);
     
-    Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);
-    
-    void AddEmployee(Domain.Aggregates.Employee employee);
+    void Add(Domain.Aggregates.Employee employee);
 }

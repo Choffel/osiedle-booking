@@ -28,4 +28,11 @@ public class EmployeeReadOnlyRepository : IEmployeeReadOnlyRepository
             ))
             .FirstOrDefaultAsync(ct);
     }
+
+    public Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default)
+    {
+        return _context.Employees
+            .AsNoTracking()
+            .AnyAsync(e => e.Email == email.ToLower().Trim(), ct);
+    }
 }

@@ -27,7 +27,7 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
     public async Task<Result> SetWorkingHoursAsync(Guid employeeId,
         SetWorkingHoursDto dto, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
+        var employee = await _employeeRepository.GetByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee is null)
         {
             return Result.Failure(EmployeeErrors.NotFound);

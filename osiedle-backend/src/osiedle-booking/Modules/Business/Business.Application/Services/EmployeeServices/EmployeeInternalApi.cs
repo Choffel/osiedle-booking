@@ -36,7 +36,7 @@ public class EmployeeInternalApi : IEmployeeInternalApi
     
     public async Task<Result<bool>> IsAvailableForBookingAsync(Guid employeeId, CancellationToken ct = default)
     {
-        var employee = await _employeeRepository.GetEmployeeByIdAsync(EmployeeId.From(employeeId), ct);
+        var employee = await _employeeRepository.GetByIdAsync(EmployeeId.From(employeeId), ct);
         if (employee is null)
         {
             return false;
@@ -44,34 +44,26 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         return employee.CanBeBooked();
     }
     
-    public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
+    
+    public async Task<Result<WorkingHoursDto>>GetWorkingHoursAsync(
         Guid employeeId, 
         DateOnly date, 
         CancellationToken ct = default)
     {
         var id = EmployeeId.From(employeeId);
         
-        var employeeExists = await _employeeRepository.ExistsEmployeeAsync(id, ct);
-        if (!employeeExists)
-        {
-            return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
-        }
-        
         var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(id, date, ct);
         
         if (workingHours is null)
         {
-            return Result.Success<IReadOnlyCollection<WorkingHoursDto>>([]);
+            return Result.Failure<WorkingHoursDto>(WorkingHoursErrors.NotFound);
         }
         
-        IReadOnlyCollection<WorkingHoursDto> result =
-        [
-            new WorkingHoursDto(
-                workingHours.Date, 
-                workingHours.Slot.StartTime,
-                workingHours.Slot.EndTime)
-        ];
+        var dto = new WorkingHoursDto(
+            workingHours.Date, 
+            workingHours.Slot.StartTime, 
+            workingHours.Slot.EndTime);
 
-        return Result.Success(result);
+        return Result.Success(dto);
     }
 }
