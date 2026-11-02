@@ -1,14 +1,11 @@
 namespace Users.Domain.Entity.RefreshToken.ValueObjects;
 
-public readonly record struct RefreshTokenId
+public record RefreshTokenId
 {
-    public Guid Value { get; }
-    
-    public RefreshTokenId()
-    {
-        throw new InvalidOperationException("Default constructor is not allowed for RefreshTokenId.");
-    }
-    
+    public Guid Value { get; init; }
+
+    private RefreshTokenId() { }
+
     private RefreshTokenId(Guid value)
     {
         if (value == Guid.Empty)

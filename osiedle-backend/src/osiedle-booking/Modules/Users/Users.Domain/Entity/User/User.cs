@@ -8,6 +8,11 @@ public class User : AggregateRoot<UserId>
 {
     public Name Name { get; private set; }
     public string Email { get; private set; }
+    
+    private readonly List<RefreshToken.RefreshToken> _refreshTokens = new();
+    public IReadOnlyList<RefreshToken.RefreshToken> RefreshTokens => _refreshTokens;
+
+    private User() { }
 
     private User(UserId id, Name name, string email)
         : base(id)
@@ -21,7 +26,6 @@ public class User : AggregateRoot<UserId>
         Email = email;
         CreatedAt = DateTime.UtcNow;
     }
-    private User() { }
 
     public static User Create(UserId id, Name name, string email)
     {

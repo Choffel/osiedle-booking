@@ -42,6 +42,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
 
             entity.Property(e => e.Email)
                 .IsRequired();
+            
+            entity.HasMany(u => u.RefreshTokens)
+                .WithOne()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<IdentityUserRole<Guid>>(ur =>
