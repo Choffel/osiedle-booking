@@ -1,13 +1,8 @@
 namespace osiedle_booking.BuildingBlocks.ValueObjects;
 
-public sealed record UserId
+public sealed record UserId // TODO сделать readonly record struct
 {
     public Guid Value { get; init; }
-    
-    public UserId()
-    {
-        throw new InvalidOperationException("Default constructor is not allowed for UserId.");
-    }
     
     private UserId(Guid value)
     {
