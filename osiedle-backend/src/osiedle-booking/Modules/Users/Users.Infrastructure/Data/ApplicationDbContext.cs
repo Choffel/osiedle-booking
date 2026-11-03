@@ -3,15 +3,15 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.RefreshToken;
+using Users.Domain.Entity.RefreshToken.ValueObjects;
 using Users.Domain.Entity.User;
-using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
 
 namespace Users.Infrastructure.Data;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdentity, Guid>
 {
     
-
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
@@ -19,13 +19,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
     
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-        
         
         modelBuilder.Entity<User>(entity =>
         {
@@ -34,11 +31,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
             entity.Property(e => e.Id)
                 .HasConversion<Guid>(
                     id => id.Value,
-                    value => new UserId(value))
+                    value => UserId.From(value))
                 .ValueGeneratedNever();
 
-            entity.Property(e => e.DisplayName)
+            // Name is a record struct: owned navigations require reference types
+            // (CS0452), so the value object maps as an EF complex property.
+            entity.ComplexProperty(e => e.Name, name =>
+            {
+                name.Property(n => n.FirstName).IsRequired();
+                name.Property(n => n.LastName).IsRequired();
+            });
+
+            entity.Property(e => e.Email)
                 .IsRequired();
+            
+            entity.HasMany(u => u.RefreshTokens)
+                .WithOne()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<IdentityUserRole<Guid>>(ur =>
@@ -50,8 +60,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
         modelBuilder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasConversion<Guid>(
+                    id => id.Value,
+                    value => RefreshTokenId.From(value))
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.UserId)
+                .HasConversion<Guid>(
+                    id => id.Value,
+                    value => UserId.From(value))
+                .IsRequired();
+
             entity.Property(e => e.Token).IsRequired();
-            entity.Property(e => e.UserId).IsRequired();
         });
         
     }

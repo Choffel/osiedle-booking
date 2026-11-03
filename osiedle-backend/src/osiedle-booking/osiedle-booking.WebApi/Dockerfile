@@ -11,7 +11,7 @@ WORKDIR /src
 
 COPY ["osiedle-booking.WebApi/osiedle-booking.WebApi.csproj", "osiedle-booking.WebApi/"]
 
-COPY ["Modules/Users/Users.Appliation/Users.Appliation.csproj", "Modules/Users/Users.Appliation/"]
+COPY ["Modules/Users/Users.Application/Users.Application.csproj", "Modules/Users/Users.Application/"]
 COPY ["Modules/Users/Users.Domain/Users.Domain.csproj", "Modules/Users/Users.Domain/"]
 COPY ["Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj", "Modules/Users/Users.Infrastructure/"]
 

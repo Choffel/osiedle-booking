@@ -53,8 +53,7 @@ namespace Business.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -62,8 +61,7 @@ namespace Business.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId")
-                        .IsUnique()
-                        .HasFilter("DeletedAt IS NULL");
+                        .IsUnique();
 
                     b.ToTable("Businesses");
                 });
@@ -117,8 +115,7 @@ namespace Business.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique()
-                        .HasFilter("deleted at IS NULL");
+                        .IsUnique();
 
                     b.ToTable("Employees", (string)null);
                 });
@@ -191,10 +188,10 @@ namespace Business.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -204,10 +201,7 @@ namespace Business.Infrastructure.Migrations
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
 
-                    b.ToTable("WorkingHours", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_WorkingHours_ValidInterval", "\"EndTime\" > \"StartTime\"");
-                        });
+                    b.ToTable("WorkingHours", (string)null);
                 });
 
             modelBuilder.Entity("Business.Domain.Entities.BookableService", b =>

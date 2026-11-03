@@ -6,4 +6,5 @@ public interface IUserContext
     string? Email { get; }
     IReadOnlyCollection<string> Roles { get; }
     public string RefreshToken { get; }
+    string? IpAddress { get; }
 }

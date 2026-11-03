@@ -5,12 +5,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Users.Appliation.Abstractions;
-using Users.Appliation.Services;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Repositories.Tokens;
+using Users.Application.Abstractions.Repositories.Users;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
+using Users.Application.Services;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
-using Users.Infrastructure.Repositories;
-using Users.Infrastructure.Services;
+using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity.Services;
+using Users.Infrastructure.Options;
+using Users.Infrastructure.Services.Tokens;
+using Users.Infrastructure.Repositories.Tokens;
+using Users.Infrastructure.Repositories.Users;
+using Users.Infrastructure.UnitOtWork;
 
 namespace Users.Infrastructure;
 
@@ -35,6 +45,11 @@ public static class DependencyInjection
                 options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
+                
+                options.Lockout.AllowedForNewUsers = configuration.GetValue<bool>("Identity:Lockout:AllowedForNewUsers", true);
+                options.Lockout.MaxFailedAccessAttempts = configuration.GetValue<int>("Identity:Lockout:MaxFailedAccessAttempts", 5);
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(
+                    configuration.GetValue<int>("Identity:Lockout:DefaultLockoutMinutes", 15));
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
@@ -45,27 +60,31 @@ public static class DependencyInjection
         #endregion
 
         #region Services
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IIdentityService, IdentityService>();
-        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IIdentityAccountService, IdentityAccountService>();
+        services.AddScoped<IIdentityCredentialsService, IdentityCredentialsService>();
+        services.AddScoped<IIdentityEmailService, IdentityEmailService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserSessionService, UserSessionService>();
         #endregion
 
         #region Repositories
+        services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ITokenRepository, TokenRepository>();
+        services.AddScoped<ITokenReadRepository, TokenReadRepository>();
+        services.AddScoped<ITokenWriteRepository, TokenWriteRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         #endregion
         
         #region JWT Authentication
-        var jwtKey = configuration["JWT_TOKEN_SETTINGS:SYMMETRIC_SECURITY_KEY"]!;
-        var jwtIssuer = configuration["JWT_TOKEN_SETTINGS:ISSUER"]!;
-        var jwtAudience = configuration["JWT_TOKEN_SETTINGS:AUDIENCE"]!;
-        
-        Console.WriteLine($"JWT Key: {jwtKey}");
-        Console.WriteLine($"JWT Issuer: {jwtIssuer}");
-        Console.WriteLine($"JWT Audience: {jwtAudience}");
-        Console.WriteLine($"Connection String: {connectionString}");
-        
+        var jwtSettings = configuration
+                              .GetSection(JwtSettings.SectionName)
+                              .Get<JwtSettings>() 
+                          ?? throw new InvalidOperationException("JwtSettings section is missing in configuration.");
+
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -79,15 +98,31 @@ public static class DependencyInjection
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtIssuer,
-                    ValidAudience = jwtAudience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                     ClockSkew = TimeSpan.Zero
                 };
             });
         
         services.AddAuthorization();
         #endregion
+        
+        services.AddOptions<JwtSettings>()
+            .Bind(configuration.GetSection(JwtSettings.SectionName))
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Secret), 
+                "JWT Secret cannot be empty.")
+            .Validate(settings => settings.Secret.Length >= 32, 
+                "JWT Secret must be at least 256 bits (32 characters) long.")
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Issuer), 
+                "JWT Issuer cannot be empty.")
+            .Validate(settings => !string.IsNullOrWhiteSpace(settings.Audience), 
+                "JWT Audience cannot be empty.")
+            .Validate(settings => settings.AccessTokenExpiryMinutes > 0, 
+                "JWT AccessTokenExpiryMinutes must be greater than 0.")
+            .Validate(settings => settings.RefreshTokenExpiryDays > 0, 
+                "JWT RefreshTokenExpiryDays must be greater than 0.")
+            .ValidateOnStart();
         
         return services;
     }

@@ -1,8 +1,13 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
-using Users.Appliation.Abstractions;
-using Users.Appliation.DTOs;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using osiedle_booking.WebApi.Extensions;
+using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Tokens;
+using Users.Application.DTOs;
+using Users.Domain.Entity.RefreshToken.ValueObjects;
 
 namespace osiedle_booking.WebApi.Controllers;
 
@@ -12,41 +17,55 @@ namespace osiedle_booking.WebApi.Controllers;
 public class TokensController : ControllerBase
 {
     private readonly ITokenService _tokenService;
+    private readonly IUserSessionService _userSessionService;
 
-    public TokensController(ITokenService tokenService)
+    public TokensController(ITokenService tokenService, IUserSessionService userSessionService)
     {
         _tokenService = tokenService;
+        _userSessionService = userSessionService;
     }
 
     [HttpPost("RevokeRefreshToken")]
     [Authorize]
-    public async Task<Result<bool>> RevokeRefreshToken(CancellationToken cancellationToken)
+    public async Task<IActionResult> RevokeRefreshToken(CancellationToken ct)
     {
-        var result = await _tokenService.RevokeRefreshTokenAsync(cancellationToken);
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
+        
+        var result = await _userSessionService.RevokeCurrentSessionAsync(UserId.From(userId), refreshToken, ct);
+        return result.ToActionResult();
     }
 
     [Authorize]
     [HttpPost("RevokeSession")]
-    public async Task<Result<string>> RevokeSession([FromBody]Guid tokenId, CancellationToken ct = default)
+    public async Task<IActionResult> RevokeSession([FromBody]Guid tokenId, CancellationToken ct)
     {
-        var result = await _tokenService.RevokeSessionAsync(tokenId, ct);
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
+        
+        var result = await _userSessionService.RevokeSessionAsync(
+            UserId.From(userId), RefreshTokenId.From(tokenId), refreshToken, ct);
+        return result.ToActionResult();
     }
 
     [AllowAnonymous]
     [HttpPost("NewAccessToken")]
-    public async Task<Result<TokenResponseDto>> GetNewAccessToken(CancellationToken cancellationToken)
+    public async Task<ActionResult<TokenResponseDto>> GetNewAccessToken(CancellationToken cancellationToken)
     {
-        var result = await _tokenService.GetNewAccessTokenAsync(cancellationToken);
-        return result;
+        var currentRefreshToken = Request.Headers["X-Refresh-Token"].ToString();
+        
+        var result = await _tokenService.GenerateTokensByRefreshTokenAsync(currentRefreshToken, cancellationToken);
+        return result.ToActionResult();
     }
 
     [Authorize]
     [HttpGet("ActiveSessions")]
-    public async Task<Result<IEnumerable<ActiveSessionDto>>> GetActiveSessionsAsync(CancellationToken ct = default)
+    public async Task<ActionResult<IReadOnlyCollection<ActiveSessionDto>>> GetActiveSessionsAsync(CancellationToken ct = default)
     {
-        var result = await _tokenService.GetActiveSessionsAsync(ct);
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
+        
+        var result = await _userSessionService.GetActiveSessionsAsync(UserId.From(userId), refreshToken, ct);
+        return result.ToActionResult();
     }
 }
