@@ -71,7 +71,7 @@ public class UserRepositoryTests : IntegrationTestBase
             // The repository exposes no Update method: GetByIdAsync returns a tracked
             // entity and SaveChangesAsync persists the domain change.
             var user = await repository.GetByIdAsync(id, CancellationToken.None);
-            user!.Update(Name.Create("Nowa", "Nazwa"));
+            user!.UpdateName(Name.Create("Nowa", "Nazwa"));
             await SaveAsync(scope);
         }
 

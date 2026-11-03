@@ -48,7 +48,7 @@ public class UserTests
     {
         var user = Create("Stara", "Nazwa");
 
-        user.Update(Name.Create("Nowa", "Nazwa"));
+        user.UpdateName(Name.Create("Nowa", "Nazwa"));
 
         user.Name.FirstName.Should().Be("Nowa");
     }
@@ -58,7 +58,7 @@ public class UserTests
     {
         var user = Create("Jan", "Kowalski");
 
-        user.Update(Name.Create("Janek", "Kowalski"));
+        user.UpdateName(Name.Create("Janek", "Kowalski"));
 
         user.UpdatedAt!.Value.Date.Should().Be(DateTime.UtcNow.Date);
     }

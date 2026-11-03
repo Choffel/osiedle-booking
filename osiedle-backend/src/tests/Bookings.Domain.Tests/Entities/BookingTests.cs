@@ -69,10 +69,10 @@ public class BookingTests
 
         Assert.Equal(BookingStatus.Cancelled, booking.Status);
         Assert.NotNull(booking.Cancellation);
-        Assert.Equal(CancelledBy.Client, booking.Cancellation!.By);
-        Assert.Equal(Client.Value, booking.Cancellation.CancelledById);
-        Assert.False(string.IsNullOrWhiteSpace(booking.Cancellation.Reason));
-        Assert.Equal(cancelledAt, booking.Cancellation.CancelledAt);
+        Assert.Equal(CancelledBy.Client, booking.Cancellation.Value.By);
+        Assert.Equal(Client.Value, booking.Cancellation.Value.CancelledById);
+        Assert.False(string.IsNullOrWhiteSpace(booking.Cancellation.Value.Reason));
+        Assert.Equal(cancelledAt, booking.Cancellation.Value.CancelledAt);
     }
 
     [Fact]

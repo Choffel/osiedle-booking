@@ -29,9 +29,9 @@ public class CancelBookingFlowTests : IntegrationTestBase
 
         booking.Status.Should().Be(BookingStatus.Cancelled);
         booking.Cancellation.Should().NotBeNull();
-        booking.Cancellation!.By.Should().Be(CancelledBy.Client);
-        booking.Cancellation.Reason.Should().NotBeNullOrWhiteSpace();
-        booking.Cancellation.CancelledAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
+        booking.Cancellation.Value.By.Should().Be(CancelledBy.Client);
+        booking.Cancellation.Value.Reason.Should().NotBeNullOrWhiteSpace();
+        booking.Cancellation.Value.CancelledAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(5));
     }
 
     [Fact]

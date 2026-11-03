@@ -10,9 +10,9 @@ public record struct CancellationInfo
     public DateTime CancelledAt { get; init; }
     
 
-    private CancellationInfo(CancelledBy by, Guid? cancelledById , string reason, DateTime cancelledAt)
+    private CancellationInfo(CancelledBy by, Guid cancelledById, string reason, DateTime cancelledAt)
     {
-        if(by != CancelledBy.System && (cancelledById == Guid.Empty || cancelledById is null))
+        if(by != CancelledBy.System && cancelledById == Guid.Empty)
             throw new ArgumentException("Cancelled by ID cannot be empty or null.", nameof(cancelledById));
         if(string.IsNullOrWhiteSpace(reason))
             throw new ArgumentException("Reason cannot be null or empty.", nameof(reason));
@@ -20,7 +20,7 @@ public record struct CancellationInfo
             throw new ArgumentException("Cancelled at cannot be the default value.", nameof(cancelledAt));
         
         By = by;
-        CancelledById = cancelledById ?? Guid.Empty;
+        CancelledById = cancelledById;
         Reason = reason;
         CancelledAt = cancelledAt;
     }

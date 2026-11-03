@@ -39,9 +39,7 @@ public sealed class SlotCalculator : ISlotCalculator
     
     public Task<bool> RelevantSlot(TimeSlot timeSlot, TimeSlot workingHours, CancellationToken ct)
     {
-        if (timeSlot is null) throw new ArgumentNullException(nameof(timeSlot));
-        if (workingHours is null) throw new ArgumentNullException(nameof(workingHours));
-
+        // TimeSlot is a struct now: a default value simply fails the range check below.
         if (timeSlot.Start < workingHours.Start || timeSlot.End > workingHours.End)
             return Task.FromResult(false);
         return Task.FromResult(true);

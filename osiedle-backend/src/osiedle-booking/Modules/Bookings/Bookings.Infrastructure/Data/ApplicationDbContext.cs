@@ -48,19 +48,19 @@ public class ApplicationDbContext : DbContext
             booking.Property(x => x.Status)
                 .HasConversion<string>();
 
-            booking.OwnsOne(x => x.Slot, slot =>
+            booking.ComplexProperty(x => x.Slot, slot =>
             {
                 slot.Property(p => p.Start).HasColumnName("Slot_Start");
                 slot.Property(p => p.End).HasColumnName("Slot_End");
             });
 
-            booking.OwnsOne(x => x.Price, price =>
+            booking.ComplexProperty(x => x.Price, price =>
             {
                 price.Property(p => p.Amount).HasColumnName("Price_Amount");
                 price.Property(p => p.Currency).HasColumnName("Price_Currency");
             });
 
-            booking.OwnsOne(x => x.Cancellation, cancellation =>
+            booking.ComplexProperty(x => x.Cancellation, cancellation =>
             {
                 cancellation.Property(p => p.By).HasColumnName("Cancellation_By");
                 cancellation.Property(p => p.Reason).HasColumnName("Cancellation_Reason");

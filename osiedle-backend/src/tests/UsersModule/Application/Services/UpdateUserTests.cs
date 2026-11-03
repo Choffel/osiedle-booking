@@ -33,12 +33,21 @@ public class UpdateUserTests
             _userReadRepositoryMock.Object);
     }
 
-    private void SetupIdentityLookup(bool found) =>
+    private static IdentityUserDto IdentityUser(Guid id) =>
+        new(id, $"user-{id:N}@example.com", new[] { "User" });
+
+    private void SetupEmailLookup(bool found) =>
         _identityAccountMock
-            .Setup(s => s.FindByEmailAsync("jan@example.com", It.IsAny<CancellationToken>()))
+            .Setup(s => s.FindByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(found
-                ? Result<IdentityUserDto>.Success(
-                    new IdentityUserDto(_currentUserId, "jan@example.com", new[] { "User" }))
+                ? Result<IdentityUserDto>.Success(IdentityUser(_currentUserId))
+                : Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
+
+    private void SetupIdLookup(bool found) =>
+        _identityAccountMock
+            .Setup(s => s.FindByUserIdAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(found
+                ? Result<IdentityUserDto>.Success(IdentityUser(_currentUserId))
                 : Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
 
     private void SetupDomainUser(User user) =>
@@ -46,33 +55,36 @@ public class UpdateUserTests
             .Setup(r => r.GetByIdAsync(It.Is<UserId>(id => id.Value == _currentUserId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-    [Fact]
-    public async Task UpdateUser_ShouldFail_WhenIdentityUserNotFound()
-    {
-        SetupIdentityLookup(found: false);
+    private User NewDomainUser(string first = "Stara", string last = "Nazwa") =>
+        User.Create(UserId.From(_currentUserId), Name.Create(first, last), $"user-{_currentUserId:N}@example.com");
 
-        var result = await _userService.UpdateUserAsync(
-            UserId.From(_currentUserId), "jan@example.com", new UpdateUserDto("Nowa nazwa"));
+    // ---------- UpdateUserNameAsync ----------
+
+    [Fact]
+    public async Task UpdateUserName_UnknownEmail_ReturnsNotFound()
+    {
+        SetupEmailLookup(found: false);
+
+        var result = await _userService.UpdateUserNameAsync(
+            UserId.From(_currentUserId), "ghost@example.com", new UpdateUserDto("Nowa", "Nazwa"));
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.NotFound);
         _userRepositoryMock.Verify(
             r => r.GetByIdAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()), Times.Never);
-        _identityAccountMock.Verify(
-            s => s.UpdateUserNameAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task UpdateUser_ShouldFail_WhenDomainUserNotFound()
+    public async Task UpdateUserName_DomainUserMissing_ReturnsNotFound()
     {
-        SetupIdentityLookup(found: true);
+        SetupEmailLookup(found: true);
         _userRepositoryMock
             .Setup(r => r.GetByIdAsync(It.Is<UserId>(id => id.Value == _currentUserId), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        var result = await _userService.UpdateUserAsync(
-            UserId.From(_currentUserId), "jan@example.com", new UpdateUserDto("Nowa nazwa"));
+        var result = await _userService.UpdateUserNameAsync(
+            UserId.From(_currentUserId), "any@example.com", new UpdateUserDto("Nowa", "Nazwa"));
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.NotFound);
@@ -82,48 +94,115 @@ public class UpdateUserTests
     }
 
     [Fact]
-    public async Task UpdateUser_ShouldPersistNewUserName_WhenUserExists()
+    public async Task UpdateUserName_PersistsDomainAndIdentityName()
     {
-        var domainUser = User.Create(
-            UserId.From(_currentUserId), Name.Create("Stara", "Nazwa"), "jan@example.com");
-
-        SetupIdentityLookup(found: true);
+        var domainUser = NewDomainUser();
+        SetupEmailLookup(found: true);
         SetupDomainUser(domainUser);
         _identityAccountMock
-            .Setup(s => s.UpdateUserNameAsync(UserId.From(_currentUserId), "Nowanazwa", It.IsAny<CancellationToken>()))
+            .Setup(s => s.UpdateUserNameAsync(UserId.From(_currentUserId), "Nowa", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
 
-        var result = await _userService.UpdateUserAsync(
-            UserId.From(_currentUserId), "jan@example.com", new UpdateUserDto("Nowanazwa"));
+        var result = await _userService.UpdateUserNameAsync(
+            UserId.From(_currentUserId), "any@example.com", new UpdateUserDto("Nowa", "Nazwa"));
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
+        domainUser.Name.FirstName.Should().Be("Nowa");
+        domainUser.Name.LastName.Should().Be("Nazwa");
         _identityAccountMock.Verify(
-            s => s.UpdateUserNameAsync(UserId.From(_currentUserId), "Nowanazwa", It.IsAny<CancellationToken>()), Times.Once);
+            s => s.UpdateUserNameAsync(UserId.From(_currentUserId), "Nowa", It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-
-        // A username change only touches the identity account, the domain profile stays.
-        domainUser.Name.FirstName.Should().Be("Stara");
     }
 
     [Fact]
-    public async Task UpdateUser_ShouldFail_WhenIdentityRejectsNewUserName()
+    public async Task UpdateUserName_IdentityRejects_ReturnsUpdateFailed()
     {
-        var domainUser = User.Create(
-            UserId.From(_currentUserId), Name.Create("Stara", "Nazwa"), "jan@example.com");
-
-        SetupIdentityLookup(found: true);
+        var domainUser = NewDomainUser();
+        SetupEmailLookup(found: true);
         SetupDomainUser(domainUser);
         _identityAccountMock
-            .Setup(s => s.UpdateUserNameAsync(UserId.From(_currentUserId), "zla nazwa", It.IsAny<CancellationToken>()))
+            .Setup(s => s.UpdateUserNameAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure(IdentityErrors.FromIdentityResult("Usernames cannot contain spaces.")));
 
-        var result = await _userService.UpdateUserAsync(
-            UserId.From(_currentUserId), "jan@example.com", new UpdateUserDto("zla nazwa"));
+        var result = await _userService.UpdateUserNameAsync(
+            UserId.From(_currentUserId), "any@example.com", new UpdateUserDto("zla nazwa", "Nazwa"));
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(UserErrors.UpdateFailed);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    // ---------- UpdateUserEmailAsyc ----------
+
+    [Fact]
+    public async Task UpdateUserEmail_UnknownUser_ReturnsNotFound()
+    {
+        SetupIdLookup(found: false);
+
+        var result = await _userService.UpdateUserEmailAsyc(
+            UserId.From(_currentUserId), "new@example.com");
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.NotFound);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateUserEmail_DomainUserMissing_ReturnsNotFound()
+    {
+        SetupIdLookup(found: true);
+        _userRepositoryMock
+            .Setup(r => r.GetByIdAsync(It.Is<UserId>(id => id.Value == _currentUserId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var result = await _userService.UpdateUserEmailAsyc(
+            UserId.From(_currentUserId), "new@example.com");
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.NotFound);
+        _identityAccountMock.Verify(
+            s => s.UpdateUserEmailAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateUserEmail_PersistsDomainAndIdentityEmail()
+    {
+        var domainUser = NewDomainUser();
+        SetupIdLookup(found: true);
+        SetupDomainUser(domainUser);
+        _identityAccountMock
+            .Setup(s => s.UpdateUserEmailAsync(UserId.From(_currentUserId), "new@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+
+        var result = await _userService.UpdateUserEmailAsyc(
+            UserId.From(_currentUserId), "new@example.com");
+
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        domainUser.Email.Should().Be("new@example.com");
+        _identityAccountMock.Verify(
+            s => s.UpdateUserEmailAsync(UserId.From(_currentUserId), "new@example.com", It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateUserEmail_IdentityRejects_ReturnsUpdateFailed()
+    {
+        var domainUser = NewDomainUser();
+        SetupIdLookup(found: true);
+        SetupDomainUser(domainUser);
+        _identityAccountMock
+            .Setup(s => s.UpdateUserEmailAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(IdentityErrors.FromIdentityResult("Invalid email.")));
+
+        var result = await _userService.UpdateUserEmailAsyc(
+            UserId.From(_currentUserId), "broken@example.com");
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.UpdateFailed);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ---------- GetUserByIdAsync ----------
 
     [Fact]
     public async Task GetUserById_ShouldFail_WhenProfileIsMissing()

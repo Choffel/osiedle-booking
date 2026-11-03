@@ -34,7 +34,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleIdent
                     value => UserId.From(value))
                 .ValueGeneratedNever();
 
-            entity.OwnsOne(e => e.Name, name =>
+            // Name is a record struct: owned navigations require reference types
+            // (CS0452), so the value object maps as an EF complex property.
+            entity.ComplexProperty(e => e.Name, name =>
             {
                 name.Property(n => n.FirstName).IsRequired();
                 name.Property(n => n.LastName).IsRequired();

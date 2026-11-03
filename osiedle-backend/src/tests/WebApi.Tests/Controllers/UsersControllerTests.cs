@@ -68,38 +68,87 @@ public class UsersControllerTests : IClassFixture<ApiFactory>
     // ---------- PUT Update ----------
 
     [Fact]
-    public async Task Update_PersistsNewUserName()
+    public async Task UpdateName_PersistsDomainAndIdentityName()
     {
         var (id, email) = await RegisterConfirmedUserAsync();
         _client.DefaultRequestHeaders.Authorization =
             new("Bearer", _factory.CreateAccessToken(id, email));
 
-        var response = await _client.PutAsJsonAsync("/api/Users/Update", new { userName = "NewNick" });
+        var response = await _client.PutAsJsonAsync("/api/Users/UpdateName",
+            new { firstName = "Nowanazwa", lastName = "Kowalski" });
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var stored = await _factory.QueryUsersDbAsync(db =>
             db.Set<ApplicationUser>().AsNoTracking().SingleAsync(u => u.Id == id));
-        stored.UserName.Should().Be("NewNick");
+        stored.UserName.Should().Be("Nowanazwa");
+
+        var me = await _client.GetAsync("/api/Users/me");
+        me.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var body = JsonDocument.Parse(await me.Content.ReadAsStringAsync());
+        body.RootElement.GetProperty("firstName").GetString().Should().Be("Nowanazwa");
+        body.RootElement.GetProperty("lastName").GetString().Should().Be("Kowalski");
     }
 
     [Fact]
-    public async Task Update_UnknownEmailClaim_Returns404()
+    public async Task UpdateName_UnknownEmailClaim_Returns404()
     {
         var (id, _) = await RegisterConfirmedUserAsync();
         _client.DefaultRequestHeaders.Authorization =
             new("Bearer", _factory.CreateAccessToken(id, UniqueEmail()));
 
-        var response = await _client.PutAsJsonAsync("/api/Users/Update", new { userName = "NewNick" });
+        var response = await _client.PutAsJsonAsync("/api/Users/UpdateName",
+            new { firstName = "Nowanazwa", lastName = "Kowalski" });
 
         await response.ShouldFailWithAsync(HttpStatusCode.NotFound, "User.NotFound");
     }
 
     [Fact]
-    public async Task Update_WithoutToken_Returns401()
+    public async Task UpdateName_WithoutToken_Returns401()
     {
-        var response = await _client.PutAsJsonAsync("/api/Users/Update", new { userName = "NewNick" });
+        var response = await _client.PutAsJsonAsync("/api/Users/UpdateName",
+            new { firstName = "Nowanazwa", lastName = "Kowalski" });
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateEmail_PersistsDomainAndIdentityEmail()
+    {
+        var (id, email) = await RegisterConfirmedUserAsync();
+        _client.DefaultRequestHeaders.Authorization =
+            new("Bearer", _factory.CreateAccessToken(id, email));
+        var newEmail = $"renamed-{Guid.NewGuid():N}@example.com";
+
+        var request = new HttpRequestMessage(HttpMethod.Put, "/api/Users/UpdateEmail")
+        {
+            Content = JsonContent.Create(newEmail),
+        };
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var storedIdentity = await _factory.QueryUsersDbAsync(db =>
+            db.Set<ApplicationUser>().AsNoTracking().SingleAsync(u => u.Id == id));
+        storedIdentity.Email.Should().Be(newEmail);
+
+        var storedDomain = await _factory.QueryUsersDbAsync(db =>
+            db.Users.AsNoTracking().SingleAsync(u => u.Id == osiedle_booking.BuildingBlocks.ValueObjects.UserId.From(id)));
+        storedDomain.Email.Should().Be(newEmail);
+    }
+
+    [Fact]
+    public async Task UpdateEmail_UnknownUserId_Returns404()
+    {
+        _client.DefaultRequestHeaders.Authorization =
+            new("Bearer", _factory.CreateAccessToken(Guid.NewGuid(), UniqueEmail()));
+
+        var request = new HttpRequestMessage(HttpMethod.Put, "/api/Users/UpdateEmail")
+        {
+            Content = JsonContent.Create("renamed@example.com"),
+        };
+        var response = await _client.SendAsync(request);
+
+        await response.ShouldFailWithAsync(HttpStatusCode.NotFound, "User.NotFound");
     }
 }
