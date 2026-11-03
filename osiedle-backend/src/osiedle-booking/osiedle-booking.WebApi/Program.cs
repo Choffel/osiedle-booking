@@ -6,13 +6,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Roles;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
-using Users.Infrastructure.Identity.Models;
+using Users.Infrastructure.Identity;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -127,9 +126,7 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
     await businessDbContext.Database.MigrateAsync();
 
-    await RoleInitData.InitializeAsync(
-        new[] { UserRoles.User },
-        roleManager);
+    await RoleInitData.InitializeAsync(roleManager);
 }
 
 app.MapControllers();
