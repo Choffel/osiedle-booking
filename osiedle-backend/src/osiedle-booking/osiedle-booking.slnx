@@ -32,6 +32,7 @@
     <Project Path="../tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj" />
     <Project Path="../tests/BookingsModule/BookingsModule.csproj" />
     <Project Path="../tests/UsersModule/UserModule.csproj" />
+    <Project Path="../tests/WebApi.Tests/WebApi.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Business/">
     <Project Path="../../tests/Business/Business.Application.Tests/Business.Application.Tests.csproj" />

@@ -135,3 +135,6 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
 app.MapControllers();
 
 app.Run();
+
+// Exposes the entry point to WebApplicationFactory-based integration tests.
+public partial class Program { }

@@ -54,6 +54,8 @@ public class BookingService : IBookingService
             .ToList();
 
         var serviceInfo = await _bookableServiceInternalApi.GetServiceInfoAsync(BookableServiceId.From(request.ServiceId), ct);
+        if (serviceInfo.IsFailure)
+            return Result<IReadOnlyList<TimeSlot>>.Failure(serviceInfo.Error);
 
         var freeSlots = await _slotCalculator.CalculateAvailableSlots(
             barberWorkHours,
@@ -87,6 +89,8 @@ public class BookingService : IBookingService
             
             var serviceInfo = await _bookableServiceInternalApi
                 .GetServiceInfoAsync(BookableServiceId.From(request.ServiceId), ct);
+            if (serviceInfo.IsFailure)
+                return Result.Failure(serviceInfo.Error);
 
             var moneyMok = Money.Pln(serviceInfo.Value.Price); // TODO: Change this when methods from the Business service become available
 

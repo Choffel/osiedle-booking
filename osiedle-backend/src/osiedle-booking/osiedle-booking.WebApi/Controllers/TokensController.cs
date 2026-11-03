@@ -50,12 +50,12 @@ public class TokensController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("NewAccessToken")]
-    public async Task<Result<TokenResponseDto>> GetNewAccessToken(CancellationToken cancellationToken)
+    public async Task<ActionResult<TokenResponseDto>> GetNewAccessToken(CancellationToken cancellationToken)
     {
         var currentRefreshToken = Request.Headers["X-Refresh-Token"].ToString();
         
         var result = await _tokenService.GenerateTokensByRefreshTokenAsync(currentRefreshToken, cancellationToken);
-        return result;
+        return result.ToActionResult();
     }
 
     [Authorize]
