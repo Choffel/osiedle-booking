@@ -113,7 +113,6 @@ public class IdentityAccountServiceTests
         var result = await _sut.UpdateUserNameAsync(UserId.From(user.Id), "nowy-nick", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        ((Result<string>)result).Value.Should().Be("nowy-nick");
         user.UserName.Should().Be("nowy-nick");
     }
 

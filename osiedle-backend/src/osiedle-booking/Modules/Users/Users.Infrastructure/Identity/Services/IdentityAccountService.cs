@@ -54,14 +54,14 @@ public class IdentityAccountService : IIdentityAccountService
     {
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user is null)
-            return Result<string>.Failure(IdentityErrors.NotFound);
+            return Result.Failure(IdentityErrors.NotFound);
 
         user.UserName = newName;
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
-            return Result<string>.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
+            return Result.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
                 result.Errors.Select(e => e.Description))));
 
-        return Result<string>.Success(user.UserName);
+        return Result.Success();
     }
 }

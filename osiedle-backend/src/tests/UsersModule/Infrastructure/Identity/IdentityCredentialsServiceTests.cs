@@ -162,7 +162,7 @@ public class IdentityCredentialsServiceTests
     }
 
     [Fact]
-    public async Task ResetPasswordAsync_ShouldReturnDto_WhenResetSucceeds()
+    public async Task ResetPasswordAsync_ShouldSucceed_WhenTokenIsValid()
     {
         var user = new ApplicationUser
         {
@@ -173,15 +173,11 @@ public class IdentityCredentialsServiceTests
         _userManagerMock.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
         _userManagerMock.Setup(m => m.ResetPasswordAsync(user, "good-token", "NewPassword1"))
             .ReturnsAsync(IdentityResult.Success);
-        _userManagerMock.Setup(m => m.GetRolesAsync(user))
-            .ReturnsAsync(new List<string> { "User" });
 
         var result = await _sut.ResetPasswordAsync(UserId.From(user.Id), "good-token", "NewPassword1", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        var dto = ((Result<Users.Application.DTOs.Identity.IdentityUserDto>)result).Value;
-        dto.Id.Should().Be(user.Id);
-        dto.Email.Should().Be("jan@example.com");
-        dto.Roles.Should().Contain("User");
+        _userManagerMock.Verify(
+            m => m.ResetPasswordAsync(user, "good-token", "NewPassword1"), Times.Once);
     }
 }

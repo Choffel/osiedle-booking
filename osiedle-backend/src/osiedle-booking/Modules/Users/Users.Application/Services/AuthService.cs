@@ -49,13 +49,13 @@ public class AuthService : IAuthService
         _jwtTokenGenerator = jwtTokenGenerator;
     }
     
-     public async Task<Result> RegisterAsync(RegisterUserRequest request, CancellationToken ct = default)
+     public async Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct = default)
     {
         var identityResult = await _identityAccountService.CreateIdentityAsync(
             request.Email,  request.FirstName, request.Password, ct);
 
         if (identityResult.IsFailure)
-            return Result.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
+            return Result<Guid>.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
         
         var user = User.Create(UserId.From(identityResult.Value.Value), Name.Create(request.FirstName, request.LastName),  request.Email);
 
@@ -67,7 +67,7 @@ public class AuthService : IAuthService
 
         await _unitOfWork.SaveChangesAsync(ct);
         
-        return Result.Success(user.Id);
+        return Result<Guid>.Success(user.Id.Value);
     }
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken ct = default)

@@ -59,12 +59,6 @@ public class IdentityCredentialsService : IIdentityCredentialsService
             return Result.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
                 result.Errors.Select(e => e.Description))));
         
-        var userRoles = await _userManager.GetRolesAsync(user);
-
-        return Result.Success(new IdentityUserDto(
-            Id: user.Id,
-            Email: user.Email,
-            Roles: userRoles.AsReadOnly()
-        ));
+        return Result.Success();
     }
 }

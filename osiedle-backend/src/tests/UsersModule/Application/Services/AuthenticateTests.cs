@@ -52,11 +52,6 @@ public class AuthenticateTests
         Email: "test@example.com",
         Roles: new[] { "User" });
 
-    // AuthenticateAsync returns the non-generic Result whose runtime payload is
-    // Result<TokenResponseDto> — unwrap it exactly the way the service boxes it.
-    private static TokenResponseDto TokensFrom(Result result) =>
-        ((Result<Result<TokenResponseDto>>)result).Value.Value;
-
     [Fact]
     public async Task AuthenticateAsync_ShouldReturnTokens_WhenCredentialsAreValid()
     {
@@ -77,8 +72,8 @@ public class AuthenticateTests
         var result = await _authService.AuthenticateAsync(request);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        TokensFrom(result).AccessToken.Should().Be("access_token");
-        TokensFrom(result).RefreshToken.Should().Be("refresh_token");
+        result.Value.AccessToken.Should().Be("access_token");
+        result.Value.RefreshToken.Should().Be("refresh_token");
 
         _tokenServiceMock.Verify(s => s.GenerateTokensAsync(
             It.Is<UserId>(u => u == UserId.From(identityUser.Id)),

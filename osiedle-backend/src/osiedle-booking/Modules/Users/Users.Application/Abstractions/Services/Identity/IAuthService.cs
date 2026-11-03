@@ -5,7 +5,7 @@ namespace Users.Application.Abstractions.Services.Identity;
 
 public interface IAuthService
 {
-    Task<Result> RegisterAsync(RegisterUserRequest request, CancellationToken ct);
+    Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct);
 
     Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default);
     Task<Result> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);

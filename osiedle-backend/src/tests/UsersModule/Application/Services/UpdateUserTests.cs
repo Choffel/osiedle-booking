@@ -148,7 +148,7 @@ public class UpdateUserTests
         var result = await _userService.GetUserByIdAsync(UserId.From(_currentUserId));
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        var profile = ((Result<CurrentUserDto>)result).Value;
+        var profile = result.Value;
         profile.FirstName.Should().Be("Jan");
         profile.LastName.Should().Be("Kowalski");
     }

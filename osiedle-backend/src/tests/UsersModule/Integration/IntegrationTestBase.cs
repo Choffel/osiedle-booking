@@ -120,8 +120,7 @@ public abstract class IntegrationTestBase : IDisposable
             new RegisterUserRequest(firstName, "Kowalski", email, password), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue("registration must succeed, error: {0}", result.Error.Description);
-        // RegisterAsync boxes the created id as Result<UserId>.
-        return ((Result<UserId>)result).Value.Value;
+        return result.Value;
     }
 
     protected async Task ConfirmEmailAsync(IServiceScope scope, string email)

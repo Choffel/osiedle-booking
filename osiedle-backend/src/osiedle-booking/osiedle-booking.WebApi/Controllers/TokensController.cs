@@ -60,7 +60,7 @@ public class TokensController : ControllerBase
 
     [Authorize]
     [HttpGet("ActiveSessions")]
-    public async Task<IActionResult> GetActiveSessionsAsync(CancellationToken ct = default)
+    public async Task<ActionResult<IReadOnlyCollection<ActiveSessionDto>>> GetActiveSessionsAsync(CancellationToken ct = default)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var refreshToken = Request.Headers["X-Refresh-Token"].ToString();

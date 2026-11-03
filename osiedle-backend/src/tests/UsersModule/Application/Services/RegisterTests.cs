@@ -47,11 +47,6 @@ public class RegisterTests
         _userRepositoryMock.Object,
         _jwtTokenGeneratorMock.Object);
 
-    // RegisterAsync returns the non-generic Result whose runtime payload is
-    // Result<UserId> — unwrap it exactly the way the service boxes it.
-    private static Guid RegisteredUserId(Result result) =>
-        ((Result<UserId>)result).Value.Value;
-
     [Fact]
     public async Task RegisterAsync_ShouldSucceed_WhenIdentityIsCreated()
     {
@@ -68,7 +63,7 @@ public class RegisterTests
         var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        RegisteredUserId(result).Should().Be(identityId);
+        result.Value.Should().Be(identityId);
         _userRepositoryMock.Verify(r => r.Add(
             It.Is<User>(u =>
                 u.Id.Value == identityId &&

@@ -125,7 +125,7 @@ public class TokenServiceFlowTests : IntegrationTestBase
             UserId.From(userId), "current-token", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        var sessions = ((Result<List<ActiveSessionDto>>)result).Value;
+        var sessions = result.Value;
         sessions.Should().HaveCount(2, "сессии других пользователей не должны попадать в выдачу");
         sessions.Single(s => s.TokenId == currentToken.Id.Value).IsCurrentSession.Should().BeTrue();
         sessions.Single(s => s.TokenId == otherToken.Id.Value).IsCurrentSession.Should().BeFalse();

@@ -7,7 +7,7 @@ namespace Users.Application.Abstractions.Services.Tokens;
 
 public interface IUserSessionService
 {
-    Task<Result> GetActiveSessionsAsync(UserId userId, string currentRefreshToken,
+    Task<Result<IReadOnlyCollection<ActiveSessionDto>>> GetActiveSessionsAsync(UserId userId, string currentRefreshToken,
         CancellationToken ct = default);
     
     Task<Result> RevokeSessionAsync(UserId userId, RefreshTokenId tokenId, string currentRefreshToken,

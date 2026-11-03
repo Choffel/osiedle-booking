@@ -13,10 +13,6 @@ namespace UserModule.Integration;
 
 public class AuthenticationFlowTests : IntegrationTestBase
 {
-    // AuthenticateAsync boxes the tokens into the non-generic Result.
-    private static TokenResponseDto TokensFrom(Result result) =>
-        ((Result<Result<TokenResponseDto>>)result).Value.Value;
-
     [Fact]
     public async Task Authenticate_ShouldSucceed_WhenCredentialsAreValidAndEmailConfirmed()
     {
@@ -29,7 +25,7 @@ public class AuthenticationFlowTests : IntegrationTestBase
         var result = await authService.AuthenticateAsync(new AuthRequest(email, ValidPassword));
 
         result.IsSuccess.Should().BeTrue(result.Error.Description);
-        var tokens = TokensFrom(result);
+        var tokens = result.Value;
         tokens.AccessToken.Split('.').Should().HaveCount(3);
         tokens.RefreshToken.Should().NotBeNullOrWhiteSpace();
 

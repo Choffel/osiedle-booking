@@ -23,7 +23,7 @@ public class UserSessionService : IUserSessionService
         _unitOfWork = unitOfWork;
     }
     
-    public async Task<Result> GetActiveSessionsAsync(UserId userId,
+    public async Task<Result<IReadOnlyCollection<ActiveSessionDto>>> GetActiveSessionsAsync(UserId userId,
         string currentRefreshToken, CancellationToken ct = default)
     {
         var refreshTokens = await _tokenReadRepository.
@@ -37,7 +37,7 @@ public class UserSessionService : IUserSessionService
             ))
             .ToList();
     
-        return Result.Success(activeSessions);
+        return Result<IReadOnlyCollection<ActiveSessionDto>>.Success(activeSessions);
     }
 
     public async Task<Result> RevokeSessionAsync(UserId userId, RefreshTokenId tokenId,

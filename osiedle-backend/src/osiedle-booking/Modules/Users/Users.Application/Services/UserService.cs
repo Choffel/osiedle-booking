@@ -46,12 +46,12 @@ public class UserService : IUserService
         return Result.Success();
     }
 
-    public async Task<Result> GetUserByIdAsync(UserId userId, CancellationToken ct = default)
+    public async Task<Result<CurrentUserDto>> GetUserByIdAsync(UserId userId, CancellationToken ct = default)
     {
         var user = await _userReadRepository.GetProfileAsync(userId, ct);
-        if (user is null) 
-            return Result.Failure(UserErrors.NotFound);
-        
-        return Result.Success(new CurrentUserDto(user.FirstName, user.LastName));
+        if (user is null)
+            return Result<CurrentUserDto>.Failure(UserErrors.NotFound);
+
+        return Result<CurrentUserDto>.Success(new CurrentUserDto(user.FirstName, user.LastName));
     }
 }
