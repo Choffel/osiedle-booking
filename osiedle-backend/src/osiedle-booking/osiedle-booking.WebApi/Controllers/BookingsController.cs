@@ -23,12 +23,11 @@ public class BookingsController : ControllerBase
     }
     
     [HttpGet("available-slots")]
-    public async Task<Result<IReadOnlyList<TimeSlot>>> GetBookingsAsync(
+    public async Task<ActionResult<IReadOnlyList<TimeSlot>>> GetAvailableSlotsAsync(
         [FromQuery] GetAvailableSlotsRequest request,
         CancellationToken ct)
     {
-        var result = await _bookingService.GetAvailableSlotsAsync(request, ct);
-        return result;
+        return (await _bookingService.GetAvailableSlotsAsync(request, ct)).ToActionResult();
     }
     
     [HttpPost("booking")]
@@ -40,15 +39,11 @@ public class BookingsController : ControllerBase
     
     [Authorize]
     [HttpGet("reservations")]
-    public async Task<IActionResult> GetMyReservationsAsync(CancellationToken ct)
+    public async Task<ActionResult<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
     {
         var clientId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        var result = await _bookingService.GetMyReservationsAsync(ClientId.From(clientId), ct);
-        if (result.IsSuccess)
-            return Ok(result.Value);
-
-        return BadRequest(result.Error);
+        return (await _bookingService.GetMyReservationsAsync(ClientId.From(clientId), ct)).ToActionResult();
     }
 
     [Authorize]
