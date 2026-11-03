@@ -36,8 +36,9 @@ public class UserService : IUserService
         var domainUser = await _userRepository.GetByIdAsync(userId, ct);
         if (domainUser is null)
             return Result.Failure(UserErrors.NotFound);
+        domainUser.Update(Name.Create(userDto.FirstName, userDto.LastName));
 
-        var updateResult = await _identityAccountService.UpdateUserNameAsync(userId, userDto.UserName, ct);
+        var updateResult = await _identityAccountService.UpdateUserNameAsync(userId, userDto.FirstName, ct);
         if (updateResult.IsFailure)
             return Result.Failure(UserErrors.UpdateFailed);
 
