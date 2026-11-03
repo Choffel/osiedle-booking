@@ -1,6 +1,7 @@
 using Business.Application.DTOs;
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
+using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.WebApi.Extensions;
 
@@ -30,7 +31,9 @@ public class BusinessesController : ControllerBase
         Guid businessId,
         CancellationToken ct = default)
     {
-        return (await _businessManagementService.GetBusinessByIdAsync(businessId, ct)).ToActionResult();
+        var business = BusinessId.From(businessId);
+        
+        return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
     }
 
     [HttpPut("{businessId:guid}")]
@@ -39,7 +42,9 @@ public class BusinessesController : ControllerBase
         [FromBody] UpdateBusinessInfoDto dto,
         CancellationToken ct = default)
     {
-        return (await _businessManagementService.UpdateBusinessInfoAsync(businessId, dto, ct)).ToActionResult();
+        var business = BusinessId.From(businessId);
+        
+        return (await _businessManagementService.UpdateBusinessInfoAsync(business, dto, ct)).ToActionResult();
     }
 
     [HttpPost("{businessId:guid}/archive")]
@@ -47,6 +52,9 @@ public class BusinessesController : ControllerBase
         Guid businessId,
         CancellationToken ct = default)
     {
-        return (await _businessManagementService.ArchiveBusinessAsync(businessId, ct)).ToActionResult();
+        
+        var business = BusinessId.From(businessId);
+        
+        return (await _businessManagementService.ArchiveBusinessAsync(business, ct)).ToActionResult();
     }
 }

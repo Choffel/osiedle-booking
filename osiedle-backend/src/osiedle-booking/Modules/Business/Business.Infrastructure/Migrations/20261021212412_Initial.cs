@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Business.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initial_clear_db : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,10 +19,8 @@ namespace Business.Infrastructure.Migrations
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    location_city = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    location_number = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    location_street = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Location = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -37,13 +35,13 @@ namespace Business.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Position = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Review = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     BusinessId = table.Column<Guid>(type: "uuid", nullable: true),
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    first_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    last_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -60,8 +58,8 @@ namespace Business.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     EmployeeId = table.Column<Guid>(type: "uuid", nullable: false),
                     Date = table.Column<DateOnly>(type: "date", nullable: false),
-                    end_time = table.Column<TimeOnly>(type: "time", nullable: false),
-                    start_time = table.Column<TimeOnly>(type: "time", nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -69,7 +67,6 @@ namespace Business.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WorkingHours", x => x.Id);
-                    table.CheckConstraint("CK_WorkingHours_ValidInterval", "end_time > start_time");
                 });
 
             migrationBuilder.CreateTable(
@@ -85,7 +82,7 @@ namespace Business.Infrastructure.Migrations
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     BusinessId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
@@ -118,15 +115,13 @@ namespace Business.Infrastructure.Migrations
                 name: "IX_Businesses_OwnerId",
                 table: "Businesses",
                 column: "OwnerId",
-                unique: true,
-                filter: "\"DeletedAt\" IS NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Employees_Email",
                 table: "Employees",
                 column: "Email",
-                unique: true,
-                filter: "\"DeletedAt\" IS NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkingHours_EmployeeId_Date",

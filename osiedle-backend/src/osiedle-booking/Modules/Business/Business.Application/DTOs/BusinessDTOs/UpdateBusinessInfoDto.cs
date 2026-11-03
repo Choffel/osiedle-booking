@@ -1,9 +1,7 @@
-﻿namespace Business.Application.DTOs.BusinessDTOs;
+﻿namespace Business.Application.DTOs;
 
 public record UpdateBusinessInfoDto(
     string NewName,
     string NewDescription,
-    string NewStreet,
-    string NewNumber,
-    string NewCity
+    string NewLocation
     );

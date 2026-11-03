@@ -56,7 +56,7 @@ public class BusinessTests
     [Fact]
     public void Create_WithEmptyOwnerId_Throws()
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", new UserId(Guid.Empty), "Description", "Location"));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", UserId.From(Guid.Empty), "Description", "Location"));
     }
 
     [Fact]

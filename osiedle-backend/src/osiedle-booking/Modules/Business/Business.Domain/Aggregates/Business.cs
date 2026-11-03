@@ -8,149 +8,98 @@ namespace Business.Domain.Aggregates;
 
 public class Business : AggregateRoot<BusinessId> 
 {
-  public string Name { get; private set; }
+    public string Name { get; private set; } = null!;
     public UserId OwnerId { get; private set; } 
-    public string? Description { get; private set; }
-    public Address Location { get; private set; } 
-    public BusinessStatus Status { get; private set; }
-
+    
+    public string Description { get; private set; }
+    public string Location { get; private set; } 
+    
     private readonly List<BookableService> _services = new();
-    public IReadOnlyCollection<BookableService> Services => _services.AsReadOnly();
-
+    public IReadOnlyList<BookableService> Services => _services;
+    
     private readonly List<EmployeeId> _employeeIds = new();
-    public IReadOnlyCollection<EmployeeId> EmployeeIds => _employeeIds.AsReadOnly();
+    public IReadOnlyList<EmployeeId> EmployeeIds => _employeeIds.AsReadOnly();
+   
+    
+    
+    public BusinessStatus Status { get; private set; }
+    
+    private Business() { }
 
-    private Business() { } 
-
-    private Business(
-        BusinessId id, 
-        string name, 
-        Address location, 
-        UserId ownerId, 
-        string? description) : base(id)
+    private Business(BusinessId id, string name, string location, UserId ownerId, string description) : base(id)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Business name cannot be empty.", nameof(name));
+        
+        if(string.IsNullOrWhiteSpace(location))
+            throw new ArgumentException("Business location cannot be empty.", nameof(location));
+
+        if(string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("Business description cannot be empty.", nameof(description));
+
         if (ownerId.Value == Guid.Empty)
             throw new ArgumentException("Business owner id cannot be empty.", nameof(ownerId));
 
-        if (location.IsEmpty)
-            throw new ArgumentException("Business location cannot be uninitialized.", nameof(location));
-
-        Name = EnsureValidName(name);
+        Name = name;
         OwnerId = ownerId;
+        Description = description;
         Location = location;
-        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         Status = BusinessStatus.Active;
         CreatedAt = DateTime.UtcNow;
     }
-
-    public static Business Create(string name, UserId ownerId, Address location, string? description = null)
-    {
-        return new Business(BusinessId.New(), name, location, ownerId, description);
-    }
     
-
-    public void AddEmployee(EmployeeId employeeId)
+    public static Business Create(string name, UserId ownerId, string description, string location)
     {
-        EnsureIsNotArchived();
-
-        if (_employeeIds.Contains(employeeId))
-            return;
-
-        _employeeIds.Add(employeeId);
-        UpdatedAt = DateTime.UtcNow;
+        var businessId = BusinessId.New();
+        return new Business(businessId, name, location, ownerId, description);
     }
 
-    public void AddService(
-        EmployeeId employeeId, 
-        string name, 
-        string description, 
-        decimal price, 
-        TimeSpan durationMinutes)
+    public void AddService(EmployeeId employeeId, string name, string description, decimal price, TimeSpan durationMinutes)
     {
-        EnsureIsNotArchived();
-        
-        if (!_employeeIds.Contains(employeeId))
-        {
-            throw new InvalidOperationException($"Employee '{employeeId.Value}' is not associated with this business.");
-        }
-        
-        var trimmedName = EnsureValidName(name);
-        if (_services.Any(s => s.ServiceName.Equals(trimmedName, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new InvalidOperationException($"Service with name '{trimmedName}' already exists in this business.");
-        }
+        if (Status == BusinessStatus.Archived)
+            throw new InvalidOperationException("Cannot modify an archived business.");
 
-        var service = BookableService.Create(employeeId, trimmedName, description, price, durationMinutes);
+        if (_services.Any(s => s.ServiceName == name))
+            throw new InvalidOperationException("Service with this name already exists.");
+        
+        //TODO: fix ANY method to check if employee is associated with this business
+        if(!_services.Any(s => s.EmployeeId == employeeId))
+            throw new InvalidOperationException("Employee is not associated with this business.");
+
+        var service = BookableService.Create(employeeId, name, description, price, durationMinutes);
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void AddEmployee(EmployeeId employeeId)
+    {
+        if (_employeeIds.Contains(employeeId))
+            return;
+
+        _employeeIds.Add(employeeId);
+    }
     
-    public void UpdateName(string newName)
+    public void UpdateInfo(string newName, string newDescription, string newLocation)
     {
-        EnsureIsNotArchived();
+        if (string.IsNullOrWhiteSpace(newName))
+            throw new ArgumentException("New business name cannot be empty.", nameof(newName));
+        
+        if (string.IsNullOrWhiteSpace(newDescription))
+            throw new ArgumentException("New business description cannot be empty.", nameof(newDescription));
+        
+        if (string.IsNullOrWhiteSpace(newLocation))
+            throw new ArgumentException("New business location cannot be empty.", nameof(newLocation));
 
-        var validName = EnsureValidName(newName);
-        if (string.Equals(Name, validName, StringComparison.Ordinal))
-            return;
-
-        Name = validName;
+        Name = newName;
+        Location = newLocation;
+        Description = newDescription;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    public void UpdateDescription(string? newDescription)
-    {
-        EnsureIsNotArchived();
-
-        var sanitizedDescription = string.IsNullOrWhiteSpace(newDescription) 
-            ? null 
-            : newDescription.Trim();
-
-        if (string.Equals(Description, sanitizedDescription, StringComparison.Ordinal))
-            return;
-
-        Description = sanitizedDescription;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateAddress(Address newAddress)
-    {
-        EnsureIsNotArchived();
-
-        if (newAddress.IsEmpty)
-        {
-            throw new ArgumentException("New business location cannot be uninitialized.", nameof(newAddress));
-        }
-
-        if (Location == newAddress)
-            return;
-
-        Location = newAddress;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
+    
     public void ArchiveBusiness()
     {
-        EnsureIsNotArchived();
-
         Status = BusinessStatus.Archived;
         DeletedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    private void EnsureIsNotArchived()
-    {
-        if (Status == BusinessStatus.Archived)
-            throw new InvalidOperationException("Cannot perform operation on an archived business.");
-    }
-
-    private static string EnsureValidName(string name)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        var trimmed = name.Trim();
-        if (trimmed.Length < 2 || trimmed.Length > 100)
-            throw new ArgumentException("Business name must be between 2 and 100 characters.", nameof(name));
-
-        return trimmed;
     }
 }

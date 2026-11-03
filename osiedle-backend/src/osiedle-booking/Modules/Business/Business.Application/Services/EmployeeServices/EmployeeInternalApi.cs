@@ -1,5 +1,4 @@
 using Business.Application.DTOs.EmployeeDTOs;
-using Business.Application.DTOs.WorkingHoursDTOs;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
@@ -11,20 +10,33 @@ public class EmployeeInternalApi : IEmployeeInternalApi
 {
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IEmployeeWorkingHoursRepository _employeeWorkingHoursRepository;
-    private readonly IEmployeeReadOnlyRepository _employeeReadOnlyRepository;
 
-    public EmployeeInternalApi(IEmployeeRepository employeeRepository,
-        IEmployeeWorkingHoursRepository employeeWorkingHoursRepository
-        , IEmployeeReadOnlyRepository employeeReadOnlyRepository)
+    public EmployeeInternalApi(IEmployeeRepository employeeRepository, IEmployeeWorkingHoursRepository employeeWorkingHoursRepository)
     {
-        _employeeReadOnlyRepository = employeeReadOnlyRepository;
         _employeeRepository = employeeRepository;
         _employeeWorkingHoursRepository = employeeWorkingHoursRepository;
     }
-    
-    public async Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(Guid employeeId, CancellationToken ct = default)
+
+    public Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
-        var shortInfo = await _employeeReadOnlyRepository.GetShortInfoAsync(EmployeeId.From(employeeId), ct);
+        return _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+    }
+
+    public async Task<Result<EmployeeStatusDto>> GetStatusAsync(EmployeeId employeeId, CancellationToken ct = default)
+    {
+        var status = await _employeeRepository.GetStatusAsync(employeeId, ct);
+
+        if (status == null)
+        {
+            return Result.Failure<EmployeeStatusDto>(EmployeeErrors.NotFound);
+        }
+
+        return Result.Success(status);
+    }
+
+    public async Task<Result<EmployeeShortInfoDto>> GetShortInfoAsync(EmployeeId employeeId, CancellationToken ct = default)
+    {
+        var shortInfo = await _employeeRepository.GetShortInfoAsync(employeeId, ct);
 
         if (shortInfo == null)
         {
@@ -34,36 +46,32 @@ public class EmployeeInternalApi : IEmployeeInternalApi
         return Result.Success(shortInfo);
     }
     
-    public async Task<Result<bool>> IsAvailableForBookingAsync(Guid employeeId, CancellationToken ct = default)
-    {
-        var employee = await _employeeRepository.GetByIdAsync(EmployeeId.From(employeeId), ct);
-        if (employee is null)
-        {
-            return false;
-        }
-        return employee.CanBeBooked();
-    }
-    
-    
-    public async Task<Result<WorkingHoursDto>>GetWorkingHoursAsync(
-        Guid employeeId, 
+    public async Task<Result<IReadOnlyCollection<WorkingHoursDto>>> GetWorkingHoursAsync(
+        EmployeeId employeeId, 
         DateOnly date, 
         CancellationToken ct = default)
     {
-        var id = EmployeeId.From(employeeId);
+        var employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
+        if (!employeeExists)
+        {
+            return Result.Failure<IReadOnlyCollection<WorkingHoursDto>>(EmployeeErrors.NotFound);
+        }
         
-        var workingHours = await _employeeWorkingHoursRepository.GetByDateAsync(id, date, ct);
+        var workingHours = await _employeeWorkingHoursRepository.GetWorkingHoursByDateAsync(employeeId, date, ct);
         
         if (workingHours is null)
         {
-            return Result.Failure<WorkingHoursDto>(WorkingHoursErrors.NotFound);
+            return Result.Success<IReadOnlyCollection<WorkingHoursDto>>([]);
         }
         
-        var dto = new WorkingHoursDto(
-            workingHours.Date, 
-            workingHours.Slot.StartTime, 
-            workingHours.Slot.EndTime);
+        IReadOnlyCollection<WorkingHoursDto> result =
+        [
+            new WorkingHoursDto(
+                workingHours.Date, 
+                workingHours.StartTime, 
+                workingHours.EndTime)
+        ];
 
-        return Result.Success(dto);
+        return Result.Success(result);
     }
 }
