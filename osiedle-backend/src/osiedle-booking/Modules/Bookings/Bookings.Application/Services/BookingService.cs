@@ -46,7 +46,7 @@ public class BookingService : IBookingService
 
         /*var barberWorkHours = await _employeeInternalApi
             .GetWorkingHoursAsync(EmployeeId.From(request.StaffId),
-                new DateOnly(request.Date.Year, request.Date.Month, request.Date.Day), ct);*/
+                new DateOnly(request.Date.Year, request.Date.Month, request.Date.Day), ct);*/ // TODO поправить во время мерджа
         
         var occupiedSlots = availableSlots
             .Where(b => b.Status == BookingStatus.Confirmed)
