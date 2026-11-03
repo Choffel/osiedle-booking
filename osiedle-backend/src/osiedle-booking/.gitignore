@@ -1,0 +1,28 @@
+## --- .NET & Build Artifacts ---
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.pdb
+*.user
+*.userosscache
+*.sln.docstates
+
+## --- JetBrains Rider / ReSharper ---
+.idea/
+*.sln.iml
+_ReSharper.*/
+*.ReSharper
+*.DotSettings.user
+
+## --- VS Code (если кто-то откроет проект там) ---
+.vscode/
+
+## --- Visual Studio ---
+.vs/
+
+## --- OS Generated ---
+.DS_Store
+Thumbs.db

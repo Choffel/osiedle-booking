@@ -1,146 +1,144 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
+using Users.Application.Errors;
 using Users.Application.Services;
 
 namespace UserModule.Application.Services;
 
 public class AuthenticateTests
 {
-    private readonly Mock<IIdentityService> _identityServiceMock = new();
+    private readonly Mock<IIdentityCredentialsService> _identityCredentialsMock = new();
+    private readonly Mock<IIdentityAccountService> _identityAccountMock = new();
+    private readonly Mock<IIdentityEmailService> _identityEmailMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
-    private readonly Mock<ILogger<UserService>> _loggerMock = new();
+    private readonly Mock<ILogger<AuthService>> _loggerMock = new();
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IUserContext> _userContextMock = new();
-    private readonly UserService _userService;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock = new();
+    private readonly AuthService _authService;
 
     public AuthenticateTests()
     {
         _userContextMock.Setup(c => c.IpAddress).Returns("127.0.0.1");
 
-        _userService = new UserService(
-            _identityServiceMock.Object,
-            _userRepositoryMock.Object,
+        _authService = new AuthService(
+            _identityCredentialsMock.Object,
+            _identityAccountMock.Object,
+            _identityEmailMock.Object,
             _loggerMock.Object,
             _roleServiceMock.Object,
             _tokenServiceMock.Object,
-            _userContextMock.Object);
+            _userContextMock.Object,
+            _unitOfWorkMock.Object,
+            _userRepositoryMock.Object,
+            _jwtTokenGeneratorMock.Object);
     }
+
+    private static IdentityUserDto KnownUser(Guid? id = null) => new(
+        Id: id ?? Guid.NewGuid(),
+        Email: "test@example.com",
+        Roles: new[] { "User" });
 
     [Fact]
     public async Task AuthenticateAsync_ShouldReturnTokens_WhenCredentialsAreValid()
     {
-        // Arrange
         var request = new AuthRequest("test@example.com", "P@ssw0rd1");
-
-        var identityUser = new IdentityUserDto(
-            Id: Guid.NewGuid(),
-            UserName: "testuser",
-            Email: "test@example.com",
-            EmailConfirmed: true,
-            Succeeded: true);
-
+        var identityUser = KnownUser();
         var tokens = new TokenResponseDto("access_token", "refresh_token");
 
-        _identityServiceMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(identityUser);
+        _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(identityUser));
+        _identityCredentialsMock
+            .Setup(s => s.CheckPasswordAsync(UserId.From(identityUser.Id), request.Password, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
+        _tokenServiceMock
+            .Setup(s => s.GenerateTokensAsync(
+                UserId.From(identityUser.Id), identityUser.Email, identityUser.Roles, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<TokenResponseDto>.Success(tokens));
 
-        _identityServiceMock.Setup(s => s.CheckPasswordAsync(identityUser.Id, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        var result = await _authService.AuthenticateAsync(request);
 
-        _tokenServiceMock.Setup(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tokens);
-
-        // Act
-        var result = await _userService.AuthenticateAsync(request);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.AccessToken.Should().Be("access_token");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.AccessToken.Should().Be("access_token");
         result.Value.RefreshToken.Should().Be("refresh_token");
 
-        _tokenServiceMock.Verify(s => s.GetTokens(
-            It.Is<UserDto>(u =>
-                u.Id == identityUser.Id &&
-                u.UserName == identityUser.UserName &&
-                u.Email == identityUser.Email),
+        _tokenServiceMock.Verify(s => s.GenerateTokensAsync(
+            It.Is<UserId>(u => u == UserId.From(identityUser.Id)),
+            identityUser.Email,
+            It.Is<IReadOnlyCollection<string>>(r => r.Contains("User")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task AuthenticateAsync_ShouldFail_WhenUserNotFound()
     {
-        // Arrange
         var request = new AuthRequest("missing@example.com", "P@ssw0rd1");
 
-        _identityServiceMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IdentityUserDto)null!);
+        _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
 
-        // Act
-        var result = await _userService.AuthenticateAsync(request);
+        var result = await _authService.AuthenticateAsync(request);
 
-        // Assert
+        // The unknown-email answer must be indistinguishable from a wrong password.
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
-        _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(IdentityErrors.InvalidCredentials);
+        _tokenServiceMock.Verify(
+            s => s.GenerateTokensAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
-    public async Task AuthenticateAsync_ShouldFail_WhenEmailNotConfirmed()
+    public async Task AuthenticateAsync_ShouldFail_WhenCredentialsServiceRejectsPassword()
     {
-        // Arrange
-        var request = new AuthRequest("test@example.com", "P@ssw0rd1");
-
-        var identityUser = new IdentityUserDto(
-            Id: Guid.NewGuid(),
-            UserName: "testuser",
-            Email: "test@example.com",
-            EmailConfirmed: false,
-            Succeeded: true);
-
-        _identityServiceMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(identityUser);
-
-        // Act
-        var result = await _userService.AuthenticateAsync(request);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
-        _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task AuthenticateAsync_ShouldFail_WhenPasswordIsInvalid()
-    {
-        // Arrange
         var request = new AuthRequest("test@example.com", "WrongPassword1");
+        var identityUser = KnownUser();
 
-        var identityUser = new IdentityUserDto(
-            Id: Guid.NewGuid(),
-            UserName: "testuser",
-            Email: "test@example.com",
-            EmailConfirmed: true,
-            Succeeded: true);
+        _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(identityUser));
+        _identityCredentialsMock
+            .Setup(s => s.CheckPasswordAsync(UserId.From(identityUser.Id), request.Password, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(IdentityErrors.InvalidCredentials));
 
-        _identityServiceMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(identityUser);
+        var result = await _authService.AuthenticateAsync(request);
 
-        _identityServiceMock.Setup(s => s.CheckPasswordAsync(identityUser.Id, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _userService.AuthenticateAsync(request);
-
-        // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid Email or Password");
-        _tokenServiceMock.Verify(s => s.GetTokens(It.IsAny<UserDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(IdentityErrors.InvalidCredentials);
+        _tokenServiceMock.Verify(
+            s => s.GenerateTokensAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_ShouldPropagateLockout_WhenAccountIsLockedOut()
+    {
+        var request = new AuthRequest("test@example.com", "P@ssw0rd1");
+        var identityUser = KnownUser();
+
+        _identityAccountMock.Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<IdentityUserDto>.Success(identityUser));
+        _identityCredentialsMock
+            .Setup(s => s.CheckPasswordAsync(UserId.From(identityUser.Id), request.Password, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(IdentityErrors.LockedOut));
+
+        var result = await _authService.AuthenticateAsync(request);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be(IdentityErrors.LockedOut);
+        _tokenServiceMock.Verify(
+            s => s.GenerateTokensAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

@@ -21,7 +21,7 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetAvailableSlotsAsync(SlotsRequest(), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         var slots = result.Value;
 
         slots.Should().HaveCount(FullDaySlotCount);
@@ -40,7 +40,7 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetAvailableSlotsAsync(SlotsRequest(), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         var slots = result.Value;
 
         // 4 slots before the busy period (09:00-09:30) + 43 after it (10:30-17:30).
@@ -63,7 +63,7 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetAvailableSlotsAsync(SlotsRequest(), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().BeEmpty();
     }
 
@@ -76,7 +76,7 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
 
         var result = await bookingService.GetAvailableSlotsAsync(SlotsRequest(), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
         result.Value.Should().HaveCount(FullDaySlotCount);
     }
 
@@ -85,9 +85,10 @@ public class AvailableSlotsFlowTests : IntegrationTestBase
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+        scope.ServiceProvider.GetRequiredService<FakeBookableServiceApi>().Duration = TimeSpan.Zero;
 
         var act = () => bookingService.GetAvailableSlotsAsync(
-            new Bookings.Application.DTOs.GetAvailableSlotsRequest(Staff, new TimeOnly(0, 0), TestDate),
+            new Bookings.Application.DTOs.GetAvailableSlotsRequest(Staff, Service, TestDate),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();

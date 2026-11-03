@@ -3,9 +3,14 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
+using Users.Application.Errors;
 using Users.Application.Services;
 using Users.Domain.Entity.User;
 
@@ -13,23 +18,34 @@ namespace UserModule.Application.Services;
 
 public class RegisterTests
 {
-    private readonly Mock<IIdentityService> _identityServiceMock = new();
+    private readonly Mock<IIdentityCredentialsService> _identityCredentialsMock = new();
+    private readonly Mock<IIdentityAccountService> _identityAccountMock = new();
+    private readonly Mock<IIdentityEmailService> _identityEmailMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<ILogger<AuthService>> _loggerMock = new();
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IUserContext> _userContextMock = new();
-    private readonly UserService _userService;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock = new();
+    private readonly AuthService _authService;
 
     public RegisterTests()
     {
-        _userService = new UserService(
-            _identityServiceMock.Object,
-            _userRepositoryMock.Object,
-            Mock.Of<ILogger<UserService>>(),
-            _roleServiceMock.Object,
-            _tokenServiceMock.Object,
-            _userContextMock.Object);
+        _authService = CreateAuthService();
     }
+
+    private AuthService CreateAuthService() => new(
+        _identityCredentialsMock.Object,
+        _identityAccountMock.Object,
+        _identityEmailMock.Object,
+        _loggerMock.Object,
+        _roleServiceMock.Object,
+        _tokenServiceMock.Object,
+        _userContextMock.Object,
+        _unitOfWorkMock.Object,
+        _userRepositoryMock.Object,
+        _jwtTokenGeneratorMock.Object);
 
     [Fact]
     public async Task RegisterAsync_ShouldSucceed_WhenIdentityIsCreated()
@@ -37,22 +53,26 @@ public class RegisterTests
         var request = new RegisterUserRequest("Jan", "Kowalski", "jan@example.com", "Password1");
         var identityId = Guid.NewGuid();
 
-        _identityServiceMock
+        _identityAccountMock
             .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Guid>.Success(identityId));
-        _identityServiceMock
-            .Setup(s => s.GenerateEmailConfirmationTokenAsync(identityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("confirm-token");
+            .ReturnsAsync(Result<UserId>.Success(UserId.From(identityId)));
+        _identityEmailMock
+            .Setup(s => s.GenerateEmailConfirmationTokenAsync(UserId.From(identityId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("confirm-token"));
 
-        var result = await _userService.RegisterAsync(request, CancellationToken.None);
+        var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value!.Value.Should().Be(identityId);
-        _userRepositoryMock.Verify(r => r.AddAsync(
-            It.Is<User>(u => u.Id.Value == identityId && u.DisplayName == request.FirstName),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _identityServiceMock.Verify(
-            s => s.GenerateEmailConfirmationTokenAsync(identityId, It.IsAny<CancellationToken>()), Times.Once);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        result.Value.Should().Be(identityId);
+        _userRepositoryMock.Verify(r => r.Add(
+            It.Is<User>(u =>
+                u.Id.Value == identityId &&
+                u.Name.FirstName == request.FirstName &&
+                u.Name.LastName == request.LastName &&
+                u.Email == request.Email)), Times.Once);
+        _identityEmailMock.Verify(
+            s => s.GenerateEmailConfirmationTokenAsync(UserId.From(identityId), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -60,16 +80,17 @@ public class RegisterTests
     {
         var request = new RegisterUserRequest("Jan", "Kowalski", "jan@example.com", "Password1");
 
-        _identityServiceMock
-            .Setup(s => s.CreateIdentityAsync(request.Email,  request.FirstName, request.Password, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<Guid>.Failure("Email is already taken"));
+        _identityAccountMock
+            .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<UserId>.Failure(UserErrors.RegistrationFailed));
 
-        var result = await _userService.RegisterAsync(request, CancellationToken.None);
+        var result = await _authService.RegisterAsync(request, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Email is already taken");
-        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
-        _identityServiceMock.Verify(
-            s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(UserErrors.RegistrationFailed);
+        _userRepositoryMock.Verify(r => r.Add(It.IsAny<User>()), Times.Never);
+        _identityEmailMock.Verify(
+            s => s.GenerateEmailConfirmationTokenAsync(It.IsAny<UserId>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -1,58 +1,76 @@
+using Bookings.Application.Abstractions;
 using Bookings.Application.Abstractions.Services;
 using Bookings.Application.DTOs;
 using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Application.Abstractions.Repositories;
 using Bookings.Domain.Entities.Booking;
 using Bookings.Domain.Entities.Booking.Enum;
+using Bookings.Domain.Errors;
 using Bookings.Domain.Services;
+using Business.Application.Interfaces.BookableService;
+using Business.Application.Interfaces.Employee;
+using Business.Domain.ValueObject;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Domain;
-using osiedle_booking.BuildingBlocks.Interfaces;
+using BusinessId = Bookings.Domain.Entities.Booking.Value_objects.BusinessId;
 
 namespace Bookings.Application.Services;
 
 public class BookingService : IBookingService
 {
     private readonly IBookingRepository _bookingRepository;
+    private readonly IBookingReadRepository _bookingReadRepository;
     private readonly ISlotCalculator _slotCalculator;
-    private readonly IUserContext _userContext;
+    private readonly IEmployeeInternalApi _employeeInternalApi;
+    private readonly IBookableServiceInternalApi _bookableServiceInternalApi;
+    private readonly IUnitOfWork _unitOfWork;
     
-    public BookingService(IBookingRepository bookingRepository, ISlotCalculator slotCalculator, IUserContext userContext)
+    public BookingService(IBookingRepository bookingRepository, IBookingReadRepository bookingReadRepository,
+        ISlotCalculator slotCalculator, IEmployeeInternalApi employeeInternalApi,
+        IBookableServiceInternalApi bookableServiceInternalApi, IUnitOfWork unitOfWork)
     {
         _bookingRepository = bookingRepository;
+        _bookingReadRepository = bookingReadRepository;
         _slotCalculator = slotCalculator;
-        _userContext = userContext;
+        _employeeInternalApi = employeeInternalApi;
+        _bookableServiceInternalApi = bookableServiceInternalApi;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<IReadOnlyList<TimeSlot>>> GetAvailableSlotsAsync(GetAvailableSlotsRequest request, CancellationToken ct)
     {
-        var availableSlots = await _bookingRepository.GetBookingsBydDateAsync(request.Date, new StaffId(request.StaffId), ct);
+        var availableSlots = await _bookingReadRepository.GetByStaffAndDateAsync(StaffId.From(request.StaffId), request.Date, ct);
 
         var barberWorkHours = TimeSlot.Create(
             request.Date.ToDateTime(new TimeOnly(9, 0)),
             request.Date.ToDateTime(new TimeOnly(18, 0)));
+
+        /*var barberWorkHours = await _employeeInternalApi
+            .GetWorkingHoursAsync(EmployeeId.From(request.StaffId),
+                new DateOnly(request.Date.Year, request.Date.Month, request.Date.Day), ct);*/ // TODO поправить во время мерджа
         
         var occupiedSlots = availableSlots
             .Where(b => b.Status == BookingStatus.Confirmed)
             .Select(b => b.Slot)
             .ToList();
 
+        var serviceInfo = await _bookableServiceInternalApi.GetServiceInfoAsync(BookableServiceId.From(request.ServiceId), ct);
+        if (serviceInfo.IsFailure)
+            return Result<IReadOnlyList<TimeSlot>>.Failure(serviceInfo.Error);
+
         var freeSlots = await _slotCalculator.CalculateAvailableSlots(
             barberWorkHours,
             occupiedSlots,
-            new TimeSpan(request.TimeForServices.Hour, request.TimeForServices.Minute, 0), // TODO: Change this when methods from the Business service become available
+            serviceInfo.Value.Duration,
             new TimeSpan(0, 10, 0)
             );
-
+        
         var result = Result<IReadOnlyList<TimeSlot>>.Success(freeSlots);
-            
+        
         return result;
     }
 
-    public async Task<Result<bool>> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
+    public async Task<Result> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
     {
-        try
-        {
             var slot = TimeSlot.Create(request.StartTime, request.EndTime);
 
             var day = request.StartTime.Date;
@@ -61,40 +79,39 @@ public class BookingService : IBookingService
                 day.AddHours(9),
                 day.AddHours(18)
             );
+            /*var barberWorkHours = await _employeeInternalApi
+            .GetWorkingHoursAsync(EmployeeId.From(request.StaffId),
+                new DateOnly(request.Date.Year, request.Date.Month, request.Date.Day), ct);*/
 
-            if(await _bookingRepository.HasOverlappingAsync(new StaffId(request.StaffId), slot, ct) ||
+            if(await _bookingRepository.HasOverlappingAsync(StaffId.From(request.StaffId), slot, ct) ||
                !await _slotCalculator.RelevantSlot(slot, barberWorkHours, ct))
-            {
-                return Result<bool>.Failure("Overlapping booking found.");
-            }
+                return Result.Failure(BookingError.Overlapping);
+            
+            var serviceInfo = await _bookableServiceInternalApi
+                .GetServiceInfoAsync(BookableServiceId.From(request.ServiceId), ct);
+            if (serviceInfo.IsFailure)
+                return Result.Failure(serviceInfo.Error);
 
-            var moneyMok = new Money(100); // TODO: Change this when methods from the Business service become available
+            var moneyMok = Money.Pln(serviceInfo.Value.Price); // TODO: Change this when methods from the Business service become available
 
             var booking = Booking.Create(
-                new BusinessId(request.BusinessId),
-                new StaffId(request.StaffId),
-                new ClientId(request.ClientId),
-                new ServiceId(request.ServiceId),
+                StaffId.From(request.StaffId),
+                BusinessId.From(request.BusinessId),
+                ClientId.From(request.ClientId),
+                ServiceId.From(request.ServiceId),
                 slot,
                 moneyMok
             );
 
-            await _bookingRepository.CreateBookingAsync(booking, ct);
-
-            return Result<bool>.Success(true);
-        }
-        catch (DomainException ex)
-        {
-            // Domain invariant violations (past slot, invalid range, negative price) are user-input
-            // errors, not server faults — surface them through the Result pattern instead of a 500.
-            return Result<bool>.Failure(ex.Message);
-        }
+            _bookingRepository.Add(booking);
+            
+            await _unitOfWork.SaveChangesAsync(ct);
+            return Result.Success();
     }
 
-    public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(CancellationToken ct)
+    public async Task<Result<IReadOnlyCollection<MyReservationDTO>>> GetMyReservationsAsync(ClientId clientId, CancellationToken ct)
     {
-        var userId = new ClientId(_userContext.UserId);
-        var reservations = await _bookingRepository.GetBookingsByClientIdIdAsync(userId, ct);
+        var reservations = await _bookingReadRepository.GetByClientIdAsync(clientId, ct);
         
         var response = new List<MyReservationDTO>(
             reservations.Select( r => new MyReservationDTO(
@@ -107,21 +124,25 @@ public class BookingService : IBookingService
         return Result<IReadOnlyCollection<MyReservationDTO>>.Success(response);
     }
 
-    public async Task<Result<bool>> CancelBookingAsync(CancelBookingRequest request, CancellationToken ct)
+    public async Task<Result> CancelBookingAsync(CancelBookingRequest request, ClientId clientId, CancellationToken ct)
     {
-        var booking = await _bookingRepository.GetBookingByIdAsync(new BookingId(request.BookingId), ct, true);
-        if(booking == null)
+        var bookingId = BookingId.From(request.BookingId);
+        
+        var booking = await _bookingRepository.GetByIdAsync(bookingId, ct);
+        
+        if(booking is null)
         {
-            return Result<bool>.Failure("Booking not found.");
+            return Result.Failure(BookingError.NotFound);
         }
-        if(!booking.IsOwnedBy(new ClientId(_userContext.UserId)))
+        if(!booking.IsOwnedBy(clientId))
         {
-            return Result<bool>.Failure("You cannot delete a reservation that isn't yours.");
+            return Result.Failure(BookingError.NotOwnedByClient);
         }
         
-        booking.Delete();
-        await _bookingRepository.Update(booking, ct);
+        booking.CancelByClient(clientId, DateTime.UtcNow);
+
+        await _unitOfWork.SaveChangesAsync(ct);
         
-        return Result<bool>.Success(true);
+        return Result.Success();
     }
 }

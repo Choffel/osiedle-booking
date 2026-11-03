@@ -23,44 +23,44 @@ public class ApplicationDbContext : DbContext
             booking.Property(x => x.Id)
                 .HasConversion(
                     id => id.Value,
-                    value => new BookingId(value));
+                    value => BookingId.From(value));
 
             booking.Property(x => x.BusinessId)
                 .HasConversion(
                     id => id.Value,
-                    value => new BusinessId(value));
+                    value => BusinessId.From(value));
 
             booking.Property(x => x.StaffId)
                 .HasConversion(
                     id => id.Value,
-                    value => new StaffId(value));
+                    value => StaffId.From(value));
 
             booking.Property(x => x.ClientId)
                 .HasConversion(
                     id => id.Value,
-                    value => new ClientId(value));
+                    value => ClientId.From(value));
 
             booking.Property(x => x.ServiceId)
                 .HasConversion(
                     id => id.Value,
-                    value => new ServiceId(value));
+                    value => ServiceId.From(value));
 
             booking.Property(x => x.Status)
                 .HasConversion<string>();
 
-            booking.OwnsOne(x => x.Slot, slot =>
+            booking.ComplexProperty(x => x.Slot, slot =>
             {
                 slot.Property(p => p.Start).HasColumnName("Slot_Start");
                 slot.Property(p => p.End).HasColumnName("Slot_End");
             });
 
-            booking.OwnsOne(x => x.Price, price =>
+            booking.ComplexProperty(x => x.Price, price =>
             {
                 price.Property(p => p.Amount).HasColumnName("Price_Amount");
                 price.Property(p => p.Currency).HasColumnName("Price_Currency");
             });
 
-            booking.OwnsOne(x => x.Cancellation, cancellation =>
+            booking.ComplexProperty(x => x.Cancellation, cancellation =>
             {
                 cancellation.Property(p => p.By).HasColumnName("Cancellation_By");
                 cancellation.Property(p => p.Reason).HasColumnName("Cancellation_Reason");

@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
 using Users.Infrastructure.Identity;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Errors;
+using Users.Infrastructure.Identity.Models;
 
 namespace UserModule.Integration;
 
@@ -14,7 +17,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -23,8 +26,7 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
 
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
-        result.IsSuccess.Should().BeTrue(result.Error);
-        result.Value.Should().Be("Email confirmed");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         var confirmedUser = await userManager.FindByEmailAsync(email);
         confirmedUser!.EmailConfirmed.Should().BeTrue();
@@ -36,13 +38,13 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, "garbage-token"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired confirmation token");
+        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var user = await userManager.FindByEmailAsync(email);
@@ -53,21 +55,21 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
     public async Task ConfirmEmail_ShouldFail_WhenEmailIsUnknown()
     {
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
         var result = await userService.ConfirmEmailAsync(
             new ConfirmEmailRequest("ghost@example.com", "any-token"));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid email address");
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
     }
 
     [Fact]
-    public async Task ConfirmEmail_ShouldFail_WhenUserRoleIsMissing()
+    public async Task ConfirmEmail_ShouldFail_WhenRoleIsMissing()
     {
         const string email = "jan@example.com";
         using var scope = CreateScope();
-        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IAuthService>();
         await RegisterUserAsync(userService, email, ValidPassword);
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleIdentity>>();
@@ -78,9 +80,11 @@ public class ConfirmEmailFlowTests : IntegrationTestBase
         var identityUser = await userManager.FindByEmailAsync(email);
         var token = await userManager.GenerateEmailConfirmationTokenAsync(identityUser!);
 
+        // RoleService checks RoleExistsAsync first, so a missing role answers a
+        // Result failure instead of letting Identity throw.
         var result = await userService.ConfirmEmailAsync(new ConfirmEmailRequest(email, token));
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Role 'User' does not exist");
+        result.Error.Should().Be(RoleErrors.AddUserToRoleFailed);
     }
 }

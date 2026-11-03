@@ -17,8 +17,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
 
         var result = await bookingService.CreateBookingAsync(Request(At(10, 0), At(10, 30)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
-        result.Value.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -46,7 +45,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
             Request(At(10, 15), At(10, 45)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -63,7 +62,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(
             Request(At(10, 30), At(11, 0)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -80,7 +79,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(
             Request(At(10, 0), At(10, 30), staff: OtherStaff), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue(result.Error);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -96,7 +95,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(Request(At(8, 0), At(8, 30)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -112,7 +111,7 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(Request(At(17, 45), At(18, 15)), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Overlapping booking found.");
+        result.Error.Should().Be(BookingError.Overlapping);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -120,8 +119,10 @@ public class CreateBookingFlowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task CreateBooking_SlotInPast_FailsWithoutThrowing()
+    public async Task CreateBooking_SlotInPast_IsAcceptedByDomain()
     {
+        // The domain has no past-slot invariant anymore: only working hours are enforced,
+        // so a yesterday slot inside 09:00-18:00 is booked normally.
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
         var past = DateTime.UtcNow.Date.AddDays(-1).AddHours(10);
@@ -129,24 +130,26 @@ public class CreateBookingFlowTests : IntegrationTestBase
         var result = await bookingService.CreateBookingAsync(
             Request(past, past.AddMinutes(30)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("past");
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
 
         using var verifyScope = CreateScope();
         var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
+        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(1);
     }
 
     [Fact]
-    public async Task CreateBooking_EndBeforeStart_FailsWithoutThrowing()
+    public async Task CreateBooking_EndBeforeStart_ThrowsArgumentException()
     {
         using var scope = CreateScope();
         var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
-        var result = await bookingService.CreateBookingAsync(
+        var act = () => bookingService.CreateBookingAsync(
             Request(At(10, 30), At(10, 0)), CancellationToken.None);
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("must be after start time");
+        await act.Should().ThrowAsync<ArgumentException>();
+
+        using var verifyScope = CreateScope();
+        var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await db.Bookings.AsNoTracking().CountAsync()).Should().Be(0);
     }
 }

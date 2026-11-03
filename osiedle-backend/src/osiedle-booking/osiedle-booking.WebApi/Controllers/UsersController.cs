@@ -1,9 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using osiedle_booking.WebApi.Extensions;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
-using Users.Domain.Entity.User.Value_objects;
 
 namespace osiedle_booking.WebApi.Controllers;
 
@@ -12,60 +13,39 @@ namespace osiedle_booking.WebApi.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
-
     public UsersController(IUserService userService)
     {
         _userService = userService;
     }
-
-    [HttpPost("register")]
-    public async Task<Result<UserId>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)    
+    
+    [Authorize]
+    [HttpPut("UpdateName")]
+    public async Task<ActionResult> UpdateAsync([FromBody] UpdateUserDto request, CancellationToken cancellationToken = default)
     {
-        var result = await _userService.RegisterAsync(createUserDto, cancellationToken);
-        return result;
-    }
-
-    [HttpPost("login")]
-    public async Task<Result<TokenResponseDto>> LoginAsync([FromBody] AuthRequest request, CancellationToken cancellationToken) 
-    {
-        var result = await _userService.AuthenticateAsync(request, cancellationToken);
-        return result;
-    }
-
-    [HttpPost("ForgotPassword")]
-    public async Task<Result<string>> ForgotPasswordAsync([FromBody ]ForgotPasswordRequest request, CancellationToken cancellationToken)
-    {
-        var result = await _userService.ForgotPasswordAsync(request, cancellationToken);
-        return result;
-    }
-
-    [HttpPost("ResetPassword")]
-    public async Task<Result<string>> ResetPasswordAsync([FromBody] ResetPasswordDto request, CancellationToken cancellationToken)
-    {
-        var result = await _userService.ResetPasswordAsync(request, cancellationToken);
-        return result;
-    }
-
-    [HttpPost("ConfirmEmail")]
-    public async Task<Result<string>> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
-    {
-        var result = await _userService.ConfirmEmailAsync(request, cancellationToken);
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        
+        var result = await _userService.UpdateUserNameAsync(UserId.From(userId), email, request, cancellationToken);
+        return result.ToActionResult();
     }
     
     [Authorize]
-    [HttpPut("Update")]
-    public async Task<Result<string>> UpdateAsync([FromBody] UpdateUserDto request, CancellationToken cancellationToken)
+    [HttpPut("UpdateEmail")]
+    public async Task<ActionResult> UpdateAsync([FromBody] string email, CancellationToken cancellationToken = default)
     {
-        var result = await _userService.UpdateUserAsync(request, cancellationToken);
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        //var email = User.FindFirstValue(ClaimTypes.Email);
+        
+        var result = await _userService.UpdateUserEmailAsyc(UserId.From(userId), email, cancellationToken);
+        return result.ToActionResult();
     }
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<Result<CurrentUserDto>> GetCurrentUserAsync()
+    public async Task<ActionResult<CurrentUserDto>> GetCurrentUserAsync(CancellationToken ct = default)
     {
-        var result = await _userService.GetCurrentUserAsync();
-        return result;
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var result = await _userService.GetUserByIdAsync(UserId.From(userId), ct);
+        return result.ToActionResult();
     }
 }

@@ -1,180 +1,78 @@
 using osiedle_booking.BuildingBlocks;
 using Users.Application.Abstractions.Services;
-using Users.Domain.Entity.User;
-using Users.Domain.Entity.User.Value_objects;
-using Microsoft.Extensions.Logging;
-using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
+using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
+using Users.Domain.Entity.User.ValueObjects;
+using Users.Domain.Errors;
 
 namespace Users.Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IIdentityService _identityService;
+    private readonly IIdentityAccountService _identityAccountService;
     private readonly IUserRepository _userRepository;
-    private readonly ILogger<UserService> _logger;
-    private readonly IRoleService _roleManager;
-    private readonly ITokenService _tokenService;
-    private readonly IUserContext _userContext;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserReadRepository _userReadRepository;
 
-    public UserService(IIdentityService identityService, IUserRepository userRepository, ILogger<UserService> logger,
-        IRoleService roleManager, ITokenService tokenService, IUserContext userContext)
+    public UserService(IIdentityAccountService identityAccountService,IUserRepository userRepository,
+        IUnitOfWork unitOfWork, IUserReadRepository userReadRepository)
     {
-        _identityService = identityService; 
+        _identityAccountService = identityAccountService;
         _userRepository = userRepository;
-        _logger = logger;
-        _roleManager = roleManager;
-        _tokenService = tokenService;
-        _userContext = userContext;
+        _unitOfWork = unitOfWork;
+        _userReadRepository = userReadRepository;
     }
     
-    public async Task<Result<UserId>> RegisterAsync(RegisterUserRequest request, CancellationToken ct)
+    public async Task<Result> UpdateUserNameAsync(UserId userId, string email, UpdateUserDto userDto,
+        CancellationToken ct = default)
     {
-        var identityResult = await _identityService.CreateIdentityAsync(
-            request.Email,  request.FirstName, request.Password, ct);
+        var user = await _identityAccountService.FindByEmailAsync(email, ct);
+        if (user.IsFailure)
+            return Result.Failure(UserErrors.NotFound);
 
-        if (!identityResult.IsSuccess)
-            return Result<UserId>.Failure(identityResult.Error);
-        
-        var userId = new UserId(identityResult.Value);
-        var user = User.Create(userId, request.FirstName);
-
-        await _userRepository.AddAsync(user, ct);
-        
-        var token = await _identityService.GenerateEmailConfirmationTokenAsync(identityResult.Value, ct);
-        
-        _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token); // TODO: Fix this when the notification service becomes available 
-
-        return Result<UserId>.Success(userId);
-    }
-    
-    public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken cancellationToken = default)
-    {
-        
-        var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
-        {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
-        }
-
-        if (!user.EmailConfirmed)
-        {
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
-        }
-
-        var isPasswordCorrect = await _identityService.CheckPasswordAsync(user.Id, request.Password, cancellationToken);
-        if (!isPasswordCorrect)
-        {
-            _logger.LogWarning("Failed login for {Email} from {Ip}", request.Email, _userContext.IpAddress);
-            return Result<TokenResponseDto>.Failure("Invalid Email or Password");
-        }
-
-        var userDto = new UserDto(user.Id, user.UserName ?? string.Empty, user.Email ?? string.Empty);
-
-        var tokens = await _tokenService.GetTokens(userDto, cancellationToken);
-
-        return Result<TokenResponseDto>.Success(new TokenResponseDto(tokens.AccessToken, tokens.RefreshToken));
-    }
-    
-    public async Task<Result<string>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
-    {
-        var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if(user == null)
-        {
-            return Result<string>.Success("If this email address exists in the system, instructions have been sent to the email.");
-        }
-
-        var token = await _identityService.GeneratePasswordResetTokenAsync(user.Id, cancellationToken);
-        
-        _logger.LogInformation("Password reset token for user {UserId}: {Token}", user.Id, token);
-
-        return Result<string>.Success("If this email address exists in the system, instructions have been sent to the email.");
-    }
-    
-    public async Task<Result<string>> ResetPasswordAsync(ResetPasswordDto request, CancellationToken cancellationToken = default)
-    {
-        var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
-        {
-            return Result<string>.Failure($"{request.Email} - this email address is not registered");
-        }
-
-        var resetPassResult = await _identityService.ResetPasswordAsync(user.Id, request.Token, request.NewPassword!, cancellationToken);
-
-        if (!resetPassResult.Succeeded)
-        {
-            return Result<string>.Failure("Failed to reset password");
-        }
-
-        return Result<string>.Success("Password reset successfully");
-    }
-    
-    public async Task<Result<string>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken = default)
-    {
-        var user = await _identityService.FindByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
-        {
-            return Result<string>.Failure("Invalid email address");
-        }
-
-        var result = await _identityService.ConfirmEmailAsync(user.Id, request.Token, cancellationToken);
-        if (!result)
-        {
-            return Result<string>.Failure("Invalid or expired confirmation token");
-        }
-
-        var roleExists = await _roleManager.RoleExistsAsync("User", cancellationToken);
-        if (!roleExists)
-        {
-            return Result<string>.Failure("Role 'User' does not exist");
-        }
-
-        await _identityService.AddToRoleAsync(user.Id, "User", cancellationToken);
-
-        return Result<string>.Success("Email confirmed");
-    }
-    
-    public async Task<Result<string>> UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken = default)
-    {
-        var userEmail = _userContext.Email;
-        var userContextId = _userContext.UserId;
-        
-        var user = await _identityService.FindByEmailAsync(userEmail, cancellationToken);
-        if (user == null)
-        {
-            return Result<string>.Failure("User not found");
-        }
-        
-        var userId = new UserId(userContextId);
-
-        var domainUser = await _userRepository.GetByIdAsync(
-            userId,
-            cancellationToken);
-
+        var domainUser = await _userRepository.GetByIdAsync(userId, ct);
         if (domainUser is null)
-        {
-            return Result<string>.Failure("User not found");
-        }
+            return Result.Failure(UserErrors.NotFound);
+        domainUser.UpdateName(Name.Create(userDto.FirstName, userDto.LastName));
 
-        domainUser.Update(userDto.UserName);
-        await _identityService.UpdateUserNameAsync(userContextId, userDto.UserName, cancellationToken);
+        var updateResult = await _identityAccountService.UpdateUserNameAsync(userId, userDto.FirstName, ct);
+        if (updateResult.IsFailure)
+            return Result.Failure(UserErrors.UpdateFailed);
 
-        await _userRepository.Update(domainUser);
+        await _unitOfWork.SaveChangesAsync(ct);
 
-        return Result<string>.Success("User updated successfully");
+        return Result.Success();
+    }
+    
+    public async Task<Result> UpdateUserEmailAsyc(UserId userId, string email, CancellationToken ct = default)
+    {
+        var user = await _identityAccountService.FindByUserIdAsync(userId, ct);
+        if (user.IsFailure)
+            return Result.Failure(UserErrors.NotFound);
+
+        var domainUser = await _userRepository.GetByIdAsync(userId, ct);
+        if (domainUser is null)
+            return Result.Failure(UserErrors.NotFound);
+        domainUser.UpdateEmail(email);
+
+        var updateResult = await _identityAccountService.UpdateUserEmailAsync(userId, email, ct);
+        if (updateResult.IsFailure)
+            return Result.Failure(UserErrors.UpdateFailed);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return Result.Success();
     }
 
-    public async Task<Result<CurrentUserDto>> GetCurrentUserAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<CurrentUserDto>> GetUserByIdAsync(UserId userId, CancellationToken ct = default)
     {
-        var userId = _userContext.UserId;
-        
-        var user = await _userRepository.GetByIdAsync(new UserId(userId), cancellationToken);
-        if (user == null)
-        {
-            return Result<CurrentUserDto>.Failure("User not found");
-        }
+        var user = await _userReadRepository.GetProfileAsync(userId, ct);
+        if (user is null)
+            return Result<CurrentUserDto>.Failure(UserErrors.NotFound);
 
-        return Result<CurrentUserDto>.Success(new CurrentUserDto(user.DisplayName));
+        return Result<CurrentUserDto>.Success(new CurrentUserDto(user.FirstName, user.LastName));
     }
 }

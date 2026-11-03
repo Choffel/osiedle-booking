@@ -29,7 +29,7 @@ public sealed class SlotCalculator : ISlotCalculator
 
         AddFreeSlots(cursor, workingHours.End);
         return result;
-
+        
         void AddFreeSlots(DateTime from, DateTime to)
         {
             for (var start = from; start + serviceDuration <= to; start += step)
@@ -37,13 +37,11 @@ public sealed class SlotCalculator : ISlotCalculator
         }
     }
     
-    public async Task<bool> RelevantSlot(TimeSlot timeSlot, TimeSlot workingHours, CancellationToken ct)
+    public Task<bool> RelevantSlot(TimeSlot timeSlot, TimeSlot workingHours, CancellationToken ct)
     {
-        if (timeSlot == null) throw new ArgumentNullException(nameof(timeSlot));
-        if (workingHours == null) throw new ArgumentNullException(nameof(workingHours));
-
+        // TimeSlot is a struct now: a default value simply fails the range check below.
         if (timeSlot.Start < workingHours.Start || timeSlot.End > workingHours.End)
-            return false;
-        return true;
+            return Task.FromResult(false);
+        return Task.FromResult(true);
     }
 }

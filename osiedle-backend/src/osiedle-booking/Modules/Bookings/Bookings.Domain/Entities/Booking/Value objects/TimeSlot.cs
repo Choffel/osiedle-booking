@@ -1,23 +1,21 @@
-using Bookings.Domain.Exceptions;
-
 namespace Bookings.Domain.Entities.Booking.Value_objects;
 
-public sealed record TimeSlot
+public record struct TimeSlot
 {
-    public DateTime Start { get; }
-    public DateTime End { get; }
+    public DateTime Start { get; init; }
+    public DateTime End { get; init; }
 
     private TimeSlot(DateTime start, DateTime end)
     {
+        if (end <= start)
+            throw new ArgumentException("End time must be after start time.", nameof(end));
+        
         Start = start;
         End = end;
     }
 
     public static TimeSlot Create(DateTime start, DateTime end)
     {
-        if (end <= start)
-            throw new InvalidTimeSlotRangeException(start, end);
-
         return new TimeSlot(start, end);
     }
 

@@ -1,10 +1,11 @@
-using System.Text;
+using Bookings.Application.Abstractions;
 using Bookings.Application.Abstractions.Repositories;
 using Bookings.Application.Abstractions.Services;
 using Bookings.Application.Services;
 using Bookings.Domain.Services;
 using Bookings.Infrastructure.Data;
 using Bookings.Infrastructure.Repositories;
+using Bookings.Infrastructure.Repositories.Booking;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,8 @@ public static class DependencyInjection
         
         #region Repositories
         services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IBookingReadRepository, BookingReadRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         #endregion
         
         return services;

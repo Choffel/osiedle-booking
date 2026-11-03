@@ -1,52 +1,70 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
-using Users.Application.Abstractions.Repositories;
+using osiedle_booking.BuildingBlocks.Roles;
+using osiedle_booking.BuildingBlocks.ValueObjects;
+using Users.Application.Abstractions;
+using Users.Application.Abstractions.Repositories.Users;
 using Users.Application.Abstractions.Services;
+using Users.Application.Abstractions.Services.Identity;
+using Users.Application.Abstractions.Services.Tokens;
 using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
+using Users.Application.Errors;
 using Users.Application.Services;
 
 namespace UserModule.Application.Services;
 
 public class ConfirmEmailTests
 {
-    private readonly Mock<IIdentityService> _identityServiceMock = new();
+    private readonly Mock<IIdentityCredentialsService> _identityCredentialsMock = new();
+    private readonly Mock<IIdentityAccountService> _identityAccountMock = new();
+    private readonly Mock<IIdentityEmailService> _identityEmailMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Mock<IRoleService> _roleServiceMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IUserContext> _userContextMock = new();
-    private readonly UserService _userService;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+    private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock = new();
+    private readonly AuthService _authService;
 
     public ConfirmEmailTests()
     {
-        _userService = new UserService(
-            _identityServiceMock.Object,
-            _userRepositoryMock.Object,
-            Mock.Of<ILogger<UserService>>(),
+        _authService = new AuthService(
+            _identityCredentialsMock.Object,
+            _identityAccountMock.Object,
+            _identityEmailMock.Object,
+            Mock.Of<ILogger<AuthService>>(),
             _roleServiceMock.Object,
             _tokenServiceMock.Object,
-            _userContextMock.Object);
+            _userContextMock.Object,
+            _unitOfWorkMock.Object,
+            _userRepositoryMock.Object,
+            _jwtTokenGeneratorMock.Object);
     }
+
+    private static IdentityUserDto KnownUser(Guid id) =>
+        new(id, "jan@example.com", new[] { "User" });
 
     [Fact]
     public async Task ConfirmEmail_ShouldFail_WhenUserDoesNotExist()
     {
         var request = new ConfirmEmailRequest("ghost@example.com", "any-token");
 
-        _identityServiceMock
+        _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IdentityUserDto?)null);
+            .ReturnsAsync(Result<IdentityUserDto>.Failure(IdentityErrors.NotFound));
 
-        var result = await _userService.ConfirmEmailAsync(request);
+        var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid email address");
-        _identityServiceMock.Verify(
-            s => s.ConfirmEmailAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        _identityServiceMock.Verify(
-            s => s.AddToRoleAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(UserErrors.EmailNotRegistered);
+        _identityEmailMock.Verify(
+            s => s.ConfirmEmailAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _roleServiceMock.Verify(
+            s => s.AddToRoleAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -55,68 +73,63 @@ public class ConfirmEmailTests
         var userId = Guid.NewGuid();
         var request = new ConfirmEmailRequest("jan@example.com", "bad-token");
 
-        _identityServiceMock
+        _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IdentityUserDto(userId, "jan", request.Email, false, true));
-        _identityServiceMock
-            .Setup(s => s.ConfirmEmailAsync(userId, request.Token, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId)));
+        _identityEmailMock
+            .Setup(s => s.ConfirmEmailAsync(UserId.From(userId), request.Token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(IdentityErrors.EmailConfirmationFailed));
 
-        var result = await _userService.ConfirmEmailAsync(request);
+        var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid or expired confirmation token");
-        _identityServiceMock.Verify(
-            s => s.AddToRoleAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(UserErrors.EmailConfirmationFailed);
+        _roleServiceMock.Verify(
+            s => s.AddToRoleAsync(It.IsAny<UserId>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ConfirmEmail_ShouldFail_WhenUserRoleIsMissing()
+    public async Task ConfirmEmail_ShouldFail_WhenRoleAssignmentFails()
     {
         var userId = Guid.NewGuid();
         var request = new ConfirmEmailRequest("jan@example.com", "good-token");
 
-        _identityServiceMock
+        _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IdentityUserDto(userId, "jan", request.Email, false, true));
-        _identityServiceMock
-            .Setup(s => s.ConfirmEmailAsync(userId, request.Token, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId)));
+        _identityEmailMock
+            .Setup(s => s.ConfirmEmailAsync(UserId.From(userId), request.Token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
         _roleServiceMock
-            .Setup(s => s.RoleExistsAsync("User", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(s => s.AddToRoleAsync(UserId.From(userId), UserRoles.User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure(RoleErrors.AddUserToRoleFailed));
 
-        var result = await _userService.ConfirmEmailAsync(request);
+        var result = await _authService.ConfirmEmailAsync(request);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Role 'User' does not exist");
-        _identityServiceMock.Verify(
-            s => s.AddToRoleAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        result.Error.Should().Be(RoleErrors.AddUserToRoleFailed);
     }
 
     [Fact]
-    public async Task ConfirmEmail_ShouldSucceedAndAssignRole_WhenTokenIsValid()
+    public async Task ConfirmEmail_ShouldSucceedAndAssignUserRole_WhenTokenIsValid()
     {
         var userId = Guid.NewGuid();
         var request = new ConfirmEmailRequest("jan@example.com", "good-token");
 
-        _identityServiceMock
+        _identityAccountMock
             .Setup(s => s.FindByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IdentityUserDto(userId, "jan", request.Email, false, true));
-        _identityServiceMock
-            .Setup(s => s.ConfirmEmailAsync(userId, request.Token, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(Result<IdentityUserDto>.Success(KnownUser(userId)));
+        _identityEmailMock
+            .Setup(s => s.ConfirmEmailAsync(UserId.From(userId), request.Token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
         _roleServiceMock
-            .Setup(s => s.RoleExistsAsync("User", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-        _identityServiceMock
-            .Setup(s => s.AddToRoleAsync(userId, "User", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IdentityUserDto(userId, "jan", request.Email, true, true));
+            .Setup(s => s.AddToRoleAsync(UserId.From(userId), UserRoles.User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
 
-        var result = await _userService.ConfirmEmailAsync(request);
+        var result = await _authService.ConfirmEmailAsync(request);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be("Email confirmed");
-        _identityServiceMock.Verify(s => s.AddToRoleAsync(userId, "User", It.IsAny<CancellationToken>()), Times.Once);
+        result.IsSuccess.Should().BeTrue(result.Error.Description);
+        _roleServiceMock.Verify(
+            s => s.AddToRoleAsync(UserId.From(userId), UserRoles.User, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
