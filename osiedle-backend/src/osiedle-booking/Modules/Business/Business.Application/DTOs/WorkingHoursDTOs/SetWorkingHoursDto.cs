@@ -1,7 +1,6 @@
-namespace Business.Application.DTOs.WorkingHoursDTOs;
+namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record SetWorkingHoursDto(
-    Guid WorkingHoursId,
     DateOnly Date,
     TimeOnly StartTime,
     TimeOnly EndTime

@@ -6,7 +6,6 @@ using Business.Application.Interfaces.Business;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Services.BusinessServices;
 
@@ -23,10 +22,8 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken = default)
     {
-        var ownerId = UserId.From(createBusinessDto.OwnerId);
-
         var existingBusiness = await _businessRepository.ExistsByOwnerIdAsync(
-            ownerId,
+            createBusinessDto.OwnerId, 
             cancellationToken);
         
         if (existingBusiness)
@@ -36,57 +33,46 @@ public class BusinessService : IBusinessManagementService
         
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
-            ownerId, 
-            Address.Create(
-                createBusinessDto.Street,
-                createBusinessDto.Number,
-                createBusinessDto.City),
-            createBusinessDto.Description);
+            createBusinessDto.OwnerId, 
+            createBusinessDto.Description, 
+            createBusinessDto.Location);
         
-        _businessRepository.Add(business);
-        
+        _businessRepository.Add(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(Guid businessId,
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.NotFound);
         }
         
-       business.UpdateName(updateBusinessInfoDto.NewName);
-       
-       business.UpdateDescription(updateBusinessInfoDto.NewDescription);
-       
-       business.UpdateAddress(Address.Create(
-           updateBusinessInfoDto.NewStreet,
-           updateBusinessInfoDto.NewNumber,
-           updateBusinessInfoDto.NewCity));
-       
+        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(Guid businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
         
-        var business = await _businessRepository.GetByIdAsync(BusinessId.From(businessId), cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;

@@ -1,5 +1,6 @@
 using Business.Domain.Entities;
 using Business.Domain.Enums;
+using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 
 namespace Business.Domain.Tests.Entities;
@@ -26,23 +27,12 @@ public class BookableServiceTests
     }
 
     [Fact]
-    public void Create_WithZeroPrice_IsAllowed()
-    {
-        var service = BookableService.Create(
-            EmployeeId.New(), "Free consultation", "No charge", 0m, TimeSpan.FromMinutes(15));
-
-        Assert.Equal(0m, service.Price);
-    }
-
-    [Fact]
-    public void UpdateDetails_UpdatesFieldsAndSetsUpdatedAt()
+    public void UpdateInfo_UpdatesFieldsAndSetsUpdatedAt()
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
-        service.UpdateDetails("Beard trim", "Beard shaping");
-        service.ChangePrice(30m);
-        service.ChangeDuration(TimeSpan.FromMinutes(20));
+        service.UpdateInfo("Beard trim", "Beard shaping", 30m, TimeSpan.FromMinutes(20));
 
         Assert.Equal("Beard trim", service.ServiceName);
         Assert.Equal("Beard shaping", service.Description);
@@ -53,6 +43,7 @@ public class BookableServiceTests
 
     [Theory]
     [InlineData("", "Description", 50, 30)]
+    [InlineData("Haircut", "Description", 0, 30)]
     [InlineData("Haircut", "Description", -5, 30)]
     [InlineData("Haircut", "Description", 50, 0)]
     [InlineData("Haircut", "Description", 50, -10)]
@@ -64,67 +55,63 @@ public class BookableServiceTests
 
     [Theory]
     [InlineData("", "Description", 50, 30)]
-    [InlineData("Haircut", "Description", -5, 30)]
+    [InlineData("Haircut", "Description", 0, 30)]
     [InlineData("Haircut", "Description", 50, 0)]
-    public void UpdateDetails_WithInvalidData_Throws(string name, string description, decimal price, int durationMinutes)
+    public void UpdateInfo_WithInvalidData_Throws(string name, string description, decimal price, int durationMinutes)
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
-        Assert.Throws<ArgumentException>(() =>
-        {
-            service.UpdateDetails(name, description);
-            service.ChangePrice(price);
-            service.ChangeDuration(TimeSpan.FromMinutes(durationMinutes));
-        });
+        Assert.Throws<ArgumentException>(() => service.UpdateInfo(
+            name, description, price, TimeSpan.FromMinutes(durationMinutes)));
     }
 
     [Fact]
-    public void Deactivate_SetsInactiveStatusAndIsIdempotent()
+    public void DeactivateService_SetsInactiveStatusAndIsIdempotent()
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
-        service.Deactivate();
+        service.DeactivateService();
         var firstUpdatedAt = service.UpdatedAt;
-        service.Deactivate();
+        service.DeactivateService();
 
         Assert.Equal(ServiceStatus.Inactive, service.Status);
         Assert.Equal(firstUpdatedAt, service.UpdatedAt);
     }
 
     [Fact]
-    public void Activate_SetsActiveStatus()
+    public void ActivateService_SetsActiveStatus()
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
-        service.Deactivate();
+        service.DeactivateService();
 
-        service.Activate();
+        service.ActivateService();
 
         Assert.Equal(ServiceStatus.Active, service.Status);
         Assert.NotNull(service.UpdatedAt);
     }
 
     [Fact]
-    public void Activate_WhenAlreadyActive_DoesNotChangeUpdatedAt()
+    public void ActivateService_WhenAlreadyActive_DoesNotChangeUpdatedAt()
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
-        service.Activate();
+        service.ActivateService();
 
         Assert.Equal(ServiceStatus.Active, service.Status);
         Assert.Null(service.UpdatedAt);
     }
 
     [Fact]
-    public void Archive_SetsArchivedStatus()
+    public void ArchiveService_SetsArchivedStatus()
     {
         var service = BookableService.Create(
             EmployeeId.New(), "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
-        service.Archive();
+        service.ArchiveService();
 
         Assert.Equal(ServiceStatus.Archived, service.Status);
         Assert.NotNull(service.UpdatedAt);

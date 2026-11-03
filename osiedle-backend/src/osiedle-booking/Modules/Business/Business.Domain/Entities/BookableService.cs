@@ -21,134 +21,62 @@ public class BookableService : Entity<BookableServiceId>
     
     private BookableService() { }
     
-    private BookableService(
-        BookableServiceId id, 
-        EmployeeId employeeId, 
-        string serviceName, 
-        string? description, 
-        decimal price, 
-        TimeSpan duration) : base(id)
+    private BookableService(BookableServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration) : base(id)   
     {
-        if (employeeId.Value == Guid.Empty)
-            throw new ArgumentException("EmployeeId cannot be empty.", nameof(employeeId));
-
-        EmployeeId = employeeId;
-        ServiceName = EnsureValidServiceName(serviceName);
-        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
-        Price = EnsureValidPrice(price);
-        Duration = EnsureValidDuration(duration);
+        ValidateAndAssign(employeeId, serviceName, description, price, duration);
         Status = ServiceStatus.Active;
-        CreatedAt = DateTime.UtcNow;
     }
     
-    public static BookableService Create(
-        EmployeeId employeeId, 
-        string serviceName, 
-        string? description, 
-        decimal price, 
-        TimeSpan duration)
+    public static BookableService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
     {
-        return new BookableService(
-            BookableServiceId.New(), 
-            employeeId, 
-            serviceName, 
-            description, 
-            price, 
-            duration);
+        var id = BookableServiceId.New();
+        return new BookableService(id, employeeId, serviceName, description, price, duration);
     }
-
-    public void UpdateDetails(string newName, string? newDescription)
+    
+    public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan duration)
     {
-        EnsureIsNotArchived();
-
-        ServiceName = EnsureValidServiceName(newName);
-        Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription.Trim();
+        ValidateAndAssign(EmployeeId, serviceName, description, price, duration);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ChangePrice(decimal newPrice)
+    private void ValidateAndAssign(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
     {
-        EnsureIsNotArchived();
+        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
 
-        var validPrice = EnsureValidPrice(newPrice);
-        if (Price == validPrice)
-            return;
+        if (price <= 0)
+            throw new ArgumentException("Service price must be greater than zero.", nameof(price));
 
-        Price = validPrice;
+        if (duration <= TimeSpan.Zero)
+            throw new ArgumentException("Service duration must be greater than zero.", nameof(duration));
+
+        EmployeeId = employeeId;
+        ServiceName = serviceName;
+        Description = description;
+        Price = price;
+        Duration = duration;
+    }
+    
+    public void DeactivateService()
+    {
+        if (Status == ServiceStatus.Inactive)
+            return; 
+
+        Status = ServiceStatus.Inactive;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    public void ChangeDuration(TimeSpan newDuration)
+    
+    public void ActivateService()
     {
-        EnsureIsNotArchived();
-
-        var validDuration = EnsureValidDuration(newDuration);
-        if (Duration == validDuration)
-            return;
-
-        Duration = validDuration;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void Activate()
-    {
-        EnsureIsNotArchived();
-
         if (Status == ServiceStatus.Active)
             return;
 
         Status = ServiceStatus.Active;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    public void Deactivate()
+    
+    public void ArchiveService()
     {
-        EnsureIsNotArchived();
-
-        if (Status == ServiceStatus.Inactive)
-            return;
-
-        Status = ServiceStatus.Inactive;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void Archive()
-    {
-        EnsureIsNotArchived();
-
         Status = ServiceStatus.Archived;
         UpdatedAt = DateTime.UtcNow;
-    }
-    
-    private void EnsureIsNotArchived()
-    {
-        if (Status == ServiceStatus.Archived)
-            throw new InvalidOperationException("Cannot perform operation on an archived service.");
-    }
-
-    private static string EnsureValidServiceName(string name)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        var trimmed = name.Trim();
-        if (trimmed.Length < 2 || trimmed.Length > 100)
-            throw new ArgumentException("Service name must be between 2 and 100 characters.", nameof(name));
-
-        return trimmed;
-    }
-
-    private static decimal EnsureValidPrice(decimal price)
-    {
-        if (price < 0)
-            throw new ArgumentException("Service price cannot be negative.", nameof(price));
-
-        return price;
-    }
-
-    private static TimeSpan EnsureValidDuration(TimeSpan duration)
-    {
-        if (duration < TimeSpan.FromMinutes(5) || duration > TimeSpan.FromHours(24))
-            throw new ArgumentException("Service duration must be between 5 minutes and 24 hours.", nameof(duration));
-
-        return duration;
     }
 }

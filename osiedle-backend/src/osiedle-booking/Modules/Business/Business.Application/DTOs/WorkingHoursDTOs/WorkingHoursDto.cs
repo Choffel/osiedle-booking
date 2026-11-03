@@ -1,4 +1,4 @@
-namespace Business.Application.DTOs.WorkingHoursDTOs;
+namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record WorkingHoursDto(
     DateOnly Date,

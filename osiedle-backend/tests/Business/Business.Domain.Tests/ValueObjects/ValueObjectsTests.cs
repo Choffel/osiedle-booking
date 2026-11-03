@@ -41,6 +41,7 @@ public class ValueObjectsTests
     {
         Guid? value = nullValue ? null : Guid.Empty;
 
+        Assert.Null(BusinessId.FromNullable(value));
         Assert.Null(EmployeeId.FromNullable(value));
     }
 
@@ -49,6 +50,7 @@ public class ValueObjectsTests
     {
         var value = Guid.NewGuid();
 
+        Assert.Equal(value, BusinessId.FromNullable(value)!.Value.Value);
         Assert.Equal(value, EmployeeId.FromNullable(value)!.Value.Value);
     }
 

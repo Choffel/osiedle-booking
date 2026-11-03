@@ -10,4 +10,5 @@ public interface IBusinessOnboardingNotificationService
     Task SendRegistrationApprovedAsync(BusinessRegistrationConfirmationDto dto, CancellationToken ct = default);
     
     Task SendRegistrationRejectedAsync(BusinessRegistrationRejectionDto dto, CancellationToken ct = default);
+    
 }
