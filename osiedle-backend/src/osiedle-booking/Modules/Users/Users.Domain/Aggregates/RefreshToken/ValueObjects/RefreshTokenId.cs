@@ -1,10 +1,8 @@
 namespace Users.Domain.Entity.RefreshToken.ValueObjects;
 
-public record RefreshTokenId
+public record struct RefreshTokenId
 {
     public Guid Value { get; init; }
-
-    private RefreshTokenId() { }
 
     private RefreshTokenId(Guid value)
     {

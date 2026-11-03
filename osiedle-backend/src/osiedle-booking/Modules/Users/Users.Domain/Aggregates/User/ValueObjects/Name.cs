@@ -1,11 +1,9 @@
 namespace Users.Domain.Entity.User.ValueObjects;
 
-public record Name
+public record struct Name
 {
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
-    
-    private Name() {}
 
     private Name(string firstName, string lastName)
     {

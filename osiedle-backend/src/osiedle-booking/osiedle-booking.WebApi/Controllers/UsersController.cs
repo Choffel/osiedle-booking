@@ -19,13 +19,24 @@ public class UsersController : ControllerBase
     }
     
     [Authorize]
-    [HttpPut("Update")]
+    [HttpPut("UpdateName")]
     public async Task<ActionResult> UpdateAsync([FromBody] UpdateUserDto request, CancellationToken cancellationToken = default)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var email = User.FindFirstValue(ClaimTypes.Email);
         
-        var result = await _userService.UpdateUserAsync(UserId.From(userId), email, request, cancellationToken);
+        var result = await _userService.UpdateUserNameAsync(UserId.From(userId), email, request, cancellationToken);
+        return result.ToActionResult();
+    }
+    
+    [Authorize]
+    [HttpPut("UpdateEmail")]
+    public async Task<ActionResult> UpdateAsync([FromBody] string email, CancellationToken cancellationToken = default)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        //var email = User.FindFirstValue(ClaimTypes.Email);
+        
+        var result = await _userService.UpdateUserEmailAsyc(UserId.From(userId), email, cancellationToken);
         return result.ToActionResult();
     }
 

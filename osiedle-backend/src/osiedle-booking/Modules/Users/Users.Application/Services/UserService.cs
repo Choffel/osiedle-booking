@@ -26,7 +26,7 @@ public class UserService : IUserService
         _userReadRepository = userReadRepository;
     }
     
-    public async Task<Result> UpdateUserAsync(UserId userId, string email, UpdateUserDto userDto,
+    public async Task<Result> UpdateUserNameAsync(UserId userId, string email, UpdateUserDto userDto,
         CancellationToken ct = default)
     {
         var user = await _identityAccountService.FindByEmailAsync(email, ct);
@@ -36,9 +36,29 @@ public class UserService : IUserService
         var domainUser = await _userRepository.GetByIdAsync(userId, ct);
         if (domainUser is null)
             return Result.Failure(UserErrors.NotFound);
-        domainUser.Update(Name.Create(userDto.FirstName, userDto.LastName));
+        domainUser.UpdateName(Name.Create(userDto.FirstName, userDto.LastName));
 
         var updateResult = await _identityAccountService.UpdateUserNameAsync(userId, userDto.FirstName, ct);
+        if (updateResult.IsFailure)
+            return Result.Failure(UserErrors.UpdateFailed);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return Result.Success();
+    }
+    
+    public async Task<Result> UpdateUserEmailAsyc(UserId userId, string email, CancellationToken ct = default)
+    {
+        var user = await _identityAccountService.FindByUserIdAsync(userId, ct);
+        if (user.IsFailure)
+            return Result.Failure(UserErrors.NotFound);
+
+        var domainUser = await _userRepository.GetByIdAsync(userId, ct);
+        if (domainUser is null)
+            return Result.Failure(UserErrors.NotFound);
+        domainUser.UpdateEmail(email);
+
+        var updateResult = await _identityAccountService.UpdateUserEmailAsync(userId, email, ct);
         if (updateResult.IsFailure)
             return Result.Failure(UserErrors.UpdateFailed);
 

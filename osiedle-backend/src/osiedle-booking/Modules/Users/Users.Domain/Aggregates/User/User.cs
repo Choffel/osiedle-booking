@@ -19,8 +19,6 @@ public class User : AggregateRoot<UserId>
     {
         if (string.IsNullOrEmpty(email))
             throw new ArgumentException("Email cannot be null or empty", nameof(email));
-        if(name is null)
-            throw new ArgumentNullException(nameof(name));
         
         Name = name;
         Email = email;
@@ -38,12 +36,26 @@ public class User : AggregateRoot<UserId>
         return user;
     }
     
-    public void Update(Name name)
+    public void UpdateName(Name name) // TODO 
     {
-        if(name is null)
-            throw new ArgumentNullException(nameof(name));
-
         Name = name;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+            throw new ArgumentException("Email cannot be null or empty", nameof(email));
+
+        Email = email;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Delete(UserId userId)
+    {
+        if (userId != Id)
+            throw new ArgumentException("You cannot delete an account that does not belong to you.", nameof(userId));
+
+        DeletedAt = DateTime.UtcNow;
     }
 }

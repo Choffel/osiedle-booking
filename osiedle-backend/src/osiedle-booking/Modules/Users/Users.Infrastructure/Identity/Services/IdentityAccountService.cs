@@ -49,6 +49,21 @@ public class IdentityAccountService : IIdentityAccountService
             Roles: userRoles.AsReadOnly()
         ));
     }
+
+    public async Task<Result<IdentityUserDto>> FindByUserIdAsync(UserId userId, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return Result<IdentityUserDto>.Failure(IdentityErrors.NotFound);
+        
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        return Result<IdentityUserDto>.Success(new IdentityUserDto(
+            Id: user.Id,
+            Email: user.Email,
+            Roles: userRoles.AsReadOnly()
+        ));
+    }
     
     public async Task<Result> UpdateUserNameAsync(UserId userId, string newName, CancellationToken ct = default)
     {
@@ -57,6 +72,21 @@ public class IdentityAccountService : IIdentityAccountService
             return Result.Failure(IdentityErrors.NotFound);
 
         user.UserName = newName;
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return Result.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
+                result.Errors.Select(e => e.Description))));
+
+        return Result.Success();
+    }
+    
+    public async Task<Result> UpdateUserEmailAsync(UserId userId, string newEmail, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return Result.Failure(IdentityErrors.NotFound);
+
+        user.Email = newEmail;
         var result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return Result.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
