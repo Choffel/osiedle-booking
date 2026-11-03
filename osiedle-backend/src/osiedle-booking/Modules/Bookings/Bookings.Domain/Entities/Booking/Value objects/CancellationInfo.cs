@@ -2,14 +2,13 @@ using Bookings.Domain.Entities.Booking.Enum;
 
 namespace Bookings.Domain.Entities.Booking.Value_objects;
 
-public sealed record CancellationInfo
+public record struct CancellationInfo
 {
     public CancelledBy By { get; init; }
     public Guid CancelledById { get; init; }
     public string Reason { get; init; }
     public DateTime CancelledAt { get; init; }
-
-    private CancellationInfo() { }
+    
 
     private CancellationInfo(CancelledBy by, Guid? cancelledById , string reason, DateTime cancelledAt)
     {

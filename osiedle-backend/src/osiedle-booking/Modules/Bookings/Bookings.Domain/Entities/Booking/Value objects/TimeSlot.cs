@@ -1,11 +1,9 @@
 namespace Bookings.Domain.Entities.Booking.Value_objects;
 
-public sealed record TimeSlot
+public record struct TimeSlot
 {
     public DateTime Start { get; init; }
     public DateTime End { get; init; }
-    
-    private TimeSlot() {}
 
     private TimeSlot(DateTime start, DateTime end)
     {

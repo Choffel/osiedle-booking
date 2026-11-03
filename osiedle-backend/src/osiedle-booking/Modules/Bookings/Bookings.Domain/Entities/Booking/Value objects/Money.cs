@@ -1,12 +1,9 @@
 namespace Bookings.Domain.Entities.Booking.Value_objects;
 
-public sealed record Money
+public record struct Money
 {
     public decimal Amount { get; init; }
     public string Currency { get; init; }
-    
-    
-    private Money() { }
 
     private Money(decimal amount, string currency)
     {

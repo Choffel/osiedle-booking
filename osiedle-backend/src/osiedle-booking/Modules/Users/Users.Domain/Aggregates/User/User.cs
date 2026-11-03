@@ -36,7 +36,7 @@ public class User : AggregateRoot<UserId>
         return user;
     }
     
-    public void UpdateName(Name name) // TODO 
+    public void UpdateName(Name name)
     {
         Name = name;
         UpdatedAt = DateTime.UtcNow;

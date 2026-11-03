@@ -1,10 +1,9 @@
 namespace Bookings.Domain.Entities.Booking.Value_objects;
 
-public sealed record ClientId
+public record struct ClientId
 {
     public Guid Value { get; init; }
     
-    private ClientId() { }
 
     private ClientId(Guid value)
     {
