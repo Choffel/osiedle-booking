@@ -1,7 +1,7 @@
-using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using Notifications.Infrastructure.Options;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace Notifications.Infrastructure.Services;
 

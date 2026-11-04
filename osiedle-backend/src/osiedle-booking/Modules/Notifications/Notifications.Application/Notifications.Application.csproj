@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Services\" />
+      <PackageReference Include="MassTransit" Version="9.2.6-develop.212" />
     </ItemGroup>
 
 </Project>

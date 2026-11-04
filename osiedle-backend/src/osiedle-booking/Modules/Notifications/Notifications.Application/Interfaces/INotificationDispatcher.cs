@@ -2,6 +2,7 @@ using Notifications.Domain.Enums;
 
 namespace Notifications.Application.Interfaces;
 
+//TModel = DTO for scriban render
 public interface INotificationDispatcher
 {
     Task DispatchAsync<TModel>(
@@ -11,4 +12,4 @@ public interface INotificationDispatcher
         string templateName, 
         TModel model, 
         CancellationToken ct);
-}
+}   

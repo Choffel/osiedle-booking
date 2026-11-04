@@ -7,9 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
-      <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
-      <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
+        <ProjectReference Include="..\Notifications.Application\Notifications.Application.csproj" />
+        <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
+        <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MailKit" Version="4.17.0" />
+      <PackageReference Include="MimeKit" Version="4.17.0" />
+      <PackageReference Include="Scriban" Version="7.5.3" />
     </ItemGroup>
 
 </Project>
