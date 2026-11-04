@@ -1,0 +1,113 @@
+$primary-color: #00a887;
+$primary-hover: #008f72;
+$text-main: #1f2937;
+$text-muted: #6b7280;
+$bg-header: #ffffff;
+$border-color: #e5e7eb;
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 72px;
+  padding: 0 32px;
+  background-color: $bg-header;
+  border-bottom: 1px solid $border-color;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .logo {
+      font-weight: 700;
+      font-size: 20px;
+      color: $text-main;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .cities {
+      padding: 6px 12px;
+      font-size: 14px;
+      color: $text-main;
+      background-color: #f9fafb;
+      border: 1px solid $border-color;
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s ease;
+
+      &:focus, &:hover {
+        border-color: $primary-color;
+      }
+    }
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+  }
+
+  &__items {
+    text-decoration: none;
+    color: $text-muted;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $text-main;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .btn-login {
+      padding: 8px 12px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      background-color: $primary-color;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+
+      &:hover {
+        background-color: $primary-hover;
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+    }
+
+    .user-avatar-link {
+      display: flex;
+      align-items: center;
+
+      .user-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid $border-color;
+        transition: border-color 0.2s ease;
+
+        &:hover {
+          border-color: $primary-color;
+        }
+      }
+    }
+  }
+}
