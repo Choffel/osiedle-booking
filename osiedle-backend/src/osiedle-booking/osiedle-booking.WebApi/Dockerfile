@@ -7,10 +7,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-
 COPY ["osiedle-booking.WebApi/osiedle-booking.WebApi.csproj", "osiedle-booking.WebApi/"]
-COPY ["osiedle-booking.slnx", "./"]
-
 COPY ["BuildingBlocks/osiedle-booking.BuildingBlocks/osiedle-booking.BuildingBlocks.csproj", "BuildingBlocks/osiedle-booking.BuildingBlocks/"]
 
 COPY ["Modules/Users/Users.Application/Users.Application.csproj", "Modules/Users/Users.Application/"]
@@ -28,15 +25,8 @@ COPY ["Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastr
 COPY ["Modules/Bookings/Bookings.Application/Bookings.Application.csproj", "Modules/Bookings/Bookings.Application/"]
 COPY ["Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj", "Modules/Bookings/Bookings.Domain/"]
 COPY ["Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj", "Modules/Bookings/Bookings.Infrastructure/"]
-COPY ["tests/Bookings.Domain.Tests/Bookings.Domain.Tests.csproj", "tests/Bookings.Domain.Tests/"]
-COPY ["tests/BookingsModule/BookingsModule.csproj", "tests/BookingsModule/"]
-COPY ["tests/UsersModule/UserModule.csproj", "tests/UsersModule/"]
-COPY ["tests/WebApi.Tests/WebApi.Tests.csproj", "tests/WebApi.Tests/"]
-COPY ["tests/Business/Business.Application.Tests/Business.Application.Tests.csproj", "tests/Business/Business.Application.Tests/"]
-COPY ["tests/Business/Business.Domain.Tests/Business.Domain.Tests.csproj", "tests/Business/Business.Domain.Tests/"]
 
-
-RUN dotnet restore "osiedle-booking.slnx"
+RUN dotnet restore "osiedle-booking.WebApi/osiedle-booking.WebApi.csproj"
 
 COPY . .
 
