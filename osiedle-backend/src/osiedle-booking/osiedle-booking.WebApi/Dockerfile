@@ -1,16 +1,20 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
-
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-
+# 1. Копируем WebApi и решение (.slnx поддерживается в .NET SDK 9/10)
 COPY ["osiedle-booking.WebApi/osiedle-booking.WebApi.csproj", "osiedle-booking.WebApi/"]
+COPY ["osiedle-booking.slnx", "./"]
 
+# 2. Копируем BuildingBlocks
+COPY ["BuildingBlocks/osiedle-booking.BuildingBlocks/osiedle-booking.BuildingBlocks.csproj", "BuildingBlocks/osiedle-booking.BuildingBlocks/"]
+
+# 3. Копируем ВСЕ модули (включая Bookings!)
 COPY ["Modules/Users/Users.Application/Users.Application.csproj", "Modules/Users/Users.Application/"]
 COPY ["Modules/Users/Users.Domain/Users.Domain.csproj", "Modules/Users/Users.Domain/"]
 COPY ["Modules/Users/Users.Infrastructure/Users.Infrastructure.csproj", "Modules/Users/Users.Infrastructure/"]
@@ -23,10 +27,14 @@ COPY ["Modules/Notifications/Notifications.Application/Notifications.Application
 COPY ["Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj", "Modules/Notifications/Notifications.Domain/"]
 COPY ["Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj", "Modules/Notifications/Notifications.Infrastructure/"]
 
-COPY ["BuildingBlocks/osiedle-booking.BuildingBlocks/osiedle-booking.BuildingBlocks.csproj", "BuildingBlocks/osiedle-booking.BuildingBlocks/"]
+COPY ["Modules/Bookings/Bookings.Application/Bookings.Application.csproj", "Modules/Bookings/Bookings.Application/"]
+COPY ["Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj", "Modules/Bookings/Bookings.Domain/"]
+COPY ["Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj", "Modules/Bookings/Bookings.Infrastructure/"]
 
-RUN dotnet restore "osiedle-booking.WebApi/osiedle-booking.WebApi.csproj"
+# Восстанавливаем пакеты для всех проектов из slnx
+RUN dotnet restore "osiedle-booking.slnx"
 
+# Копируем весь исходный код
 COPY . .
 
 WORKDIR "/src/osiedle-booking.WebApi"
@@ -46,7 +54,5 @@ RUN dotnet publish "osiedle-booking.WebApi.csproj" \
 
 FROM base AS final
 WORKDIR /app
-
 COPY --from=publish /app/publish .
-
 ENTRYPOINT ["dotnet", "osiedle-booking.WebApi.dll"]
