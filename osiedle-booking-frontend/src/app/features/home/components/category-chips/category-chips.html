@@ -1,0 +1,9 @@
+<div class="category-chips">
+  <span class="category-chips__label">KATEGORIE:</span>
+
+  <div class="category-chips__list">
+    @for (category of categories; track category) {
+      <button type="button" class="chip-btn">{{ category }}</button>
+    }
+  </div>
+</div>

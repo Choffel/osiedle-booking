@@ -1,0 +1,53 @@
+<article class="salon-card">
+  <!-- 1. Верхний блок с картинкой и бейджами -->
+  <div class="salon-card__image-wrapper">
+    <img [src]="salon().photo || 'https://via.placeholder.com/400x250'" [alt]="salon().name" class="salon-card__image" />
+    
+    <span class="salon-card__badge salon-card__badge--available">
+      <span class="dot"></span> Dostępny dziś
+    </span>
+
+    <div class="salon-card__rating">
+      <span class="star">★</span>
+      <span class="score">{{ salon().rating }}</span>
+      <span class="count">(142)</span>
+    </div>
+  </div>
+
+  <!-- 2. Информация о салоне -->
+  <div class="salon-card__content">
+    <div class="salon-card__location">
+      <span class="icon">📍</span> {{ salon().address }}
+    </div>
+    
+    <h3 class="salon-card__name">{{ salon().name }}</h3>
+
+    <!-- 3. Список топовых услуг -->
+    <div class="salon-card__services">
+      @for (service of salon().services; track service.name) {
+        <div class="salon-card__service-item">
+          <span class="service-name">{{ service.name }}</span>
+          <span class="service-price">{{ service.price }} PLN</span>
+        </div>
+      }
+    </div>
+
+    <!-- 4. Свободные слоты времени -->
+    <div class="salon-card__slots">
+      <span class="slots-label">WOLNE TERMINY NA DZIŚ:</span>
+      
+      <div class="slots-grid">
+        @for (slot of salon().timeSlots; track slot.time) {
+          <button type="button" class="slot-btn">
+            <span class="slot-time">{{ slot.time }}</span>
+            <span class="slot-master">{{ slot.staffMember }}</span>
+          </button>
+        }
+      </div>
+
+      <button type="button" class="more-slots-btn">
+        Więcej wolnych godzin (6) &rsaquo;
+      </button>
+    </div>
+  </div>
+</article>

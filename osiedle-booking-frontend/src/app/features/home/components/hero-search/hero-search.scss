@@ -1,0 +1,186 @@
+// Переменные под макет Barberio
+$primary-color: #00a887;
+$primary-hover: #008f72;
+$text-main: #1f2937;
+$text-muted: #6b7280;
+$bg-section: #f9fafb;
+$card-bg: #ffffff;
+$border-color: #f9fafb;
+
+.hero-search {
+  background-color: $bg-section;
+  width: 100%;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  // 1. Заголовок и подзаголовок
+  &__header {
+    max-width: 640px;
+    margin-bottom: 32px;
+  }
+
+  &__badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: $primary-color;
+    background-color: rgba($primary-color, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    font-size: 32px;
+    font-weight: 800;
+    color: $text-main;
+    line-height: 1.25;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.02em;
+  }
+
+  &__subtitle {
+    font-size: 15px;
+    color: $text-muted;
+    margin: 0;
+  }
+
+  // 2. Форма поиска (Поле ввода + Инпуты + Кнопка)
+  &__form {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr auto; // Поля растягиваются, кнопка справа
+    gap: 12px;
+    background-color: $card-bg;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    border: 1px solid $border-color;
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: 24px;
+    align-items: center;
+
+    // Адаптив под мобилки и планшеты
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 6px 12px;
+    border-right: 1px solid $border-color;
+
+    &:nth-child(3) {
+      border-right: none; // У последнего инпута перед кнопкой убираем полосу
+    }
+
+    @media (max-width: 900px) {
+      border-right: none;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: 12px;
+    }
+  }
+
+  &__label {
+    font-size: 10px;
+    font-weight: 700;
+    color: $text-muted;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  &__input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: $text-main;
+    background: transparent;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  &__btn {
+    height: 100%;
+    min-height: 48px;
+    padding: 0 24px;
+    background-color: $primary-color;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+
+    &:hover {
+      background-color: $primary-hover;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  // 3. Быстрый выбор дат (Чипсы)
+  &__dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+}
+
+// Стили чипсов выбора дат
+.date-chip {
+  background-color: $card-bg;
+  border: 1px solid $border-color;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-main;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $primary-color;
+    color: $primary-color;
+  }
+
+  &--active {
+    background-color: #ffffff;
+    border-color: $primary-color;
+    color: $primary-color;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.15);
+  }
+
+  &__count {
+    font-size: 11px;
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  &--picker {
+    color: $text-muted;
+    border-style: dashed;
+  }
+}

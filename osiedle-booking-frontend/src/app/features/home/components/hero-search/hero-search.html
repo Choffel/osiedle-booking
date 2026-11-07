@@ -1,0 +1,59 @@
+<section class="hero-search">
+  <!-- Заголовок и подзаголовок -->
+  <div class="hero-search__header">
+    <span class="hero-search__badge">REZERWACJE W CZASIE RZECZYWISTYM</span>
+    <h1 class="hero-search__title">
+      Zarezerwuj barbera w Warszawie bez czekania
+    </h1>
+    <p class="hero-search__subtitle">
+      Sprawdź natychmiastowe wolne terminy na dziś i umów wizytę w 30 sekund.
+    </p>
+  </div>
+
+  <!-- Форма поиска (Услуга, Локация, Дата, Кнопка) -->
+  <div class="hero-search__form">
+    <div class="hero-search__field">
+      <label class="hero-search__label">USŁUGA LUB SALON</label>
+      <input 
+        type="text" 
+        placeholder="Strzyżenie męskie + trymowanie" 
+        class="hero-search__input" 
+      />
+    </div>
+
+    <div class="hero-search__field">
+      <label class="hero-search__label">LOKALIZACJA</label>
+      <input 
+        type="text" 
+        placeholder="Warszawa, Śródmieście" 
+        class="hero-search__input" 
+      />
+    </div>
+
+    <div class="hero-search__field">
+      <label class="hero-search__label">TERMIN</label>
+      <input 
+        type="text" 
+        placeholder="Dzisiaj, od zaraz" 
+        class="hero-search__input" 
+      />
+    </div>
+
+    <button type="button" class="hero-search__btn">
+      Szukaj wizyty
+    </button>
+  </div>
+
+  <!-- Быстрый выбор дат -->
+  <div class="hero-search__dates">
+    <button type="button" class="date-chip date-chip--active">
+      Dziś (24 maja) <span class="date-chip__count">28 wolnych</span>
+    </button>
+    <button type="button" class="date-chip">
+      Jutro (25 maja) <span class="date-chip__count">42 sloty</span>
+    </button>
+    <button type="button" class="date-chip">Pon (26 maja)</button>
+    <button type="button" class="date-chip">Wt (27 maja)</button>
+    <button type="button" class="date-chip date-chip--picker">Inna data</button>
+  </div>
+</section>

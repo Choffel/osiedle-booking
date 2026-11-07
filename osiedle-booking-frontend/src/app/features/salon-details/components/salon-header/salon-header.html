@@ -1,0 +1,49 @@
+<div class="salon-header">
+  <!-- 1. Хлебные крошки -->
+  <nav class="breadcrumbs">
+    <a href="#">Strona główna</a> &rsaquo; 
+    <a href="#">Warszawa</a> &rsaquo; 
+    <span>{{ salon().name }}</span>
+  </nav>
+
+  <!-- 2. Заголовок и мета-информация -->
+  <div class="salon-header__main">
+    <div class="salon-header__info">
+      <h1 class="salon-header__title">{{ salon().name }}</h1>
+      
+      <div class="salon-header__meta">
+        <span class="rating">★ {{ salon().rating }} <small>(142 opinii)</small></span>
+        <span class="dot">•</span>
+        <span class="status-badge">Otwarte do 21:00</span>
+        <span class="dot">•</span>
+        <span class="address">📍 {{ salon().address }}</span>
+      </div>
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="salon-header__actions">
+      <button type="button" class="btn-action">
+        <span>♡</span> Zapisz
+      </button>
+      <button type="button" class="btn-action">
+        <span>↗</span> Udostępnij
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Сетка галереи (1 большая + 4 маленьких) -->
+  <div class="gallery-grid">
+    <div class="gallery-grid__main">
+      <img [src]="salon().photo" [alt]="salon().name" />
+    </div>
+    <div class="gallery-grid__sub">
+      <img [src]="salon().photo" alt="Interior 1" />
+      <img [src]="salon().photo" alt="Interior 2" />
+      <img [src]="salon().photo" alt="Interior 3" />
+      <div class="gallery-grid__more">
+        <img [src]="salon().photo" alt="Interior 4" />
+        <span class="overlay">+12 zdjęć</span>
+      </div>
+    </div>
+  </div>
+</div>

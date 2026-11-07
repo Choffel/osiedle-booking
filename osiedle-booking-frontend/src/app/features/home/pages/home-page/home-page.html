@@ -1,0 +1,36 @@
+<app-hero-search />
+
+<main class="home-container">
+  <app-category-chips />
+  <section class="salons-section">
+    <div class="salons-section__container">
+      
+      <div class="salons-section__header">
+        <div class="salons-section__title-group">
+          <span class="salons-section__badge">• WOLNE SLOTY BEZ CZEKANIA</span>
+          <h2 class="salons-section__title">Najbliższe wolne terminy w Warszawie</h2>
+          <p class="salons-section__subtitle">
+            Salony z potwierdzoną dostępnością na dziś. Wybierz dogodną godzinę i przejdź do rezerwacji.
+          </p>
+        </div>
+
+        <a href="#" class="salons-section__map-link">
+          Pokaż mapę dostępności &rarr;
+        </a>
+      </div>
+
+      <!-- Твоя готовая сетка с карточками -->
+      <div class="salons-grid">
+        @for (salonItem of salons; track salonItem.name) {
+          <app-salon-card [salon]="salonItem" />
+        }
+      </div>
+
+    </div>
+  </section>
+  <app-features-list />
+</main>
+
+<footer>
+  <app-footer />
+</footer>
