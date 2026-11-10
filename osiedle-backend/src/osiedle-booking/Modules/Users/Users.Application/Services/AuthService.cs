@@ -87,7 +87,7 @@ public class AuthService : IAuthService
         
         var tokens = await _tokenService.GenerateTokensAsync(UserId.From(user.Value.Id),
             user.Value.Email, user.Value.Roles, ct);
-
+        
         return Result<TokenResponseDto>.Success(tokens.Value);
     }
     
