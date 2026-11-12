@@ -1,8 +1,9 @@
 import { Component, input } from '@angular/core';
-import { Salon } from '../../../features/home/pages/home-page/home-page';
+import { RouterLink } from '@angular/router';
+import {Salon, Services} from '../../../shared/Interfaces/Services';
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-salon-card',
   styleUrl: './salon-card.scss',
   templateUrl: './salon-card.html',
@@ -10,3 +11,4 @@ import { Salon } from '../../../features/home/pages/home-page/home-page';
 export class SalonCardComponent {
   salon = input.required<Salon>();
 }
+  

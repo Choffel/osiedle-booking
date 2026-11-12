@@ -6,4 +6,6 @@ import { Component } from '@angular/core';
   styleUrl: './hero-search.scss',
   templateUrl: './hero-search.html',
 })
-export class HeroSearchComponent {}
+export class HeroSearchComponent {
+  
+}

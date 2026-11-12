@@ -1,3 +1,22 @@
-@if (salon) {
-  <app-salon-header [salon]="salon" />
-}
+<main class="home-container">
+  @if (salon()) {
+    <app-salon-header [salon]="salon()!" />
+  }
+
+    <div class="salon-details-layout">
+      <div class="salon-details-layout__content">
+        @if (salon()) {
+    <app-service-list [salon]="salon()!" />
+  }
+      </div>
+
+      <div class="salon-details-layout__sidebar">
+        <app-booking-sidebar [selectedService]="selectedService()" />
+      </div>
+    </div>
+
+</main>
+
+<footer>
+  <app-footer />
+</footer>

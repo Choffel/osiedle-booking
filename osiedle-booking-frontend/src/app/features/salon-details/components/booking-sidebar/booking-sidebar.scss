@@ -1,0 +1,225 @@
+$primary-color: #00a887;
+$text-main: #111827;
+$text-muted: #6b7280;
+$border-color: #e5e7eb;
+$bg-light: #f8fafc;
+
+.booking-sidebar {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid $border-color;
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+
+  &__header {
+    margin-bottom: 4px;
+  }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 800;
+    color: $text-main;
+    margin: 0 0 4px 0;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+.selected-service-box {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px 16px;
+
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: $primary-color;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .service-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .name {
+      font-size: 14px;
+      font-weight: 700;
+      color: $text-main;
+    }
+
+    .price {
+      font-size: 14px;
+      font-weight: 800;
+      color: $primary-color;
+    }
+  }
+
+  .placeholder {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.booking-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    font-size: 13px;
+    font-weight: 700;
+    color: $text-main;
+  }
+
+  .step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .selected-date-info {
+      font-size: 12px;
+      color: $primary-color;
+      font-weight: 600;
+    }
+  }
+}
+
+.days-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+
+  .day-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    background-color: $bg-light;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    .day-name { font-size: 11px; color: $text-muted; }
+    .day-date { font-size: 12px; font-weight: 700; color: $text-main; }
+
+    &--active {
+      background-color: $text-main;
+      border-color: $text-main;
+
+      .day-name, .day-date { color: #ffffff; }
+    }
+  }
+}
+
+.staff-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  background-color: $bg-light;
+  font-size: 13px;
+  color: $text-main;
+  outline: none;
+  cursor: pointer;
+}
+
+.time-slots-group {
+  margin-top: 6px;
+
+  .group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: $text-muted;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .time-slot-btn {
+    padding: 8px 0;
+    background-color: $bg-light;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $text-main;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $primary-color;
+    }
+
+    &--active {
+      background-color: $primary-color;
+      border-color: $primary-color;
+      color: #ffffff;
+    }
+  }
+}
+
+.btn-submit-booking {
+  width: 100%;
+  padding: 14px;
+  background-color: $primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+
+  &:hover:not(:disabled) {
+    background-color: darken(#00a887, 5%);
+  }
+
+  &:disabled {
+    background-color: #d1d5db;
+    cursor: not-allowed;
+  }
+}
+
+.booking-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: $text-muted;
+
+    .icon {
+      font-size: 12px;
+    }
+  }
+}

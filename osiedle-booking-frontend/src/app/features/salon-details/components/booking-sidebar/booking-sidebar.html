@@ -1,0 +1,101 @@
+<aside class="booking-sidebar">
+  <!-- 1. Заголовок -->
+  <div class="booking-sidebar__header">
+    <h3 class="booking-sidebar__title">Szybka rezerwacja</h3>
+    <p class="booking-sidebar__subtitle">Wybierz dogodny slot i potwierdź</p>
+  </div>
+
+  <!-- 2. Выбранная услуга -->
+  <div class="selected-service-box">
+    <span class="label">WYBRANA USŁUGA</span>
+    @if (selectedService()) {
+      <div class="service-details">
+        <span class="name">{{ selectedService()?.name }}</span>
+        <span class="price">{{ selectedService()?.price }} PLN</span>
+      </div>
+    } @else {
+      <p class="placeholder">Wybierz usługę z listy obok</p>
+    }
+  </div>
+
+  <!-- 3. Шаг 1: Выбор дня -->
+  <div class="booking-step">
+    <label class="booking-step__label">1. Dzień wizyty</label>
+    <div class="days-toggle">
+      <button type="button" class="day-btn day-btn--active">
+        <span class="day-name">Dziś</span>
+        <span class="day-date">24 maja</span>
+      </button>
+      <button type="button" class="day-btn">
+        <span class="day-name">Jutro</span>
+        <span class="day-date">25 maja</span>
+      </button>
+      <button type="button" class="day-btn">
+        <span class="day-name">Poniedziałek</span>
+        <span class="day-date">26 maja</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Шаг 2: Выбор мастера -->
+  <div class="booking-step">
+    <label class="booking-step__label">2. Pracownik</label>
+    <select class="staff-select">
+      <option value="any">Dowolny dostępny barber</option>
+      <option value="marek">Marek</option>
+      <option value="tomek">Tomek</option>
+    </select>
+  </div>
+
+  <!-- 5. Шаг 3: Свободные слоты времени -->
+  <div class="booking-step">
+    <div class="step-header">
+      <label class="booking-step__label">3. Dostępne godziny</label>
+      <span class="selected-date-info">Dziś, 24 maja</span>
+    </div>
+
+    <div class="time-slots-group">
+      <span class="group-label">POPOŁUDNIE</span>
+      <div class="slots-grid">
+        <button type="button" class="time-slot-btn">12:45</button>
+        <button type="button" class="time-slot-btn">13:30</button>
+        <button type="button" class="time-slot-btn">14:30</button>
+        <button type="button" class="time-slot-btn time-slot-btn--active">16:00</button>
+      </div>
+    </div>
+
+    <div class="time-slots-group">
+      <span class="group-label">WIECZÓR</span>
+      <div class="slots-grid">
+        <button type="button" class="time-slot-btn">17:15</button>
+        <button type="button" class="time-slot-btn">18:00</button>
+        <button type="button" class="time-slot-btn">18:30</button>
+        <button type="button" class="time-slot-btn">19:15</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Главная кнопка действия -->
+  <button 
+    type="button" 
+    class="btn-submit-booking"
+    [disabled]="!selectedService()">
+    ✓ Przejdź do potwierdzenia
+  </button>
+
+  <!-- 7. Гарантии под кнопкой -->
+  <div class="booking-features">
+    <div class="feature-item">
+      <span class="icon">✓</span>
+      <span>Darmowe odwołanie do 2 godz. przed wizytą</span>
+    </div>
+    <div class="feature-item">
+      <span class="icon">💬</span>
+      <span>Natychmiastowe potwierdzenie SMS w 30 sek.</span>
+    </div>
+    <div class="feature-item">
+      <span class="icon">🔒</span>
+      <span>Płatność na miejscu (karta, BLIK lub gotówka)</span>
+    </div>
+  </div>
+</aside>

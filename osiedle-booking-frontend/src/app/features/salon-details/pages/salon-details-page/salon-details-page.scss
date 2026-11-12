@@ -1,0 +1,23 @@
+.home-container {
+  margin: 0 auto;
+  padding: 0 32px;
+  width: 100%;
+}
+
+.salon-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px 64px;
+  width: 100%;
+}
+
+.salon-details-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px; // Левая колонка гибкая, сайдбар 360px
+  gap: 32px;
+  align-items: start;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}

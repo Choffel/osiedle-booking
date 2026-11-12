@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { Salon } from '../../pages/salon-details-page/salon-details-page';
+import { Salon } from '../../../../shared/Interfaces/Services';
 
 @Component({
   imports: [],
