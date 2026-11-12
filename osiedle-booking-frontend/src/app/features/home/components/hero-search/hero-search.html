@@ -14,28 +14,28 @@
   <div class="hero-search__form">
     <div class="hero-search__field">
       <label class="hero-search__label">USŁUGA LUB SALON</label>
-      <input 
-        type="text" 
-        placeholder="Strzyżenie męskie + trymowanie" 
-        class="hero-search__input" 
+      <input
+        type="text"
+        placeholder="Strzyżenie męskie + trymowanie"
+        class="hero-search__input"
       />
     </div>
 
     <div class="hero-search__field">
       <label class="hero-search__label">LOKALIZACJA</label>
-      <input 
-        type="text" 
-        placeholder="Warszawa, Śródmieście" 
-        class="hero-search__input" 
+      <input
+        type="text"
+        placeholder="Warszawa, Śródmieście"
+        class="hero-search__input"
       />
     </div>
 
     <div class="hero-search__field">
       <label class="hero-search__label">TERMIN</label>
-      <input 
-        type="text" 
-        placeholder="Dzisiaj, od zaraz" 
-        class="hero-search__input" 
+      <input
+        type="text"
+        placeholder="Dzisiaj, od zaraz"
+        class="hero-search__input"
       />
     </div>
 
@@ -46,14 +46,15 @@
 
   <!-- Быстрый выбор дат -->
   <div class="hero-search__dates">
-    <button type="button" class="date-chip date-chip--active">
-      Dziś (24 maja) <span class="date-chip__count">28 wolnych</span>
-    </button>
-    <button type="button" class="date-chip">
-      Jutro (25 maja) <span class="date-chip__count">42 sloty</span>
-    </button>
-    <button type="button" class="date-chip">Pon (26 maja)</button>
-    <button type="button" class="date-chip">Wt (27 maja)</button>
+    @for (day of upcomingDays; track day.isoDate) {
+      <button
+        type="button"
+        class="date-chip"
+        [class.date-chip--active]="selectedDate()?.isoDate === day.isoDate"
+        (click)="selectDate(day)">
+        {{ day.dayLabel }} ({{ day.dateLabel }})
+      </button>
+    }
     <button type="button" class="date-chip date-chip--picker">Inna data</button>
   </div>
 </section>
