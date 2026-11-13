@@ -9,7 +9,7 @@ public readonly partial record struct Slug
 
     public string Value { get; }
 
-    public Slug(string value)
+    private Slug(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
