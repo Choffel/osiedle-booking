@@ -25,11 +25,15 @@ public class CategoryReadRepository : ICategoryReadRepository
     
     public async Task<bool> ValidateCategory(CategoryInfoDTO category, CancellationToken ct = default)
     {
+        var slug = Slug.From(category.Slug);
+        var name = category.Name.ToLower();
+
         return await _context.Categories
             .AsNoTracking()
+            .IgnoreQueryFilters()
             .AnyAsync(c =>
-                    c.Name.ToLower() == category.Name.ToLower() ||
-                    c.Slug == Slug.From(category.Slug),
+                    c.Name.ToLower() == name ||
+                    c.Slug == slug,
                 ct);
     }
     
