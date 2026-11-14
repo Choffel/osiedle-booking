@@ -19,7 +19,7 @@ public class CategoryReadRepository : ICategoryReadRepository
         return await _context.Categories
             .AsNoTracking()
             .Where(c => c.Id == id)
-            .Select(c => new CategoryInfoDTO(c.Id.Value, c.Name, c.Slug.Value))
+            .Select(c => new CategoryInfoDTO(c.Id.Value, c.Name, c.Slug.Value, c.DisplayOrder))
             .FirstOrDefaultAsync(ct);
     }
     
@@ -29,5 +29,22 @@ public class CategoryReadRepository : ICategoryReadRepository
             .AsNoTracking()
             .Where(c => c.Slug == slug)
             .AnyAsync(ct);
+    }
+    
+    public async Task<IReadOnlyList<CategoryInfoDTO?>> GetAllAsync(CancellationToken ct = default)
+    {
+        return await _context.Categories
+            .AsNoTracking()
+            .Select(c => new CategoryInfoDTO(c.Id.Value, c.Name, c.Slug.Value, c.DisplayOrder))
+            .OrderBy(c => c.DisplayOrder)
+            .ToListAsync(ct);
+    }
+    
+    public async Task<Domain.Aggregates.Category?> GetCategoryBySlugAsync(Slug slug, CancellationToken ct = default)
+    {
+        return await _context.Categories
+            .Where(c => c.Slug == slug)
+            .OrderBy(c => c.DisplayOrder)
+            .FirstOrDefaultAsync(ct);
     }
 }
