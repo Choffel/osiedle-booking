@@ -6,6 +6,8 @@ public readonly partial record struct Slug
 {
     [GeneratedRegex("^[a-z0-9]+(?:-[a-z0-9]+)*$")]
     private static partial Regex SlugRegex();
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
 
     public string Value { get; }
 
@@ -17,6 +19,7 @@ public readonly partial record struct Slug
         }
 
         value = value.Trim().ToLowerInvariant();
+        value = WhitespaceRegex().Replace(value, "-");
         
         if (value.Length > 100)
         {
