@@ -13,7 +13,7 @@ namespace Notifications.Infrastructure;
 
 public static  class DependencyInjection
 {
-    public static IServiceCollection AddNotificationsModule(
+    public static IServiceCollection AddNotificationsInfrastructure(
         this IServiceCollection services, 
         IConfiguration configuration)
     {
@@ -32,6 +32,7 @@ public static  class DependencyInjection
         
         services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
         services.AddScoped<INotificationModule, NotificationService>();
+        services.AddScoped<INotificationInternalApi, NotificationInternalApi>();
 
         return services;
     }

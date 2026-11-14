@@ -5,6 +5,7 @@ using Business.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Notifications.Infrastructure;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
@@ -25,6 +26,7 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 #endregion
