@@ -25,7 +25,8 @@ public class CategoryService : ICategoryService
     
     public async Task<Result> CreateAsync(CategoryCreateRequestDTO request, CancellationToken ct = default)
     {
-        if (await _categoryReadRepository.ExistsBySlugAsync(Slug.From(request.Slug), ct))
+        if (await _categoryReadRepository.ValidateCategory(new CategoryInfoDTO(Guid.Empty, 
+                request.Name, request.Slug, request.DisplayOrder), ct))
         {
             return Result.Failure(CategoryErrors.AlreadyExists);
         }
