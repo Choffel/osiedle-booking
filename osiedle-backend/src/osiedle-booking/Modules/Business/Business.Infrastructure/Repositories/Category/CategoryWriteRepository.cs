@@ -12,11 +12,6 @@ public class CategoryWriteRepository : ICategoryWriteRepository
     {
         _context = context;
     }
-    
-    public async Task<Domain.Aggregates.Category?> GetCategoryByIdAsync(CategoryId id, CancellationToken ct = default)
-    {
-        return await _context.Categories.FirstOrDefaultAsync(c => c.Id == id, ct);
-    }
 
     public void Add(Domain.Aggregates.Category category)
     {

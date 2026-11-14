@@ -5,7 +5,6 @@ namespace Business.Application.Interfaces.Category.Repositories;
 
 public interface ICategoryReadRepository
 {
-    Task<CategoryInfoDTO?> GetCategoryByIdAsync(CategoryId id, CancellationToken ct = default);
     Task<bool> ValidateCategory(CategoryInfoDTO category, CancellationToken ct = default);
     Task<IReadOnlyList<CategoryInfoDTO?>> GetAllAsync(CancellationToken ct = default);
 }

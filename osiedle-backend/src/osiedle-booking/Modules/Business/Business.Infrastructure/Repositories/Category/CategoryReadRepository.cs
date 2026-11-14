@@ -14,15 +14,6 @@ public class CategoryReadRepository : ICategoryReadRepository
         _context = context;
     }
     
-    public async Task<CategoryInfoDTO?> GetCategoryByIdAsync(CategoryId id, CancellationToken ct = default)
-    {
-        return await _context.Categories
-            .AsNoTracking()
-            .Where(c => c.Id == id)
-            .Select(c => new CategoryInfoDTO(c.Id.Value, c.Name, c.Slug.Value, c.DisplayOrder))
-            .FirstOrDefaultAsync(ct);
-    }
-    
     public async Task<bool> ValidateCategory(CategoryInfoDTO category, CancellationToken ct = default)
     {
         var slug = Slug.From(category.Slug);
