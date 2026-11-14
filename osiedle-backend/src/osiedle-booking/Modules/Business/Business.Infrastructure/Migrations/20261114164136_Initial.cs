@@ -31,6 +31,23 @@ namespace Business.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Employees",
                 columns: table => new
                 {
@@ -82,7 +99,7 @@ namespace Business.Infrastructure.Migrations
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     BusinessId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
@@ -118,6 +135,18 @@ namespace Business.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Categories_Name",
+                table: "Categories",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_Slug",
+                table: "Categories",
+                column: "Slug",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Employees_Email",
                 table: "Employees",
                 column: "Email",
@@ -135,6 +164,9 @@ namespace Business.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "BookableServices");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "WorkingHours");
