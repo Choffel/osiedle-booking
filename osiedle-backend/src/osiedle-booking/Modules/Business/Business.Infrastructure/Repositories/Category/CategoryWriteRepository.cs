@@ -22,4 +22,12 @@ public class CategoryWriteRepository : ICategoryWriteRepository
     {
         _context.Categories.Add(category);
     }
+    
+    public async Task<Domain.Aggregates.Category?> GetCategoryBySlugAsync(Slug slug, CancellationToken ct = default)
+    {
+        return await _context.Categories
+            .Where(c => c.Slug == slug)
+            .OrderBy(c => c.DisplayOrder)
+            .FirstOrDefaultAsync(ct);
+    }
 }

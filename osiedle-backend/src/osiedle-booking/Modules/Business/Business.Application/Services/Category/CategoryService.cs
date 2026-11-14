@@ -56,7 +56,7 @@ public class CategoryService : ICategoryService
 
     public async Task<Result> ArchiveBySlug(Slug slug, CancellationToken ct = default)
     {
-        var category = await _categoryReadRepository.GetCategoryBySlugAsync(slug, ct);
+        var category = await _categoryWriteRepository.GetCategoryBySlugAsync(slug, ct);
         if (category is null)
             return Result.Failure(CategoryErrors.NotFound);
 

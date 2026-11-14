@@ -6,4 +6,5 @@ public interface ICategoryWriteRepository
 {
     Task<Domain.Aggregates.Category?> GetCategoryByIdAsync(CategoryId id, CancellationToken ct = default);
     void Add(Domain.Aggregates.Category category);
+    Task<Domain.Aggregates.Category?> GetCategoryBySlugAsync(Slug slug, CancellationToken ct = default);
 }
