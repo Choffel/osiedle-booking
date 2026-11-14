@@ -36,6 +36,7 @@ public class Category : AggregateRoot<CategoryId>
         
         Name = name;
         DisplayOrder = displayOrder;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Archive()
