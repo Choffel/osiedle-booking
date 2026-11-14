@@ -11,4 +11,8 @@
         <ProjectReference Include="..\..\..\BuildingBlocks\osiedle-booking.BuildingBlocks\osiedle-booking.BuildingBlocks.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MassTransit" Version="9.2.6-develop.212" />
+    </ItemGroup>
+
 </Project>
