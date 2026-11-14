@@ -23,20 +23,28 @@ public class CategoryReadRepository : ICategoryReadRepository
             .FirstOrDefaultAsync(ct);
     }
     
-    public async Task<bool> ExistsBySlugAsync(Slug slug, CancellationToken ct = default)
+    public async Task<bool> ValidateCategory(CategoryInfoDTO category, CancellationToken ct = default)
     {
         return await _context.Categories
             .AsNoTracking()
-            .Where(c => c.Slug == slug)
-            .AnyAsync(ct);
+            .AnyAsync(c =>
+                    c.Name == category.Name ||
+                    c.Slug == Slug.From(category.Slug),
+                ct);
     }
     
     public async Task<IReadOnlyList<CategoryInfoDTO?>> GetAllAsync(CancellationToken ct = default)
     {
         return await _context.Categories
             .AsNoTracking()
-            .Select(c => new CategoryInfoDTO(c.Id.Value, c.Name, c.Slug.Value, c.DisplayOrder))
-            .OrderBy(c => c.DisplayOrder)
+            .OrderBy(c => c.DisplayOrder == 0)
+            .ThenBy(c => c.DisplayOrder)       
+            .ThenBy(c => c.Name)
+            .Select(c => new CategoryInfoDTO(
+                c.Id.Value,
+                c.Name,
+                c.Slug.Value,
+                c.DisplayOrder))
             .ToListAsync(ct);
     }
     
