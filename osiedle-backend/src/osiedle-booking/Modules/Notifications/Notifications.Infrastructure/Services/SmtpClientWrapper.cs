@@ -15,16 +15,20 @@ public class SmtpClientWrapper : ISmtpClientWrapper
     }
     
     
-    public  async Task SendMimeMessageAsync(MimeMessage message, CancellationToken cancellationToken)
+    public async Task SendMimeMessageAsync(MimeMessage message, CancellationToken cancellationToken)
     {
         using var client = new SmtpClient();
 
-        var secureSmtpOptions = _smtpOptions.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.None;
-        
-        await client.ConnectAsync(_smtpOptions.Host, _smtpOptions.Port, secureSmtpOptions, cancellationToken);
-        
+        var options = _smtpOptions.Port switch
+        {
+            465 => SecureSocketOptions.SslOnConnect,
+            _ when _smtpOptions.UseSsl => SecureSocketOptions.StartTls,
+            _ => SecureSocketOptions.None
+        };
+
+        await client.ConnectAsync(_smtpOptions.Host, _smtpOptions.Port, options, cancellationToken);
+        await client.AuthenticateAsync(_smtpOptions.UserName, _smtpOptions.Password, cancellationToken);
         await client.SendAsync(message, cancellationToken);
-        
         await client.DisconnectAsync(true, cancellationToken);
     }
 }
