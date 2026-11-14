@@ -34,6 +34,5 @@ public readonly partial record struct Slug
     }
     
     public static Slug Create(string value) => new(value);
-    public static Slug From(string value) => new(value);
     public override string ToString() => Value ?? string.Empty;
 }

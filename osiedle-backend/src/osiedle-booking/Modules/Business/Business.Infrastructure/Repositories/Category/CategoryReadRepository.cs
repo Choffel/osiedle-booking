@@ -16,7 +16,7 @@ public class CategoryReadRepository : ICategoryReadRepository
     
     public async Task<bool> ValidateCategory(CategoryInfoDTO category, CancellationToken ct = default)
     {
-        var slug = Slug.From(category.Slug);
+        var slug = Slug.Create(category.Slug);
         var name = category.Name.ToLower();
 
         return await _context.Categories

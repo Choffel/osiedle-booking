@@ -16,7 +16,7 @@ public class CategoryValueObjectsTests
     public void Slug_Create_NormalizesInput(string input, string expected)
     {
         Assert.Equal(expected, Slug.Create(input).Value);
-        Assert.Equal(expected, Slug.From(input).Value);
+        Assert.Equal(expected, Slug.Create(input).Value);
     }
 
     [Theory]

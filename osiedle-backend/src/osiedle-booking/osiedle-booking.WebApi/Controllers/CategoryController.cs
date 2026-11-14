@@ -37,7 +37,7 @@ public class CategoryController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> ArchiveBySlug(string slug, CancellationToken ct)
     {
-        var result = await _categoryService.ArchiveBySlug(Slug.From(slug), ct);
+        var result = await _categoryService.ArchiveBySlug(Slug.Create(slug), ct);
         return result.ToActionResult();
     }
 }
