@@ -25,13 +25,17 @@ public class CategoryService : ICategoryService
     
     public async Task<Result> CreateAsync(CategoryCreateRequestDTO request, CancellationToken ct = default)
     {
+        // The duplicate check must compare normalized values, because that is what
+        // the aggregate stores and what the unique index enforces.
+        var name = request.Name?.Trim() ?? string.Empty;
+
         if (await _categoryReadRepository.ValidateCategory(new CategoryInfoDTO(Guid.Empty, 
-                request.Name, request.Slug, request.DisplayOrder), ct))
+                name, request.Slug, request.DisplayOrder), ct))
         {
             return Result.Failure(CategoryErrors.AlreadyExists);
         }
         
-        var category = Domain.Aggregates.Category.Create(request.Name, request.Slug, request.DisplayOrder);
+        var category = Domain.Aggregates.Category.Create(name, request.Slug, request.DisplayOrder);
         _categoryWriteRepository.Add(category);
         
         await _unitOfWork.SaveChangesAsync(ct);
