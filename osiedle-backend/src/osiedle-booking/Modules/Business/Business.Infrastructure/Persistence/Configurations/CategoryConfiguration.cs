@@ -32,6 +32,9 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.Property(c => c.DisplayOrder)
             .IsRequired();
+        
+        builder.HasIndex(c => c.Name)
+            .IsUnique();
 
         builder.HasIndex(c => c.Slug)
             .IsUnique();
