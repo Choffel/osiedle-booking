@@ -28,7 +28,7 @@ public class CategoryReadRepository : ICategoryReadRepository
         return await _context.Categories
             .AsNoTracking()
             .AnyAsync(c =>
-                    c.Name == category.Name ||
+                    c.Name.ToLower() == category.Name.ToLower() ||
                     c.Slug == Slug.From(category.Slug),
                 ct);
     }
