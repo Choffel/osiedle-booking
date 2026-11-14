@@ -5,7 +5,12 @@ namespace Notifications.Application.Services;
 
 public class NotificationInternalApi : INotificationInternalApi
 {
-    private readonly INotificationModule _notificationModule; 
+    private readonly INotificationModule _notificationModule;
+
+    public NotificationInternalApi(INotificationModule notificationModule)
+    {
+        _notificationModule = notificationModule;
+    }
     
     public async Task SendVerificationLinkAsync(string email, string code, CancellationToken ct) 
     {
