@@ -31,7 +31,7 @@ public class BookingsController : ControllerBase
     }
     
     [HttpPost("booking")]
-    public async Task<IActionResult> CreateBookingAsync([FromQuery]  CreateBookingRequest request, CancellationToken ct)
+    public async Task<ActionResult> CreateBookingAsync([FromQuery]  CreateBookingRequest request, CancellationToken ct)
     {
         var result = await _bookingService.CreateBookingAsync(request, ct);
         return result.ToActionResult();
@@ -48,7 +48,7 @@ public class BookingsController : ControllerBase
 
     [Authorize]
     [HttpDelete("reservations")]
-    public async Task<IActionResult> CancelBookingByIdAsync(CancelBookingRequest request, CancellationToken ct)
+    public async Task<ActionResult> CancelBookingByIdAsync(CancelBookingRequest request, CancellationToken ct)
     {
         var clientId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         

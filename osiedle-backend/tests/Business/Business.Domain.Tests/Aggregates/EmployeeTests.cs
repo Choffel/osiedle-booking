@@ -1,6 +1,7 @@
 using Business.Domain.Aggregates;
 using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Domain.Tests.Aggregates;
 

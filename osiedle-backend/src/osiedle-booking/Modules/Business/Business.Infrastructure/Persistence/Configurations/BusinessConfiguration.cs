@@ -1,5 +1,4 @@
-﻿
-using Business.Domain.ValueObjects;
+﻿using Business.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using osiedle_booking.BuildingBlocks.ValueObjects;
@@ -10,7 +9,6 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
 {
     public void Configure(EntityTypeBuilder<Domain.Aggregates.Business> builder)
     {
-        
         builder.HasKey(b => b.Id);
         
         builder.Property(b => b.OwnerId)
@@ -20,8 +18,6 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
             .IsRequired();
         
         builder.HasIndex(b => b.OwnerId).IsUnique();
-        
-        
         
         builder.Property(b => b.Id)
             .HasConversion(

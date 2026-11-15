@@ -2,6 +2,7 @@
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Interfaces.Business;
 

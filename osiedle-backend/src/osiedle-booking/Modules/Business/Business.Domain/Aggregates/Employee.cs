@@ -2,6 +2,7 @@
 using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.Domain;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Domain.Aggregates;
 
