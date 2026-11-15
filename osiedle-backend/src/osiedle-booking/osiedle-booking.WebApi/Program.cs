@@ -7,12 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Notifications.Infrastructure;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.Roles;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
+using Users.Infrastructure.Identity.Models;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -129,19 +131,19 @@ app.UseCors(); // TODO: Configure CORS policy as needed
 app.UseAuthentication();
 app.UseAuthorization();
 
-// using (var scope = app.Services.CreateScope()) // TODO: refactor this to a proper migration or seeding mechanism
-// {
-//     var services = scope.ServiceProvider;
-//     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
-//
-//     var dbContext = services.GetRequiredService<ApplicationDbContext>();
-//     await dbContext.Database.MigrateAsync();
-//
-//     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
-//     await businessDbContext.Database.MigrateAsync();
-//
-//     await RoleInitData.InitializeAsync(roleManager);
-// }
+using (var scope = app.Services.CreateScope()) // TODO: refactor this to a proper migration or seeding mechanism
+{
+    var services = scope.ServiceProvider;
+    var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
+
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+
+    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+    await businessDbContext.Database.MigrateAsync();
+
+    await RoleInitData.InitializeAsync(UserRoles.All,roleManager);
+}
 
 app.MapControllers();
 
