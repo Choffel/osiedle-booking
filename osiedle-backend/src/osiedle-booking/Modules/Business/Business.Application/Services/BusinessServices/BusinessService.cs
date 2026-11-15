@@ -6,6 +6,7 @@ using Business.Application.Interfaces.Business;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Services.BusinessServices;
 

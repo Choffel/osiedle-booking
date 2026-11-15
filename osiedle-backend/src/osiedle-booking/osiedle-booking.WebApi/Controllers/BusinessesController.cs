@@ -3,6 +3,7 @@ using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using osiedle_booking.WebApi.Extensions;
 
 namespace osiedle_booking.WebApi.Controllers;
