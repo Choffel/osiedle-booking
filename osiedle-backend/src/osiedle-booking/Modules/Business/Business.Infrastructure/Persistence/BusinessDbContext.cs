@@ -11,12 +11,10 @@ public class BusinessDbContext : DbContext
     }
 
     public DbSet<Business.Domain.Aggregates.Business> Businesses { get; set; }
-    
     public DbSet<Employee> Employees { get; set; }
-    
     public DbSet<Business.Domain.Entities.BookableService> BookableServices { get; set; }
-    
     public DbSet<Business.Domain.Entities.WorkingHours> WorkingHours { get; set; }
+    public DbSet<Category> Categories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

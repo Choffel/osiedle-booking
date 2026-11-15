@@ -17,3 +17,4 @@ osiedle-backend/src/osiedle-booking/.env
 **/bin/
 **/obj/
 osiedle-backend/src/osiedle-booking/osiedle-booking.sln.DotSettings.user
+/.idea

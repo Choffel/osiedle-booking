@@ -27,7 +27,7 @@ public class TokensController : ControllerBase
 
     [HttpPost("RevokeRefreshToken")]
     [Authorize]
-    public async Task<IActionResult> RevokeRefreshToken(CancellationToken ct)
+    public async Task<ActionResult> RevokeRefreshToken(CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
@@ -38,7 +38,7 @@ public class TokensController : ControllerBase
 
     [Authorize]
     [HttpPost("RevokeSession")]
-    public async Task<IActionResult> RevokeSession([FromBody]Guid tokenId, CancellationToken ct)
+    public async Task<ActionResult> RevokeSession([FromBody]Guid tokenId, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         var refreshToken = Request.Headers["X-Refresh-Token"].ToString();
