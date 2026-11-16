@@ -107,19 +107,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
-
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database"),
-        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
-
-builder.Services.AddDbContext<BusinessDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database"),
-        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Business")));
-
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
