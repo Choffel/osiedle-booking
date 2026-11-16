@@ -2,6 +2,8 @@ using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
 using Business.Infrastructure.Persistence;
+using Files.Domain.ValueObjects;
+using Files.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -29,6 +31,7 @@ builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+builder.Services.AddFilesInfrastructure(builder.Configuration, connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 #endregion
@@ -44,6 +47,8 @@ builder.Services.AddControllers()
             new GuidValueObjectJsonConverter<BookableServiceId>(BookableServiceId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<WorkingHoursId>(WorkingHoursId.From, id => id.Value));
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<FileId>(FileId.From, id => id.Value));
     });
 builder.Services.AddEndpointsApiExplorer();
 
