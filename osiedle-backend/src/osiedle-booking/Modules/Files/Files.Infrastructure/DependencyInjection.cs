@@ -18,7 +18,7 @@ public static class DependencyInjection
     public static IServiceCollection AddFilesInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration,
-        string? connectionString = null)
+        string connectionString)
     {
         services.Configure<AzureBlobStorageOptions>(
             configuration.GetSection(AzureBlobStorageOptions.SectionName));
@@ -26,20 +26,24 @@ public static class DependencyInjection
         var azureOptions = configuration.GetSection(AzureBlobStorageOptions.SectionName)
             .Get<AzureBlobStorageOptions>();
 
-        if (azureOptions is not null && !string.IsNullOrWhiteSpace(azureOptions.ConnectionString))
+        var blobConnectionString = azureOptions?.ConnectionString;
+        if (!string.IsNullOrWhiteSpace(blobConnectionString))
         {
-            services.AddSingleton(new BlobServiceClient(azureOptions.ConnectionString));
+            services.AddSingleton(new BlobServiceClient(blobConnectionString));
+        }
+        else if (!string.IsNullOrWhiteSpace(azureOptions?.ServiceUri))
+        {
+            services.AddSingleton(new BlobServiceClient(new Uri(azureOptions.ServiceUri)));
+        }
+        else
+        {
+            services.AddSingleton(new BlobServiceClient("UseDevelopmentStorage=true"));
         }
 
-        var dbConnectionString = connectionString
-            ?? configuration.GetConnectionString("Database")
-            ?? configuration["CONNECTION_STRING"];
-
-        if (!string.IsNullOrWhiteSpace(dbConnectionString))
-        {
-            services.AddDbContext<FilesDbContext>(options =>
-                options.UseNpgsql(dbConnectionString));
-        }
+        services.AddDbContext<FilesDbContext>(options =>
+            options.UseNpgsql(
+                connectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Files")));
 
         services.AddScoped<IBlobStorageService, AzureBlobStorageService>();
         services.AddScoped<IImageValidator, ImageValidator>();

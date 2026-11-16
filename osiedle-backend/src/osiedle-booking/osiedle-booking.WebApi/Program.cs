@@ -4,6 +4,7 @@ using Business.Infrastructure;
 using Business.Infrastructure.Persistence;
 using Files.Domain.ValueObjects;
 using Files.Infrastructure;
+using Files.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -146,6 +147,9 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
 
     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
     await businessDbContext.Database.MigrateAsync();
+
+    var filesDbContext = services.GetRequiredService<FilesDbContext>();
+    await filesDbContext.Database.MigrateAsync();
 
     await RoleInitData.InitializeAsync(UserRoles.All,roleManager);
 }

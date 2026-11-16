@@ -23,7 +23,10 @@ public static class DependencyInjection
     {
         #region Database
         services.AddDbContext<BusinessDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(
+                connectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                    "__EFMigrationsHistory_Business")));
         #endregion
 
         #region Internal API

@@ -1,8 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Files.Application.Interfaces;
-using Files.Infrastructure.Options;
-using Microsoft.Extensions.Options;
 
 namespace Files.Infrastructure.Storage;
 
@@ -13,23 +11,6 @@ public class AzureBlobStorageService : IBlobStorageService
     public AzureBlobStorageService(BlobServiceClient blobServiceClient)
     {
         _blobServiceClient = blobServiceClient;
-    }
-
-    public AzureBlobStorageService(IOptions<AzureBlobStorageOptions> options)
-    {
-        var settings = options.Value;
-        if (!string.IsNullOrWhiteSpace(settings.ConnectionString))
-        {
-            _blobServiceClient = new BlobServiceClient(settings.ConnectionString);
-        }
-        else if (!string.IsNullOrWhiteSpace(settings.ServiceUri))
-        {
-            _blobServiceClient = new BlobServiceClient(new Uri(settings.ServiceUri));
-        }
-        else
-        {
-            throw new InvalidOperationException("AzureBlobStorage connection string or service URI must be configured.");
-        }
     }
 
     public async Task<string> UploadAsync(
