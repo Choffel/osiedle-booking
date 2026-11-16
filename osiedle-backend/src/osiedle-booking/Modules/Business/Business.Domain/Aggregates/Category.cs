@@ -30,6 +30,9 @@ public class Category : AggregateRoot<CategoryId>
         );
     }
 
+    public static Category Create(CategoryId id, string name, string slug, int displayOrder)
+        => new(id, name, slug, displayOrder);
+
     public void Update(string name, int displayOrder)
     {
         ValidateAndAssign(ref name, displayOrder);

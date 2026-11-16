@@ -54,6 +54,9 @@ public class Business : AggregateRoot<BusinessId>
         return new Business(businessId, name, location, ownerId, description);
     }
 
+    public static Business Create(BusinessId id, string name, UserId ownerId, string description, string location)
+        => new(id, name, location, ownerId, description);
+
     public void AddService(EmployeeId employeeId, string name, string description, decimal price, TimeSpan durationMinutes)
     {
         if (Status == BusinessStatus.Archived)
