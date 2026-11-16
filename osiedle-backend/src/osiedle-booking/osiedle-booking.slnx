@@ -18,6 +18,11 @@
     <Project Path="Modules/Business/Business.Domain/Business.Domain.csproj" />
     <Project Path="Modules/Business/Business.Infrastructure/Business.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Modules/Files/">
+    <Project Path="Modules/Files/Files.Application/Files.Application.csproj" />
+    <Project Path="Modules/Files/Files.Domain/Files.Domain.csproj" />
+    <Project Path="Modules/Files/Files.Infrastructure/Files.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/Modules/Notifications/">
     <Project Path="Modules/Notifications/Notifications.Application/Notifications.Application.csproj" />
     <Project Path="Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
