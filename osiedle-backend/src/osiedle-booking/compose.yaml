@@ -28,16 +28,17 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      - ./.env 
+      - ./.env
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       # For Docker network: use service name 'postgres'
       ConnectionStrings__Database: Host=postgres;Port=5432;Database=osiedle_booking;Username=postgres;Password=postgres
+      AzureBlobStorage__ConnectionString: ${AzureBlobStorage__ConnectionString}
+      AzureBlobStorage__ContainerName: ${AzureBlobStorage__ContainerName:-images}
     ports:
       - "8080:8080"
     restart: unless-stopped
 
 volumes:
   postgres_data:
-
