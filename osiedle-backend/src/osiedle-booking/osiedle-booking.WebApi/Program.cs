@@ -1,3 +1,4 @@
+using Bookings.Infrastructure;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
@@ -15,6 +16,7 @@ using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
+using BookingsDbContext = Bookings.Infrastructure.Data.ApplicationDbContext;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,7 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
+builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -141,6 +144,9 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
 
     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
     await businessDbContext.Database.MigrateAsync();
+
+    var bookingsDbContext = services.GetRequiredService<BookingsDbContext>();
+    await bookingsDbContext.Database.MigrateAsync();
 
     await RoleInitData.InitializeAsync(UserRoles.All,roleManager);
 }
