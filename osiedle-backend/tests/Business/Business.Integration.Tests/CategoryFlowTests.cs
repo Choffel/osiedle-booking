@@ -101,7 +101,7 @@ public sealed class CategoryFlowTests : IntegrationTestBase
         using var scope = CreateScope();
         var service = Service(scope);
         Assert.True((await CreateAsync(service, "Manicure", "manicure", 1)).IsSuccess);
-        Assert.True((await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.From("manicure"))).IsSuccess);
+        Assert.True((await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.Create("manicure"))).IsSuccess);
 
         // Archived rows are hidden by the query filter but still occupy the unique
         // index, so this insert hits it — must surface as a clean conflict, not a 500.
@@ -199,7 +199,7 @@ public sealed class CategoryFlowTests : IntegrationTestBase
         using var scope = CreateScope();
         var service = Service(scope);
 
-        var result = await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.From("does-not-exist"));
+        var result = await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.Create("does-not-exist"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(CategoryErrors.NotFound.Code, result.Error.Code);
@@ -212,7 +212,7 @@ public sealed class CategoryFlowTests : IntegrationTestBase
         var service = Service(scope);
         Assert.True((await CreateAsync(service, "Pedicure", "pedicure", 1)).IsSuccess);
 
-        Assert.True((await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.From("pedicure"))).IsSuccess);
+        Assert.True((await service.ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.Create("pedicure"))).IsSuccess);
 
         using var listScope = CreateScope();
         var listing = await Service(listScope).GetCategoriesAsync();
@@ -225,7 +225,7 @@ public sealed class CategoryFlowTests : IntegrationTestBase
         Assert.NotNull((await Db(dbScope).Categories.IgnoreQueryFilters().SingleAsync()).DeletedAt);
 
         // ...so archiving again cannot find it (no 500 from the double-archive guard).
-        var second = await Service(listScope).ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.From("pedicure"));
+        var second = await Service(listScope).ArchiveBySlug(Business.Domain.ValueObjects.Category.Slug.Create("pedicure"));
         Assert.False(second.IsSuccess);
         Assert.Equal(CategoryErrors.NotFound.Code, second.Error.Code);
     }
