@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      SOLUTION: osiedle-backend/src/osiedle-booking/osiedle-booking.slnx
       ConnectionStrings__DefaultConnection: ${{ secrets.CONNECTIONSTRINGS__DEFAULTCONNECTION }}
       SMTPSETTINGS__ENABLESSL: ${{ secrets.SMTPSETTINGS__ENABLESSL }}
       SMTPSETTINGS__HOST: ${{ secrets.SMTPSETTINGS__HOST }}
@@ -34,16 +35,16 @@ jobs:
           dotnet-version: '10.0.x' # Change this to match your SDK version
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore "$SOLUTION"
 
       - name: Clean the solution
-        run: dotnet clean
+        run: dotnet clean "$SOLUTION"
 
       - name: Build the solution
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build "$SOLUTION" --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+        run: dotnet test "$SOLUTION" --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
