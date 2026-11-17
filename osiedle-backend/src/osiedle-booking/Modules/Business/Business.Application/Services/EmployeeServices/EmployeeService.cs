@@ -7,7 +7,6 @@ using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Services.EmployeeServices;
 
@@ -27,6 +26,7 @@ public class EmployeeService : IEmployeeManagementService
         _businessRepository = businessRepository;
     }
     
+    //TODO: fix, add userId
     public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
     {
         var businessId = BusinessId.FromNullable(dto.BusinessId);
