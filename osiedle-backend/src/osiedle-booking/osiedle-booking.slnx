@@ -42,5 +42,6 @@
   <Folder Name="/Tests/Business/">
     <Project Path="../../tests/Business/Business.Application.Tests/Business.Application.Tests.csproj" />
     <Project Path="../../tests/Business/Business.Domain.Tests/Business.Domain.Tests.csproj" />
+    <Project Path="../../tests/Business/Business.Integration.Tests/Business.Integration.Tests.csproj" />
   </Folder>
 </Solution>
