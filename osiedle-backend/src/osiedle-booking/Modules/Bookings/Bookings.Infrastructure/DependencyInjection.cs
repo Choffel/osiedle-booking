@@ -17,7 +17,9 @@ public static class DependencyInjection
     public static IServiceCollection AddBookingInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         #region Database
-        var connectionString = configuration["CONNECTION_STRING"];
+        var connectionString = configuration.GetConnectionString("Database")
+                               ?? configuration["CONNECTION_STRING"]
+                               ?? throw new InvalidOperationException("Database connection string is missing.");
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
         #endregion

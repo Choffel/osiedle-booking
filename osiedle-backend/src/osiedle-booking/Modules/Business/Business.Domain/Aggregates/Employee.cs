@@ -87,4 +87,8 @@ public class Employee : AggregateRoot<EmployeeId>
         return new Employee(employeeId, businessId, firstName, lastName, position, review, email);
     }
 
+    public static Employee Create(EmployeeId id, BusinessId? businessId, string firstName, string lastName,
+        string position, string? review, string email)
+        => new(id, businessId, firstName, lastName, position, review, email);
+
 }

@@ -53,6 +53,10 @@ public class Booking : AggregateRoot<BookingId>
         return booking;
     }
 
+    public static Booking Create(BookingId id, StaffId staffId, BusinessId businessId, ClientId clientId,
+        ServiceId serviceId, TimeSlot slot, Money price)
+        => new(id, staffId, businessId, clientId, serviceId, slot, price, BookingStatus.Confirmed);
+
     public void CancelByClient(ClientId clientId, DateTime cancelledAt)
     {
         EnsureCanBeCancelled();
