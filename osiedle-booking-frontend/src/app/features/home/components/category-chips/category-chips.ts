@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {CategoriesService} from '../../../../core/services/categories.service'
+
 
 @Component({
   selector: 'app-category-chips',
@@ -8,12 +11,6 @@ import { Component } from '@angular/core';
   styleUrl: './category-chips.scss',
 })
 export class CategoryChipsComponent {
-  categories: string[] = [
-    'Wszystkie',
-    'Strzyżenie męskie',
-    'Trymowanie brody',
-    'Combo (włosy + broda)',
-    'Golenie brzytwą',
-    'Zabiegi'
-  ];
+  private readonly categoriesService = inject(CategoriesService);
+  readonly categories = toSignal(this.categoriesService.getCategories(), { initialValue: [] });
 }
