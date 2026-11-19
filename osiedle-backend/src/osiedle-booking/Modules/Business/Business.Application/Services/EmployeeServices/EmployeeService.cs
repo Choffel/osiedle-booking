@@ -7,6 +7,7 @@ using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.Services.EmployeeServices;
 
@@ -26,19 +27,18 @@ public class EmployeeService : IEmployeeManagementService
         _businessRepository = businessRepository;
     }
     
-    //TODO: fix, add userId
-    public async Task<Result<EmployeeId>> CreateEmployeeAsync(EmployeeCreateDto dto, CancellationToken ct = default)
+   
+    public async Task<Result<EmployeeId>> CreateEmployeeAsync(UserId currentUserId, EmployeeCreateDto dto, CancellationToken ct = default)
     {
         var businessId = BusinessId.FromNullable(dto.BusinessId);
 
         if (businessId is not null)
         {
-            var businessExists = await _businessRepository.ExistsByIdAsync(businessId.Value, ct);
-
-            if (!businessExists)
-            {
+            var business = await _businessRepository.GetBusinessByIdAsync(currentUserId, businessId.Value, ct);
+            if (business is null)
                 return Result.Failure<EmployeeId>(EmployeeErrors.BusinessNotFound);
-            }
+            if (business.OwnerId != currentUserId)
+                return Result.Failure<EmployeeId>(EmployeeErrors.Forbidden);
         }
 
         var employee = Employee.Create(
@@ -47,7 +47,8 @@ public class EmployeeService : IEmployeeManagementService
             dto.LastName,
             dto.Position,
             dto.Review,
-            dto.Email);
+            dto.Email,
+            businessId is null ? currentUserId : null);
 
         var existing = await _employeeRepository.ExistsByEmailAsync(employee.Email, ct);
 
@@ -63,13 +64,17 @@ public class EmployeeService : IEmployeeManagementService
         return Result.Success(employee.Id);
     }
     
-    public async Task<Result> UpdateProfileAsync(EmployeeId employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateProfileAsync(UserId currentUserId, EmployeeId employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
     {
         var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         if (employee == null)
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
+
+        var canManage = await CanManageAsync(employee, currentUserId, ct);
+        if (!canManage)
+            return Result.Failure(EmployeeErrors.Forbidden);
 
         var normalizedEmail = Employee.NormalizeEmail(dto.Email);
         
@@ -86,7 +91,7 @@ public class EmployeeService : IEmployeeManagementService
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
+    public async Task<Result> DeactivateEmployeeAsync(UserId currentUserId, EmployeeId employeeId, CancellationToken ct = default)
     {
         var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
         
@@ -94,9 +99,26 @@ public class EmployeeService : IEmployeeManagementService
         {
             return Result.Failure(EmployeeErrors.NotFound);
         }
+
+        var canManage = await CanManageAsync(employee, currentUserId, ct);
+        if (!canManage)
+            return Result.Failure(EmployeeErrors.Forbidden);
         
         employee.ChangeStatus(EmploymentStatus.Terminated);
         await _unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
+    }
+
+    private async Task<bool> CanManageAsync(Employee employee, UserId currentUserId, CancellationToken ct)
+    {
+        if (employee.BusinessId is not null)
+        {
+            var businessId = employee.BusinessId.Value;
+            var business = await _businessRepository.GetBusinessByIdAsync(
+                currentUserId, businessId, ct);
+            return business?.OwnerId == currentUserId;
+        }
+
+        return employee.UserId == currentUserId;
     }
 }

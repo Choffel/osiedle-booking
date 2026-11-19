@@ -24,6 +24,11 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasConversion(
                 id => id != null ? id.Value : (Guid?)null,
                 value => value.HasValue ? BusinessId.From(value.Value) : null);
+
+        builder.Property(e => e.UserId)
+            .HasConversion(
+                id => id != null ? id.Value : (Guid?)null,
+                value => value.HasValue ? UserId.From(value.Value) : null);
         
         builder.Property(e => e.FirstName)
             .HasMaxLength(50) 
