@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Files.Application.DTOs;
 using Files.Application.Interfaces;
 using Files.Domain.ValueObjects;
@@ -20,9 +19,6 @@ public class FilesController : ControllerBase
         _fileService = fileService;
     }
 
-    private Guid GetCurrentUserId() =>
-        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
     [HttpPost("companies/{companyId:guid}/avatar")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<FileResponseDto>> UploadCompanyAvatarAsync(
@@ -30,7 +26,7 @@ public class FilesController : ControllerBase
         IFormFile file,
         CancellationToken ct = default)
     {
-        var request = ToUploadRequest(file);
+        var request = file.ToUploadRequest();
         return (await _fileService.UploadCompanyAvatarAsync(companyId, request, ct)).ToActionResult();
     }
 
@@ -41,7 +37,7 @@ public class FilesController : ControllerBase
         IFormFile file,
         CancellationToken ct = default)
     {
-        var request = ToUploadRequest(file);
+        var request = file.ToUploadRequest();
         return (await _fileService.UploadCompanyCoverAsync(companyId, request, ct)).ToActionResult();
     }
 
@@ -52,7 +48,7 @@ public class FilesController : ControllerBase
         IFormFile file,
         CancellationToken ct = default)
     {
-        var request = ToUploadRequest(file);
+        var request = file.ToUploadRequest();
         return (await _fileService.UploadEmployeeAvatarAsync(employeeId, request, ct)).ToActionResult();
     }
 
@@ -63,7 +59,7 @@ public class FilesController : ControllerBase
         IFormFile file,
         CancellationToken ct = default)
     {
-        var request = ToUploadRequest(file);
+        var request = file.ToUploadRequest();
         return (await _fileService.UploadServicePhotoAsync(serviceId, request, ct)).ToActionResult();
     }
 
@@ -103,15 +99,4 @@ public class FilesController : ControllerBase
         return (await _fileService.DeleteFileAsync(FileId.From(fileId), ct)).ToActionResult();
     }
 
-    private static FileUploadRequest ToUploadRequest(IFormFile? file)
-    {
-        if (file is null)
-            return new FileUploadRequest(Stream.Null, string.Empty, string.Empty, 0);
-
-        return new FileUploadRequest(
-            file.OpenReadStream(),
-            file.FileName,
-            file.ContentType,
-            file.Length);
-    }
 }
