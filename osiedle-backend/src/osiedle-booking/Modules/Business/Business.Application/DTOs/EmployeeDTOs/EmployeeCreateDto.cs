@@ -5,7 +5,7 @@ using osiedle_booking.BuildingBlocks.ValueObjects;
 namespace Business.Application.DTOs.EmployeeDTOs;
 
 public record EmployeeCreateDto(
-    BusinessId? BusinessId,
+    Guid? BusinessId,
     string FirstName,
     string LastName,
     string Position,

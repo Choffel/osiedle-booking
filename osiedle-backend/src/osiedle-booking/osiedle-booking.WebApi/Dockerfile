@@ -26,6 +26,10 @@ COPY ["Modules/Bookings/Bookings.Application/Bookings.Application.csproj", "Modu
 COPY ["Modules/Bookings/Bookings.Domain/Bookings.Domain.csproj", "Modules/Bookings/Bookings.Domain/"]
 COPY ["Modules/Bookings/Bookings.Infrastructure/Bookings.Infrastructure.csproj", "Modules/Bookings/Bookings.Infrastructure/"]
 
+COPY ["Modules/Files/Files.Application/Files.Application.csproj", "Modules/Files/Files.Application/"]
+COPY ["Modules/Files/Files.Domain/Files.Domain.csproj", "Modules/Files/Files.Domain/"]
+COPY ["Modules/Files/Files.Infrastructure/Files.Infrastructure.csproj", "Modules/Files/Files.Infrastructure/"]
+
 RUN dotnet restore "osiedle-booking.WebApi/osiedle-booking.WebApi.csproj"
 
 COPY . .

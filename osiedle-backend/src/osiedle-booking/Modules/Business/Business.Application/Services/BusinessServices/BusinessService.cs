@@ -23,9 +23,12 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken = default)
     {
+        var ownerId = UserId.From(createBusinessDto.OwnerId);
+        
         var existingBusiness = await _businessRepository.ExistsByOwnerIdAsync(
-            createBusinessDto.OwnerId, 
+            ownerId, 
             cancellationToken);
+        
         
         if (existingBusiness)
         {
@@ -34,7 +37,7 @@ public class BusinessService : IBusinessManagementService
         
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
-            createBusinessDto.OwnerId, 
+            ownerId, 
             createBusinessDto.Description, 
             createBusinessDto.Location);
         
