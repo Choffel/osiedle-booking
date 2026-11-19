@@ -74,10 +74,10 @@ public class BusinessServiceTests
         var userId = UserId.New();
         var business = BusinessAggregate.Create("Beauty Salon", userId, "Description", "Location", Category.Haircut);
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, business.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
 
-        var result = await _sut.GetBusinessByIdAsync(userId, business.Id);
+        var result = await _sut.GetBusinessByIdAsync(business.Id);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(business.Id.Value, result.Value.Id);
@@ -88,13 +88,12 @@ public class BusinessServiceTests
     [Fact]
     public async Task GetBusinessByIdAsync_WhenBusinessMissing_ReturnsNotFound()
     {
-        var userId = UserId.New();
         var businessId = BusinessId.New();
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, businessId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BusinessAggregate?)null);
 
-        var result = await _sut.GetBusinessByIdAsync(userId, businessId);
+        var result = await _sut.GetBusinessByIdAsync(businessId);
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);

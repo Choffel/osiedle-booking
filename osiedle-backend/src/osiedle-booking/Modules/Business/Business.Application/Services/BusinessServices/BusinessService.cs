@@ -49,9 +49,9 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 

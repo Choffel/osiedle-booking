@@ -32,15 +32,13 @@ public class BusinessesController : ControllerBase
     }
 
     [HttpGet("{businessId:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<BusinessResponseDto>> GetBusinessByIdAsync(
         [FromRoute] Guid businessId,
         CancellationToken ct = default)
     {
         var business = BusinessId.From(businessId);
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var user = UserId.From(userId);
-        
-        return (await _businessManagementService.GetBusinessByIdAsync(user, business, ct)).ToActionResult();
+        return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
     }
 
     [HttpPut("{businessId:guid}")]
