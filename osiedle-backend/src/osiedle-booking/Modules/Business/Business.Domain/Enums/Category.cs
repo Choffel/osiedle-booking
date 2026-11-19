@@ -14,22 +14,21 @@ public enum Category
     FacialCare = 10,
     Waxing = 11
 }
-//TODO: Chenge to english/polish or delete 
 public static class CategoryExtensions
 {
     public static string ToDisplayName(this Category category) => category switch
     {
-        Category.Haircut => "Стрижка",
-        Category.BeardTrim => "Стрижка бороды",
-        Category.Shaving => "Бритье",
-        Category.Styling => "Укладка",
-        Category.Coloring => "Окрашивание",
-        Category.HairCare => "Уход за волосами",
-        Category.HairWash => "Мытье головы",
-        Category.KidsHaircut => "Детская стрижка",
-        Category.Combo => "Комплекс",
-        Category.FacialCare => "Уход за лицом",
-        Category.Waxing => "Восковая депиляция",
+        Category.Haircut => "Haircut",
+        Category.BeardTrim => "Beard Trim",
+        Category.Shaving => "Shaving",
+        Category.Styling => "Styling",
+        Category.Coloring => "Coloring",
+        Category.HairCare => "Hair Care",
+        Category.HairWash => "Hair Wash",
+        Category.KidsHaircut => "Kids Haircut",
+        Category.Combo => "Combo",
+        Category.FacialCare => "Facial Care",
+        Category.Waxing => "Waxing",
         _ => category.ToString()
     };
 }

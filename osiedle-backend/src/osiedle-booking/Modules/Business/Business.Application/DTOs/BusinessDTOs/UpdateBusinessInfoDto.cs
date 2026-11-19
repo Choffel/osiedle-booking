@@ -1,10 +1,8 @@
-﻿using Business.Domain.Enums;
-
-namespace Business.Application.DTOs;
+﻿namespace Business.Application.DTOs.BusinessDTOs;
 
 public record UpdateBusinessInfoDto(
     string NewName,
     string NewDescription,
     string NewLocation,
-    Category NewCategory
+    string NewCategory
     );

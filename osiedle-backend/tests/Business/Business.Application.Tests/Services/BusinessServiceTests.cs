@@ -104,7 +104,8 @@ public class BusinessServiceTests
     {
         var userId = UserId.New();
         var business = BusinessAggregate.Create("Old name", userId, "Old description", "Old location", Category.Haircut);
-        var dto = new UpdateBusinessInfoDto("New name", "New description", "New location", Category.BeardTrim);
+        var dto = new UpdateBusinessInfoDto(
+            "New name", "New description", "New location", nameof(Category.BeardTrim));
 
         _businessRepository
             .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
@@ -119,6 +120,7 @@ public class BusinessServiceTests
         Assert.Equal(dto.NewName, business.Name);
         Assert.Equal(dto.NewDescription, business.Description);
         Assert.Equal(dto.NewLocation, business.Location);
+        Assert.Equal(Category.BeardTrim, business.Category);
         Assert.Equal(dto.NewName, result.Value.Name);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -133,7 +135,8 @@ public class BusinessServiceTests
             .ReturnsAsync((BusinessAggregate?)null);
 
         var result = await _sut.UpdateBusinessInfoAsync(
-            userId, businessId, new UpdateBusinessInfoDto("New name", "New description", "New location", Category.BeardTrim));
+            userId, businessId,
+            new UpdateBusinessInfoDto("New name", "New description", "New location", nameof(Category.BeardTrim)));
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);

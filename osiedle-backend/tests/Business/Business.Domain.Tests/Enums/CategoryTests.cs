@@ -21,18 +21,18 @@ public class CategoryTests
     }
 
     [Theory]
-    [InlineData(Category.Haircut, "Стрижка")]
-    [InlineData(Category.BeardTrim, "Стрижка бороды")]
-    [InlineData(Category.Shaving, "Бритье")]
-    [InlineData(Category.Styling, "Укладка")]
-    [InlineData(Category.Coloring, "Окрашивание")]
-    [InlineData(Category.HairCare, "Уход за волосами")]
-    [InlineData(Category.HairWash, "Мытье головы")]
-    [InlineData(Category.KidsHaircut, "Детская стрижка")]
-    [InlineData(Category.Combo, "Комплекс")]
-    [InlineData(Category.FacialCare, "Уход за лицом")]
-    [InlineData(Category.Waxing, "Восковая депиляция")]
-    public void ToDisplayName_ReturnsExpectedRussianName(Category category, string expectedDisplayName)
+    [InlineData(Category.Haircut, "Haircut")]
+    [InlineData(Category.BeardTrim, "Beard Trim")]
+    [InlineData(Category.Shaving, "Shaving")]
+    [InlineData(Category.Styling, "Styling")]
+    [InlineData(Category.Coloring, "Coloring")]
+    [InlineData(Category.HairCare, "Hair Care")]
+    [InlineData(Category.HairWash, "Hair Wash")]
+    [InlineData(Category.KidsHaircut, "Kids Haircut")]
+    [InlineData(Category.Combo, "Combo")]
+    [InlineData(Category.FacialCare, "Facial Care")]
+    [InlineData(Category.Waxing, "Waxing")]
+    public void ToDisplayName_ReturnsExpectedEnglishName(Category category, string expectedDisplayName)
     {
         Assert.Equal(expectedDisplayName, category.ToDisplayName());
     }

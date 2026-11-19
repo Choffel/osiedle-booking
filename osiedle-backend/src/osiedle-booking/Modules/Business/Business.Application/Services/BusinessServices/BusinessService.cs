@@ -3,6 +3,7 @@ using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
+using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
@@ -72,7 +73,13 @@ public class BusinessService : IBusinessManagementService
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
-        business.ChangeCategory(updateBusinessInfoDto.NewCategory);
+        if (!Enum.TryParse<Category>(updateBusinessInfoDto.NewCategory, true, out var category) ||
+            !Enum.IsDefined(category))
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
+        }
+
+        business.ChangeCategory(category);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

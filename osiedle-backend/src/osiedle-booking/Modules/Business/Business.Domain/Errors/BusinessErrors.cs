@@ -14,4 +14,7 @@ public static class BusinessErrors
 
     public static readonly Error Forbidden =
         Error.Forbidden("Business.Forbidden", "You cannot manage this business");
+
+    public static readonly Error InvalidCategory =
+        Error.Validation("Business.InvalidCategory", "Invalid business category");
 }

@@ -33,10 +33,10 @@ public class CategoryControllerTests : IClassFixture<ApiFactory>
         var haircut = categories!.FirstOrDefault(c => c.Name == nameof(Category.Haircut));
         haircut.Should().NotBeNull();
         haircut!.Id.Should().Be((int)Category.Haircut);
-        haircut.DisplayName.Should().Be("Стрижка");
+        haircut.DisplayName.Should().Be("Haircut");
 
         var beardTrim = categories.FirstOrDefault(c => c.Name == nameof(Category.BeardTrim));
         beardTrim.Should().NotBeNull();
-        beardTrim!.DisplayName.Should().Be("Стрижка бороды");
+        beardTrim!.DisplayName.Should().Be("Beard Trim");
     }
 }
