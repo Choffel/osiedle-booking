@@ -39,7 +39,9 @@ public class BusinessService : IBusinessManagementService
             createBusinessDto.Name, 
             ownerId, 
             createBusinessDto.Description, 
-            createBusinessDto.Location);
+            createBusinessDto.Location,
+            createBusinessDto.Category
+            );
         
         _businessRepository.Add(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -47,19 +49,19 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
         if (business == null)
             return BusinessErrors.NotFound;
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId,
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
 
         if (business is null)
         {
@@ -68,15 +70,17 @@ public class BusinessService : IBusinessManagementService
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
+        business.ChangeCategory(updateBusinessInfoDto.NewCategory);
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
         
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;

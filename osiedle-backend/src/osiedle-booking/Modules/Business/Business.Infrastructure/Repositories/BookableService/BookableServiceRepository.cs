@@ -31,7 +31,8 @@ public class BookableServiceRepository : IBookableServiceRepository
             .Where(s => s.Id == id) 
             .Select(s => new ServiceShortInfoDto(
                 s.Id.Value,         
-                s.EmployeeId.Value,  
+                s.EmployeeId.Value,
+                s.Category,  
                 s.ServiceName,
                 s.Price,
                 s.Duration
@@ -47,6 +48,7 @@ public class BookableServiceRepository : IBookableServiceRepository
             .Select(s => new ServiceShortInfoDto(
                 s.Id.Value,
                 s.EmployeeId.Value,
+                s.Category,
                 s.ServiceName,
                 s.Price,
                 s.Duration

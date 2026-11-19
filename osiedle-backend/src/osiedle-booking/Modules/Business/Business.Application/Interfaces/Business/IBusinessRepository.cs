@@ -13,7 +13,7 @@ public interface IBusinessRepository
     
     Task<bool>ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
     
-    Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct);
+    Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(UserId userId, BusinessId businessId, CancellationToken ct = default);
     
     Task<bool> EmployeeBelongsToBusinessAsync(EmployeeId employeeId, BusinessId businessId, CancellationToken ct);
     

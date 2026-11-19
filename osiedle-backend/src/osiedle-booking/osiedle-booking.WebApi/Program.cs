@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Bookings.Infrastructure;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
@@ -30,6 +32,7 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
+builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddFilesInfrastructure(builder.Configuration, connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -39,6 +42,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<BusinessId>(BusinessId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(

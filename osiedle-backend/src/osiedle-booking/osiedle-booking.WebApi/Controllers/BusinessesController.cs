@@ -29,33 +29,38 @@ public class BusinessesController : ControllerBase
 
     [HttpGet("{businessId:guid}")]
     public async Task<ActionResult<BusinessResponseDto>> GetBusinessByIdAsync(
-        Guid businessId,
+        [FromRoute] Guid UserId,
+        [FromRoute] Guid businessId,
         CancellationToken ct = default)
     {
         var business = BusinessId.From(businessId);
+        var user = BuildingBlocks.ValueObjects.UserId.From(UserId);
         
-        return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
+        return (await _businessManagementService.GetBusinessByIdAsync(user, business, ct)).ToActionResult();
     }
 
     [HttpPut("{businessId:guid}")]
     public async Task<ActionResult<BusinessResponseDto>> UpdateBusinessInfoAsync(
+        Guid userId,
         Guid businessId,
         [FromBody] UpdateBusinessInfoDto dto,
         CancellationToken ct = default)
     {
         var business = BusinessId.From(businessId);
+        var user = UserId.From(userId);
         
-        return (await _businessManagementService.UpdateBusinessInfoAsync(business, dto, ct)).ToActionResult();
+        return (await _businessManagementService.UpdateBusinessInfoAsync(user, business, dto, ct)).ToActionResult();
     }
 
     [HttpPost("{businessId:guid}/archive")]
     public async Task<ActionResult<BusinessResponseDto>> ArchiveBusinessAsync(
-        Guid businessId,
+        [FromRoute] Guid UserId,
+        [FromRoute] Guid businessId,
         CancellationToken ct = default)
     {
-        
+        var user = BuildingBlocks.ValueObjects.UserId.From(UserId);
         var business = BusinessId.From(businessId);
         
-        return (await _businessManagementService.ArchiveBusinessAsync(business, ct)).ToActionResult();
+        return (await _businessManagementService.ArchiveBusinessAsync(user, business, ct)).ToActionResult();
     }
 }

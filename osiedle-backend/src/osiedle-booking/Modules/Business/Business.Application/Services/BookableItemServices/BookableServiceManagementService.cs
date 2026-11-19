@@ -30,8 +30,14 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     {
         var employeeId = EmployeeId.From(bookableServiceDto.EmployeeId);
 
+        if (!Enum.IsDefined(bookableServiceDto.Category))
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
+        }
+
         var bookableService = BookableService.Create(
             employeeId,
+            bookableServiceDto.Category,
             bookableServiceDto.ServiceName,
             bookableServiceDto.ServiceDescription,
             bookableServiceDto.ServicePrice,
@@ -89,7 +95,13 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         }
     }
     
+    if (!Enum.IsDefined(dto.Category))
+    {
+        return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
+    }
+    
     bookableService.UpdateInfo(
+        dto.Category,
         dto.ServiceName,
         dto.ServiceDescription,
         dto.ServicePrice,
