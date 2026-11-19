@@ -38,14 +38,6 @@ public class BusinessRepository : IBusinessRepository
         return business;
     }
 
-    public async Task<BusinessAggregate?> GetBusinessByIdAsync(UserId userId, BusinessId businessId, CancellationToken ct = default)
-    {
-        var business = await _context.Businesses
-            .Include(s => s.Services)
-            .FirstOrDefaultAsync(b => b.Id == businessId, ct);
-        return business;
-    }
-
     public Task<bool> EmployeeBelongsToBusinessAsync(
         EmployeeId employeeId, 
         BusinessId businessId, 

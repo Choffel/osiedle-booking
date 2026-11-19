@@ -91,7 +91,7 @@ public class EmployeeServiceTests
             .Setup(r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(currentUserId, businessId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
         _employeeRepository
             .Setup(r => r.AddEmployee(It.IsAny<EmployeeAggregate>()))
@@ -116,7 +116,7 @@ public class EmployeeServiceTests
             .Setup(r => r.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(It.IsAny<UserId>(), businessId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Business.Domain.Aggregates.Business?)null);
 
         var result = await _sut.CreateEmployeeAsync(UserId.New(), dto);
@@ -311,7 +311,7 @@ public class EmployeeServiceTests
             .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(employee);
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(currentUserId, business.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
 
         var result = await _sut.DeactivateEmployeeAsync(currentUserId, employee.Id);

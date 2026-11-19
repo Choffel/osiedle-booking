@@ -107,7 +107,7 @@ public class BusinessServiceTests
         var dto = new UpdateBusinessInfoDto("New name", "New description", "New location", Category.BeardTrim);
 
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, business.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -129,7 +129,7 @@ public class BusinessServiceTests
         var userId = UserId.New();
         var businessId = BusinessId.New();
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, businessId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BusinessAggregate?)null);
 
         var result = await _sut.UpdateBusinessInfoAsync(
@@ -147,7 +147,7 @@ public class BusinessServiceTests
         var business = BusinessAggregate.Create("Name", userId, "Description", "Location", Category.Haircut);
 
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, business.Id, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(business);
         _unitOfWork
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -168,7 +168,7 @@ public class BusinessServiceTests
         var userId = UserId.New();
         var businessId = BusinessId.New();
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(userId, businessId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBusinessByIdAsync(businessId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BusinessAggregate?)null);
 
         var result = await _sut.ArchiveBusinessAsync(userId, businessId);

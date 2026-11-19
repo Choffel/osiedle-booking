@@ -34,7 +34,7 @@ public class EmployeeService : IEmployeeManagementService
 
         if (businessId is not null)
         {
-            var business = await _businessRepository.GetBusinessByIdAsync(currentUserId, businessId.Value, ct);
+            var business = await _businessRepository.GetBusinessByIdAsync(businessId.Value, ct);
             if (business is null)
                 return Result.Failure<EmployeeId>(EmployeeErrors.BusinessNotFound);
             if (business.OwnerId != currentUserId)
@@ -114,8 +114,7 @@ public class EmployeeService : IEmployeeManagementService
         if (employee.BusinessId is not null)
         {
             var businessId = employee.BusinessId.Value;
-            var business = await _businessRepository.GetBusinessByIdAsync(
-                currentUserId, businessId, ct);
+            var business = await _businessRepository.GetBusinessByIdAsync(businessId, ct);
             return business?.OwnerId == currentUserId;
         }
 

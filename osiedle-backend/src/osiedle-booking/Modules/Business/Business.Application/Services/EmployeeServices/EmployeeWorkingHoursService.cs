@@ -83,8 +83,7 @@ public class EmployeeWorkingHoursService : IEmployeeWorkingHoursService
         if (employee.BusinessId is not null)
         {
             var businessId = employee.BusinessId.Value;
-            var business = await _businessRepository.GetBusinessByIdAsync(
-                currentUserId, businessId, ct);
+            var business = await _businessRepository.GetBusinessByIdAsync(businessId, ct);
             return business?.OwnerId == currentUserId;
         }
 

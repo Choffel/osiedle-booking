@@ -61,12 +61,14 @@ public class BusinessService : IBusinessManagementService
     public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.NotFound);
         }
+        if (business.OwnerId != userId)
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
@@ -80,10 +82,12 @@ public class BusinessService : IBusinessManagementService
     public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
         
-        var business = await _businessRepository.GetBusinessByIdAsync(userId, businessId, cancellationToken);
+        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;
+        if (business.OwnerId != userId)
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
 
         
         business.ArchiveBusiness();
