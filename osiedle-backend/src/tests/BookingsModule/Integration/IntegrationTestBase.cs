@@ -48,7 +48,7 @@ public sealed class FakeBookableServiceApi : IBookableServiceInternalApi
 
     public Task<Result<ServiceShortInfoDto>> GetServiceInfoAsync(BookableServiceId id, CancellationToken ct = default) =>
         Task.FromResult(Result<ServiceShortInfoDto>.Success(
-            new ServiceShortInfoDto(id.Value, Guid.Empty, "Test service", Price, Duration)));
+            new ServiceShortInfoDto(id.Value, Guid.Empty, Business.Domain.Enums.Category.Haircut, "Test service", Price, Duration)));
 
     public Task<Result<IReadOnlyCollection<ServiceShortInfoDto>>> GetServicesByEmployeeAsync(
         EmployeeId employeeId, CancellationToken ct = default) =>

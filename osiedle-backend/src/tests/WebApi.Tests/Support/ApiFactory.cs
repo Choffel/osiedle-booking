@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using Business.Domain.Aggregates;
 using Business.Domain.Entities;
+using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -16,6 +17,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
+using Notifications.Infrastructure.Services;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
@@ -53,6 +55,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("JwtSettings:Audience", JwtAudience);
         builder.UseSetting("JwtSettings:AccessTokenExpiryMinutes", "15");
         builder.UseSetting("JwtSettings:RefreshTokenExpiryDays", "7");
+        builder.UseSetting("SmtpSettings:Host", "localhost");
+        builder.UseSetting("SmtpSettings:Port", "1025");
+        builder.UseSetting("SmtpSettings:UseSsl", "false");
+        builder.UseSetting("SmtpSettings:SenderEmail", "test@example.com");
+        builder.UseSetting("SmtpSettings:SenderName", "WebApi Tests");
 
         builder.ConfigureServices(services =>
         {
@@ -63,6 +70,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDbContextOptionsConfiguration<UsersDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<BookingsDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<BusinessDbContext>>();
+            services.RemoveAll<ISmtpClientWrapper>();
+            services.AddSingleton<ISmtpClientWrapper, NoOpSmtpClientWrapper>();
 
             // The snapshot is authored for Npgsql, so a SQLite-built model always
             // differs from it — MigrateAsync's pending-changes validation must be off.
@@ -78,12 +87,19 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         });
     }
 
+    private sealed class NoOpSmtpClientWrapper : ISmtpClientWrapper
+    {
+        public Task SendMimeMessageAsync(MimeKit.MimeMessage message, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+    }
+
     protected override IHost CreateHost(IHostBuilder builder)
     {
         var host = base.CreateHost(builder);
         // Runs after Program's startup block (migrations + role seeding) and before
         // any request can reach the Bookings endpoints. Must use the returned host's
         // services: the factory's `Services` property would re-enter StartServer here.
+        EnsureBusinessSchema(host.Services);
         EnsureBookingsSchema(host.Services);
         return host;
     }
@@ -99,6 +115,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     /// is created once here (idempotent) before the first booking endpoint runs.
     /// </summary>
     public void EnsureBookingsSchema() => EnsureBookingsSchema(Services);
+
+    private static void EnsureBusinessSchema(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BusinessDbContext>();
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
+    }
 
     private void EnsureBookingsSchema(IServiceProvider services)
     {
@@ -230,7 +254,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         await db.SaveChangesAsync();
 
         var service = BookableService.Create(
-            employee.Id, "Strzyzenie", "Test service", price, duration ?? TimeSpan.FromMinutes(30));
+            employee.Id, Category.Haircut, "Strzyzenie", "Test service", price, duration ?? TimeSpan.FromMinutes(30));
         db.BookableServices.Add(service);
         await db.SaveChangesAsync();
 
