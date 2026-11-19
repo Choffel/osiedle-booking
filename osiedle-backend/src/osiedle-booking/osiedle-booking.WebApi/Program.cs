@@ -132,16 +132,19 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
 
-    var dbContext = services.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
 
-    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
-    await businessDbContext.Database.MigrateAsync();
+        var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+        await businessDbContext.Database.MigrateAsync();
 
-    var filesDbContext = services.GetRequiredService<FilesDbContext>();
-    await filesDbContext.Database.MigrateAsync();
+        var filesDbContext = services.GetRequiredService<FilesDbContext>();
+        await filesDbContext.Database.MigrateAsync();
 
-    await RoleInitData.InitializeAsync(UserRoles.All,roleManager);
+        await RoleInitData.InitializeAsync(UserRoles.All, roleManager);
+    }
 }
 
 app.MapControllers();

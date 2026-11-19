@@ -8,6 +8,7 @@ using Business.Domain.Entities;
 using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -23,9 +24,13 @@ using Users.Domain.Entity.RefreshToken;
 using Users.Domain.Entity.RefreshToken.ValueObjects;
 using Users.Domain.Entity.User;
 using Users.Domain.Entity.User.ValueObjects;
+using osiedle_booking.BuildingBlocks.Roles;
+using Users.Infrastructure.Data.InitialData;
+using Users.Infrastructure.Identity.Models;
 using UsersDbContext = Users.Infrastructure.Data.ApplicationDbContext;
 using BookingsDbContext = Bookings.Infrastructure.Data.ApplicationDbContext;
 using Business.Infrastructure.Persistence;
+using Files.Infrastructure.Persistence;
 
 namespace WebApi.Tests.Support;
 
@@ -43,6 +48,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     private readonly SqliteConnection _usersDb = NewConnection();
     private readonly SqliteConnection _bookingsDb = NewConnection();
     private readonly SqliteConnection _businessDb = NewConnection();
+    private readonly SqliteConnection _filesDb = NewConnection();
     private bool _bookingsSchemaEnsured;
 
     private static SqliteConnection NewConnection() =>
@@ -50,6 +56,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
         builder.UseSetting("JwtSettings:Secret", JwtSecret);
         builder.UseSetting("JwtSettings:Issuer", JwtIssuer);
         builder.UseSetting("JwtSettings:Audience", JwtAudience);
@@ -66,10 +73,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             Open(_usersDb);
             Open(_bookingsDb);
             Open(_businessDb);
+            Open(_filesDb);
 
             services.RemoveAll<IDbContextOptionsConfiguration<UsersDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<BookingsDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<BusinessDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<FilesDbContext>>();
             services.RemoveAll<ISmtpClientWrapper>();
             services.AddSingleton<ISmtpClientWrapper, NoOpSmtpClientWrapper>();
 
@@ -84,6 +93,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddDbContext<BusinessDbContext>(o => o
                 .UseSqlite(_businessDb)
                 .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
+            services.AddDbContext<FilesDbContext>(o => o
+                .UseSqlite(_filesDb)
+                .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
         });
     }
 
@@ -96,12 +108,21 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override IHost CreateHost(IHostBuilder builder)
     {
         var host = base.CreateHost(builder);
-        // Runs after Program's startup block (migrations + role seeding) and before
-        // any request can reach the Bookings endpoints. Must use the returned host's
-        // services: the factory's `Services` property would re-enter StartServer here.
+        EnsureUserSchema(host.Services);
         EnsureBusinessSchema(host.Services);
+        EnsureFilesSchema(host.Services);
         EnsureBookingsSchema(host.Services);
         return host;
+    }
+
+    private static void EnsureUserSchema(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+        db.Database.EnsureCreated();
+
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<RoleIdentity>>();
+        RoleInitData.InitializeAsync(UserRoles.All, roleManager).GetAwaiter().GetResult();
     }
 
     private static void Open(SqliteConnection connection)
@@ -121,6 +142,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BusinessDbContext>();
         db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
+    }
+
+    private static void EnsureFilesSchema(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FilesDbContext>();
         db.Database.EnsureCreated();
     }
 
