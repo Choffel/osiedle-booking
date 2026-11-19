@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Files.Application.DTOs;
 using Files.Application.Interfaces;
 using Files.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.WebApi.Extensions;
 
@@ -8,6 +10,7 @@ namespace osiedle_booking.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FilesController : ControllerBase
 {
     private readonly IFileService _fileService;
@@ -16,6 +19,9 @@ public class FilesController : ControllerBase
     {
         _fileService = fileService;
     }
+
+    private Guid GetCurrentUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpPost("companies/{companyId:guid}/avatar")]
     [Consumes("multipart/form-data")]
