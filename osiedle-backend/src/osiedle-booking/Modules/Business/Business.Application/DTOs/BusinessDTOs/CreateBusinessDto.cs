@@ -8,5 +8,5 @@ public record CreateBusinessDto(
     Guid OwnerId,
     string Description,
     string Location,
-    Category Category
+    string Category
     );

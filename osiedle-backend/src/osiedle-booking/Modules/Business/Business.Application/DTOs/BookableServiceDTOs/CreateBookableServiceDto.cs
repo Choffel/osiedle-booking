@@ -4,7 +4,7 @@ namespace Business.Application.DTOs.BookableServiceDTOs;
 
 public record CreateBookableServiceDto(
     Guid EmployeeId,
-    Category Category,
+    string Category,
     string ServiceName,
     string ServiceDescription,
     decimal ServicePrice,

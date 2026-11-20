@@ -25,7 +25,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WithFreeOwner_AddsBusinessAndSaves()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Haircuts and more", "Main Street 1", Category.Haircut);
+        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Haircuts and more", "Main Street 1", nameof(Category.Haircut));
         BusinessAggregate? added = null;
 
         _businessRepository
@@ -54,7 +54,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WhenOwnerAlreadyHasBusiness_ReturnsConflict()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Description", "Location", Category.Haircut);
+        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Description", "Location", nameof(Category.Haircut));
 
         _businessRepository
             .Setup(r => r.ExistsByOwnerIdAsync(UserId.From(dto.OwnerId), It.IsAny<CancellationToken>()))

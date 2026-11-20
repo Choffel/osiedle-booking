@@ -14,6 +14,10 @@ public interface IBusinessRepository
     Task<bool>ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
     
     Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Domain.Aggregates.Business>> GetBusinessesByCategoryAsync(
+        Domain.Enums.Category category,
+        CancellationToken ct = default);
     
     Task<bool> EmployeeBelongsToBusinessAsync(EmployeeId employeeId, BusinessId businessId, CancellationToken ct);
     

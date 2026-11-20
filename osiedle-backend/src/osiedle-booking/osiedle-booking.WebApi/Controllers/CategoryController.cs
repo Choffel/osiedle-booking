@@ -1,4 +1,5 @@
 using Business.Application.DTOs.CategoryDTOs;
+using Business.Application.DTOs;
 using Business.Application.Interfaces.Categories.Services;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.WebApi.Extensions;
@@ -20,6 +21,15 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<CategoryResponseDTO>>> GetCategoriesAsync(CancellationToken ct)
     {
         var result = await _categoryService.GetCategoriesAsync(ct);
+        return result.ToActionResult();
+    }
+
+    [HttpGet("businesses/{category}")]
+    public async Task<ActionResult<IReadOnlyList<BusinessResponseDto>>> GetBusinessesByCategoryAsync(
+        string category,
+        CancellationToken ct)
+    {
+        var result = await _categoryService.GetAllBusinessesByCategoryAsync(category, ct);
         return result.ToActionResult();
     }
 }

@@ -36,12 +36,18 @@ public class BusinessService : IBusinessManagementService
             return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
         }
         
+        if (!Enum.TryParse<Category>(createBusinessDto.Category, true, out var category) ||
+            !Enum.IsDefined(category))
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
+        }
+
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             ownerId, 
             createBusinessDto.Description, 
             createBusinessDto.Location,
-            createBusinessDto.Category
+            category
             );
         
         _businessRepository.Add(business, cancellationToken);

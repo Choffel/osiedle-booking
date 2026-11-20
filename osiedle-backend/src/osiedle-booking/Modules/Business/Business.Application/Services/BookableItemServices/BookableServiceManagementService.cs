@@ -30,25 +30,26 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     {
         var employeeId = EmployeeId.From(bookableServiceDto.EmployeeId);
 
-        if (!Enum.IsDefined(bookableServiceDto.Category))
+        if (!Enum.TryParse<Category>(bookableServiceDto.Category, true, out var category) ||
+            !Enum.IsDefined(category))
         {
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
         }
-
-        var bookableService = BookableService.Create(
-            employeeId,
-            bookableServiceDto.Category,
-            bookableServiceDto.ServiceName,
-            bookableServiceDto.ServiceDescription,
-            bookableServiceDto.ServicePrice,
-            bookableServiceDto.ServiceDuration
-        );
 
         bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
         if (!employeeExists)
         {
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
         }
+
+        var bookableService = BookableService.Create(
+            employeeId,
+            category,
+            bookableServiceDto.ServiceName,
+            bookableServiceDto.ServiceDescription,
+            bookableServiceDto.ServicePrice,
+            bookableServiceDto.ServiceDuration
+        );
 
         bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(bookableService.ServiceName, employeeId, ct);
         if (isNameTaken)
