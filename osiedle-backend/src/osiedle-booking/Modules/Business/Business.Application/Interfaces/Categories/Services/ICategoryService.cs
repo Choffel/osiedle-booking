@@ -9,6 +9,6 @@ public interface ICategoryService
     Task<Result<IReadOnlyList<CategoryResponseDTO>>> GetCategoriesAsync(CancellationToken ct = default);
 
     Task<Result<IReadOnlyList<BusinessResponseDto>>> GetAllBusinessesByCategoryAsync(
-        string category,
+        string slug,
         CancellationToken ct = default);
 }

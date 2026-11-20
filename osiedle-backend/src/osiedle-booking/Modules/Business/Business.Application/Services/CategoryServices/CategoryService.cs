@@ -23,19 +23,19 @@ public class CategoryService : ICategoryService
         var categories = Enum.GetValues<Domain.Enums.Category>()
             .Select(c => new CategoryResponseDTO(
                 (int)c,
-                c.ToString(),
                 c.ToDisplayName(),
-                c.ToSlug()))
+                c.ToSlug()
+            ))
             .ToList();
 
         return Task.FromResult(Result<IReadOnlyList<CategoryResponseDTO>>.Success(categories));
     }
 
     public async Task<Result<IReadOnlyList<BusinessResponseDto>>> GetAllBusinessesByCategoryAsync(
-        string category,
+        string slug,
         CancellationToken ct = default)
     {
-        if (!CategoryExtensions.TryFromSlug(category, out var parsedCategory))
+        if (!CategoryExtensions.TryFromSlug(slug, out var parsedCategory))
         {
             return Result<IReadOnlyList<BusinessResponseDto>>.Failure(BusinessErrors.InvalidCategory);
         }
