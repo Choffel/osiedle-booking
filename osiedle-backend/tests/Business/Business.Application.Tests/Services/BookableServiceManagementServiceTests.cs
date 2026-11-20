@@ -114,7 +114,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, (Category)999, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            service.EmployeeId, "invalid-category", "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -132,7 +132,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            EmployeeId.New(), Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -148,7 +148,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenServiceMissing_ReturnsNotFound()
     {
         var dto = new UpdateBookableServiceDto(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            EmployeeId.New(), Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
                 It.IsAny<BookableServiceId>(), It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -170,7 +170,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, Category.BeardTrim, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, Category.BeardTrim.ToSlug(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
@@ -198,7 +198,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, Category.BeardTrim, "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, Category.BeardTrim.ToSlug(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(
@@ -219,7 +219,7 @@ public class BookableServiceManagementServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.ServiceName, service.ServiceName);
-        Assert.Equal(dto.Category, service.Category);
+        Assert.Equal(Category.BeardTrim, service.Category);
         Assert.Equal(dto.ServiceDescription, service.Description);
         Assert.Equal(dto.ServicePrice, service.Price);
         Assert.Equal(dto.ServiceDuration, service.Duration);
@@ -232,7 +232,7 @@ public class BookableServiceManagementServiceTests
         var service = BookableService.Create(
             EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
-            service.EmployeeId, Category.Haircut, "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
+            service.EmployeeId, Category.Haircut.ToSlug(), "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(

@@ -34,6 +34,7 @@ public class CategoryControllerTests : IClassFixture<ApiFactory>
         haircut.Should().NotBeNull();
         haircut!.Id.Should().Be((int)Category.Haircut);
         haircut.DisplayName.Should().Be("Haircut");
+        haircut.Slug.Should().Be("haircut");
 
         var beardTrim = categories.FirstOrDefault(c => c.Name == nameof(Category.BeardTrim));
         beardTrim.Should().NotBeNull();

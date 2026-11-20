@@ -21,7 +21,11 @@ public class CategoryService : ICategoryService
     public Task<Result<IReadOnlyList<CategoryResponseDTO>>> GetCategoriesAsync(CancellationToken ct = default)
     {
         var categories = Enum.GetValues<Domain.Enums.Category>()
-            .Select(c => new CategoryResponseDTO((int)c, c.ToString(), c.ToDisplayName()))
+            .Select(c => new CategoryResponseDTO(
+                (int)c,
+                c.ToString(),
+                c.ToDisplayName(),
+                c.ToSlug()))
             .ToList();
 
         return Task.FromResult(Result<IReadOnlyList<CategoryResponseDTO>>.Success(categories));
@@ -31,8 +35,7 @@ public class CategoryService : ICategoryService
         string category,
         CancellationToken ct = default)
     {
-        if (!Enum.TryParse<Category>(category, true, out var parsedCategory) ||
-            !Enum.IsDefined(parsedCategory))
+        if (!CategoryExtensions.TryFromSlug(category, out var parsedCategory))
         {
             return Result<IReadOnlyList<BusinessResponseDto>>.Failure(BusinessErrors.InvalidCategory);
         }
