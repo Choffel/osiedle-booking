@@ -24,12 +24,12 @@ public class CategoryController : ControllerBase
         return result.ToActionResult();
     }
 
-    [HttpGet("businesses/{category}")]
+    [HttpGet("businesses/{categorySlug}")]
     public async Task<ActionResult<IReadOnlyList<BusinessResponseDto>>> GetBusinessesByCategoryAsync(
-        string category,
+        [FromRoute] string categorySlug,
         CancellationToken ct)
     {
-        var result = await _categoryService.GetAllBusinessesByCategoryAsync(category, ct);
+        var result = await _categoryService.GetAllBusinessesByCategoryAsync(categorySlug, ct);
         return result.ToActionResult();
     }
 }

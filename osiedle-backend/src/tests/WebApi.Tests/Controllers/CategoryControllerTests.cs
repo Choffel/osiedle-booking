@@ -30,13 +30,13 @@ public class CategoryControllerTests : IClassFixture<ApiFactory>
         categories.Should().NotBeNull();
         categories.Should().HaveCount(Enum.GetValues<Category>().Length);
 
-        var haircut = categories!.FirstOrDefault(c => c.Name == nameof(Category.Haircut));
+        var haircut = categories!.FirstOrDefault(c => c.Slug == Category.Haircut.ToSlug());
         haircut.Should().NotBeNull();
         haircut!.Id.Should().Be((int)Category.Haircut);
         haircut.DisplayName.Should().Be("Haircut");
         haircut.Slug.Should().Be("haircut");
 
-        var beardTrim = categories.FirstOrDefault(c => c.Name == nameof(Category.BeardTrim));
+        var beardTrim = categories.FirstOrDefault(c => c.Slug == Category.BeardTrim.ToSlug());
         beardTrim.Should().NotBeNull();
         beardTrim!.DisplayName.Should().Be("Beard Trim");
     }
