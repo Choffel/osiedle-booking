@@ -15,7 +15,7 @@ public class MappingExtensionsTests
     public void ToResponseDto_MapsBusinessFields()
     {
         var ownerId = UserId.New();
-        var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", "Location");
+        var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", "Location", Category.Haircut);
 
         var dto = business.ToResponseDto();
 
@@ -51,12 +51,13 @@ public class MappingExtensionsTests
     {
         var employeeId = EmployeeId.New();
         var service = BusinessServiceEntity.Create(
-            employeeId, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            employeeId, Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         var dto = service.ToDto();
 
         Assert.Equal(service.EmployeeId.Value, dto.EmployeeId);
         Assert.Equal(service.Id.Value, dto.BookableServiceId);
+        Assert.Equal(Category.Haircut, dto.Category);
         Assert.Equal(service.ServiceName, dto.ServiceName);
         Assert.Equal(service.Description, dto.ServiceDescription);
         Assert.Equal(service.Price, dto.ServicePrice);

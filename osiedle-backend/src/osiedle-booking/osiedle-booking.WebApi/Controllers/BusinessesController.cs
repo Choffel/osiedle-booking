@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Business.Application.DTOs;
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using osiedle_booking.WebApi.Extensions;
@@ -10,6 +12,7 @@ namespace osiedle_booking.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BusinessesController : ControllerBase
 {
     private readonly IBusinessManagementService _businessManagementService;
@@ -24,16 +27,17 @@ public class BusinessesController : ControllerBase
         [FromBody] CreateBusinessDto dto,
         CancellationToken ct = default)
     {
-        return (await _businessManagementService.CreateBusinessAsync(dto, ct)).ToActionResult();
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return (await _businessManagementService.CreateBusinessAsync(dto with { OwnerId = userId }, ct)).ToActionResult();
     }
 
     [HttpGet("{businessId:guid}")]
+    [AllowAnonymous]
     public async Task<ActionResult<BusinessResponseDto>> GetBusinessByIdAsync(
-        Guid businessId,
+        [FromRoute] Guid businessId,
         CancellationToken ct = default)
     {
         var business = BusinessId.From(businessId);
-        
         return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
     }
 
@@ -44,18 +48,21 @@ public class BusinessesController : ControllerBase
         CancellationToken ct = default)
     {
         var business = BusinessId.From(businessId);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = UserId.From(userId);
         
-        return (await _businessManagementService.UpdateBusinessInfoAsync(business, dto, ct)).ToActionResult();
+        return (await _businessManagementService.UpdateBusinessInfoAsync(user, business, dto, ct)).ToActionResult();
     }
 
     [HttpPost("{businessId:guid}/archive")]
     public async Task<ActionResult<BusinessResponseDto>> ArchiveBusinessAsync(
-        Guid businessId,
+        [FromRoute] Guid businessId,
         CancellationToken ct = default)
     {
-        
         var business = BusinessId.From(businessId);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = UserId.From(userId);
         
-        return (await _businessManagementService.ArchiveBusinessAsync(business, ct)).ToActionResult();
+        return (await _businessManagementService.ArchiveBusinessAsync(user, business, ct)).ToActionResult();
     }
 }

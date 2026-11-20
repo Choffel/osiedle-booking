@@ -30,7 +30,7 @@ public class BusinessRepository : IBusinessRepository
         return exist;
     }
 
-    public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct)
+    public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default)
     {
         var business = await _context.Businesses
             .Include(s => s.Services)

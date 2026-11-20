@@ -1,10 +1,12 @@
-﻿using osiedle_booking.BuildingBlocks.ValueObjects;
+﻿using Business.Domain.Enums;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 
 namespace Business.Application.DTOs.BusinessDTOs;
 
 public record CreateBusinessDto(
     string Name,
-    UserId OwnerId,
+    Guid OwnerId,
     string Description,
-    string Location
+    string Location,
+    Category Category
     );

@@ -1,6 +1,7 @@
 using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.Interfaces.BookableService;
 using Business.Application.Services.BookableItemServices;
+using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
@@ -46,7 +47,7 @@ public class BookableServiceInternalApiTests
     public async Task GetServiceInfoAsync_WhenServiceExists_ReturnsShortInfo()
     {
         var serviceInfo = new ServiceShortInfoDto(
-            Guid.NewGuid(), Guid.NewGuid(), "Haircut", 50m, TimeSpan.FromMinutes(45));
+            Guid.NewGuid(), Guid.NewGuid(), Category.Haircut, "Haircut", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.GetBasicInfoByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(serviceInfo);
@@ -75,8 +76,8 @@ public class BookableServiceInternalApiTests
     {
         IReadOnlyList<ServiceShortInfoDto> services =
         [
-            new ServiceShortInfoDto(Guid.NewGuid(), Guid.NewGuid(), "Haircut", 50m, TimeSpan.FromMinutes(45)),
-            new ServiceShortInfoDto(Guid.NewGuid(), Guid.NewGuid(), "Beard trim", 30m, TimeSpan.FromMinutes(20))
+            new ServiceShortInfoDto(Guid.NewGuid(), Guid.NewGuid(), Category.Haircut, "Haircut", 50m, TimeSpan.FromMinutes(45)),
+            new ServiceShortInfoDto(Guid.NewGuid(), Guid.NewGuid(), Category.BeardTrim, "Beard trim", 30m, TimeSpan.FromMinutes(20))
         ];
         _bookableServiceRepository
             .Setup(r => r.GetShortInfosByEmployeeIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))

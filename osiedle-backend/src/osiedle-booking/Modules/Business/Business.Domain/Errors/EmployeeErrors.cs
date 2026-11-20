@@ -18,4 +18,7 @@ public static class EmployeeErrors
     
     public static readonly Error InvalidDateRange =
         Error.Validation("Employee.InvalidDateRange", "End date must be after start date");
+
+    public static readonly Error Forbidden =
+        Error.Forbidden("Employee.Forbidden", "You cannot manage this employee");
 }

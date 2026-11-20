@@ -27,4 +27,7 @@ public static class BookableServiceErrors
     
     public static readonly Error AlreadyArchived =
         Error.Conflict("BookableService.AlreadyArchived", "Bookable service is already archived");
+    
+    public static readonly Error InvalidCategory =
+        Error.Validation("BookableService.InvalidCategory", "Invalid bookable service category");
 }

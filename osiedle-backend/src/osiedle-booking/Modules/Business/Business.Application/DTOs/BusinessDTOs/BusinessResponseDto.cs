@@ -7,6 +7,7 @@ public record BusinessResponseDto(
     string Description,
     string Location,
     string Status,
+    string Category,
     DateTime CreatedAt,
     DateTime? UpdatedAt
     );

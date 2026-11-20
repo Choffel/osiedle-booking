@@ -20,6 +20,8 @@ public class Employee : AggregateRoot<EmployeeId>
     public string Email { get; private set; }
 
     public BusinessId? BusinessId { get; private set; } = null;
+
+    public UserId? UserId { get; private set; }
     
     public EmploymentStatus Status { get; private set; } = EmploymentStatus.Active;
     
@@ -30,7 +32,7 @@ public class Employee : AggregateRoot<EmployeeId>
     
     
     private Employee(
-        EmployeeId id, BusinessId? businessId,
+        EmployeeId id, BusinessId? businessId, UserId? userId,
         string firstName, 
         string lastName, 
         string position, 
@@ -39,6 +41,7 @@ public class Employee : AggregateRoot<EmployeeId>
         ) : base(id)
     {
         BusinessId = businessId;
+        UserId = userId;
         ValidateAndAssign(firstName, lastName, position, review, email);
     }
     
@@ -81,10 +84,10 @@ public class Employee : AggregateRoot<EmployeeId>
         return email.Trim().ToLowerInvariant();
     }
     
-    public static Employee Create(BusinessId? businessId, string firstName, string lastName, string position, string? review, string email)
+    public static Employee Create(BusinessId? businessId, string firstName, string lastName, string position, string? review, string email, UserId? userId = null)
     {
         var employeeId = EmployeeId.New();
-        return new Employee(employeeId, businessId, firstName, lastName, position, review, email);
+        return new Employee(employeeId, businessId, userId, firstName, lastName, position, review, email);
     }
 
 }

@@ -9,6 +9,8 @@ public class BookableService : Entity<BookableServiceId>
 {
     public EmployeeId EmployeeId { get; private set; }
     
+    public Category Category { get; private set; }
+    
     public string ServiceName { get; private set; }
     
     public string Description { get; private set; }
@@ -21,26 +23,29 @@ public class BookableService : Entity<BookableServiceId>
     
     private BookableService() { }
     
-    private BookableService(BookableServiceId id, EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration) : base(id)   
+    private BookableService(BookableServiceId id, EmployeeId employeeId, Category category, string serviceName, string description, decimal price, TimeSpan duration) : base(id)   
     {
-        ValidateAndAssign(employeeId, serviceName, description, price, duration);
+        ValidateAndAssign(employeeId, category, serviceName, description, price, duration);
         Status = ServiceStatus.Active;
     }
     
-    public static BookableService Create(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
+    public static BookableService Create(EmployeeId employeeId, Category category, string serviceName, string description, decimal price, TimeSpan duration)
     {
         var id = BookableServiceId.New();
-        return new BookableService(id, employeeId, serviceName, description, price, duration);
+        return new BookableService(id, employeeId, category, serviceName, description, price, duration);
     }
     
-    public void UpdateInfo(string serviceName, string description, decimal price, TimeSpan duration)
+    public void UpdateInfo(Category category, string serviceName, string description, decimal price, TimeSpan duration)
     {
-        ValidateAndAssign(EmployeeId, serviceName, description, price, duration);
+        ValidateAndAssign(EmployeeId, category, serviceName, description, price, duration);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    private void ValidateAndAssign(EmployeeId employeeId, string serviceName, string description, decimal price, TimeSpan duration)
+    private void ValidateAndAssign(EmployeeId employeeId, Category category, string serviceName, string description, decimal price, TimeSpan duration)
     {
+        if (!Enum.IsDefined(category))
+            throw new ArgumentException("Invalid service category.", nameof(category));
+
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
 
         if (price <= 0)
@@ -50,6 +55,7 @@ public class BookableService : Entity<BookableServiceId>
             throw new ArgumentException("Service duration must be greater than zero.", nameof(duration));
 
         EmployeeId = employeeId;
+        Category = category;
         ServiceName = serviceName;
         Description = description;
         Price = price;

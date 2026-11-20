@@ -1,7 +1,12 @@
+using System.Text.Json.Serialization;
+using Bookings.Infrastructure;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
 using Business.Infrastructure.Persistence;
+using Files.Domain.ValueObjects;
+using Files.Infrastructure;
+using Files.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -13,9 +18,8 @@ using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
-using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
-
+    
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +32,9 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
+builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+builder.Services.AddFilesInfrastructure(builder.Configuration, connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 #endregion
@@ -36,6 +42,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<BusinessId>(BusinessId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(
@@ -44,6 +51,8 @@ builder.Services.AddControllers()
             new GuidValueObjectJsonConverter<BookableServiceId>(BookableServiceId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<WorkingHoursId>(WorkingHoursId.From, id => id.Value));
+        options.JsonSerializerOptions.Converters.Add(
+            new GuidValueObjectJsonConverter<FileId>(FileId.From, id => id.Value));
     });
 builder.Services.AddEndpointsApiExplorer();
 
@@ -101,19 +110,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
-
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database"),
-        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
-
-builder.Services.AddDbContext<BusinessDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database"),
-        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Business")));
-
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -136,13 +132,19 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
 
-    var dbContext = services.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
 
-    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
-    await businessDbContext.Database.MigrateAsync();
+        var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+        await businessDbContext.Database.MigrateAsync();
 
-    await RoleInitData.InitializeAsync(UserRoles.All,roleManager);
+        var filesDbContext = services.GetRequiredService<FilesDbContext>();
+        await filesDbContext.Database.MigrateAsync();
+
+        await RoleInitData.InitializeAsync(UserRoles.All, roleManager);
+    }
 }
 
 app.MapControllers();

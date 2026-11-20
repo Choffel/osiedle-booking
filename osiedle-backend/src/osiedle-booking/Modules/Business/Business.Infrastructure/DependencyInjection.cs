@@ -1,18 +1,15 @@
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.BookableService;
 using Business.Application.Interfaces.Business;
-using Business.Application.Interfaces.Category.Repositories;
-using Business.Application.Interfaces.Category.Services;
+using Business.Application.Interfaces.Categories.Services;
 using Business.Application.Interfaces.Employee;
-using Business.Application.Services;
 using Business.Application.Services.BookableItemServices;
 using Business.Application.Services.BusinessServices;
-using Business.Application.Services.Category;
+using Business.Application.Services.CategoryServices;
 using Business.Application.Services.EmployeeServices;
 using Business.Infrastructure.Persistence;
 using Business.Infrastructure.Repositories;
 using Business.Infrastructure.Repositories.Business;
-using Business.Infrastructure.Repositories.Category;
 using Business.Infrastructure.Repositories.Employee;
 using Business.Infrastructure.UnitOtWork;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +24,10 @@ public static class DependencyInjection
     {
         #region Database
         services.AddDbContext<BusinessDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(
+                connectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                    "__EFMigrationsHistory_Business")));
         #endregion
 
         #region Internal API
@@ -41,8 +41,6 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IEmployeeWorkingHoursRepository, EmployeeWorkingHoursRepository>();
         services.AddScoped<IBusinessRepository, BusinessRepository>();
-        services.AddScoped<ICategoryReadRepository, CategoryReadRepository>();
-        services.AddScoped<ICategoryWriteRepository, CategoryWriteRepository>();
         #endregion
         
         #region Unit of Work
