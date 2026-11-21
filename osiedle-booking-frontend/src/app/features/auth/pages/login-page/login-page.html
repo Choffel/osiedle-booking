@@ -1,0 +1,93 @@
+<div class="login-card">
+  <div class="login-card__header">
+    <h1 class="login-card__title">Zaloguj się</h1>
+    <p class="login-card__subtitle">
+      Wpisz swój e-mail i hasło, aby uzyskać dostęp do konta.
+    </p>
+  </div>
+
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="form-field">
+      <label for="email" class="form-field__label">
+        Adres e-mail <span class="form-field__required">*</span>
+      </label>
+      <div class="input-wrapper">
+        <input
+          formControlName="email"
+          id="email"
+          type="email"
+          class="input-wrapper__control"
+          placeholder="np. jan.kowalski@email.com"
+          autocomplete="email"
+        />
+        <span class="input-wrapper__icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg>
+        </span>
+      </div>
+
+      @if (loginForm.controls.email.invalid && loginForm.controls.email.touched) {
+        @if (loginForm.controls.email.hasError('required')) {
+          <span class="form-field__error">Adres e-mail jest wymagany</span>
+        } @else if (loginForm.controls.email.hasError('email')) {
+          <span class="form-field__error">Wpisz poprawny adres e-mail</span>
+        }
+      }
+    </div>
+
+    <div class="form-field">
+      <div class="form-field__label-row">
+        <label for="password" class="form-field__label">
+          Hasło <span class="form-field__required">*</span>
+        </label>
+        <a routerLink="/auth/forgot-password" class="forgot-link">
+          Nie pamiętasz hasła?
+        </a>
+      </div>
+
+      <app-password-input
+        inputId="password"
+        placeholder="Wpisz hasło"
+        autocomplete="current-password"
+        [control]="loginForm.controls.password"
+      />
+
+      @if (loginForm.controls.password.invalid && loginForm.controls.password.touched) {
+        @if (loginForm.controls.password.hasError('required')) {
+          <span class="form-field__error">Hasło jest wymagane</span>
+        } @else if (loginForm.controls.password.hasError('minlength')) {
+          <span class="form-field__error">Hasło musi mieć co najmniej 6 znaków</span>
+        }
+      }
+    </div>
+
+    @if (serverError()) {
+      <div class="form-field__error">{{ serverError() }}</div>
+    }
+
+    <div class="login-form__actions">
+      <a routerLink="/register" class="btn btn--secondary">
+        Nie masz konta? Utwórz konto
+      </a>
+
+      <button type="submit" class="btn btn--primary" [disabled]="isLoading()">
+        <span>{{ isLoading() ? 'Logowanie...' : 'Zaloguj się' }}</span>
+        @if (!isLoading()) {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        }
+      </button>
+    </div>
+  </form>
+
+  <p class="login-card__legal">
+    Kontynuując, akceptujesz nasz
+    <a routerLink="/terms" class="legal-link">Regulamin</a>
+    oraz
+    <a routerLink="/privacy" class="legal-link">Politykę prywatności</a>.
+  </p>
+</div>

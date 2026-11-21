@@ -1,0 +1,160 @@
+<div class="register-card">
+  <div class="register-card__badge">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+    <span>Rejestracja klienta</span>
+  </div>
+
+  <div class="register-card__header">
+    <h1 class="register-card__title">Utwórz konto w Barberio</h1>
+    <p class="register-card__subtitle">Podaj swoje dane, aby utworzyć konto</p>
+  </div>
+
+  <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <!-- E-mail -->
+    <div class="form-field">
+      <label for="email" class="form-field__label">
+        Adres e-mail <span class="form-field__required">*</span>
+      </label>
+      <div class="input-wrapper input-wrapper--left-icon">
+        <span class="input-wrapper__left-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg>
+        </span>
+        <input
+          formControlName="email"
+          id="email"
+          type="email"
+          class="input-wrapper__control"
+          placeholder="klient@barberio.pl"
+          autocomplete="email"
+        />
+      </div>
+
+      @if (registerForm.controls.email.invalid && registerForm.controls.email.touched) {
+        @if (registerForm.controls.email.hasError('required')) {
+          <span class="form-field__error">Adres e-mail jest wymagany</span>
+        } @else if (registerForm.controls.email.hasError('email')) {
+          <span class="form-field__error">Wpisz poprawny adres e-mail</span>
+        }
+      }
+    </div>
+
+    <!-- Imię + Nazwisko -->
+    <div class="form-row">
+      <div class="form-field">
+        <label for="firstName" class="form-field__label">
+          Imię <span class="form-field__required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <input
+            formControlName="firstName"
+            id="firstName"
+            type="text"
+            class="input-wrapper__control"
+            placeholder="np. Jan"
+            autocomplete="given-name"
+          />
+        </div>
+
+        @if (registerForm.controls.firstName.invalid && registerForm.controls.firstName.touched) {
+          <span class="form-field__error">Imię jest wymagane</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="lastName" class="form-field__label">
+          Nazwisko <span class="form-field__required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <input
+            formControlName="lastName"
+            id="lastName"
+            type="text"
+            class="input-wrapper__control"
+            placeholder="np. Kowalski"
+            autocomplete="family-name"
+          />
+        </div>
+
+        @if (registerForm.controls.lastName.invalid && registerForm.controls.lastName.touched) {
+          <span class="form-field__error">Nazwisko jest wymagane</span>
+        }
+      </div>
+    </div>
+
+    <!-- Hasło -->
+    <div class="form-field">
+      <label for="password" class="form-field__label">
+        Hasło <span class="form-field__required">*</span>
+      </label>
+
+      <app-password-input
+        inputId="password"
+        placeholder="Wprowadź hasło"
+        autocomplete="new-password"
+        [control]="registerForm.controls.password"
+      />
+
+      <p class="form-field__hint form-field__hint--plain">
+        Hasło musi mieć co najmniej 8 znaków i zawierać co najmniej jedną cyfrę i jedną literę.
+      </p>
+
+      @if (registerForm.controls.password.invalid && registerForm.controls.password.touched) {
+        @if (registerForm.controls.password.hasError('required')) {
+          <span class="form-field__error">Hasło jest wymagane</span>
+        } @else if (registerForm.controls.password.hasError('minlength') || registerForm.controls.password.hasError('pattern')) {
+          <span class="form-field__error">Hasło nie spełnia wymagań bezpieczeństwa</span>
+        }
+      }
+    </div>
+
+    <!-- Regulamin checkbox -->
+    <div class="form-field">
+      <label class="checkbox-field">
+        <input
+          type="checkbox"
+          formControlName="acceptTerms"
+          class="checkbox-field__input"
+        />
+        <span class="checkbox-field__text">
+          Akceptuję <a routerLink="/terms" class="legal-link">Regulamin</a> oraz oświadczam, że zapoznałem się z
+          <a routerLink="/privacy" class="legal-link">Polityką prywatności</a> serwisu Barberio.
+        </span>
+      </label>
+
+      @if (registerForm.controls.acceptTerms.invalid && registerForm.controls.acceptTerms.touched) {
+        <span class="form-field__error">Akceptacja regulaminu jest wymagana</span>
+      }
+    </div>
+
+    @if (serverError()) {
+      <div class="form-field__error">{{ serverError() }}</div>
+    }
+
+    <!-- Przyciski -->
+    <div class="register-form__actions">
+      <a routerLink="/register" class="btn btn--secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+        <span>Powrót</span>
+      </a>
+
+      <button type="submit" class="btn btn--primary" [disabled]="isLoading()">
+        <span>{{ isLoading() ? 'Tworzenie konta...' : 'Dalej' }}</span>
+        @if (!isLoading()) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        }
+      </button>
+    </div>
+  </form>
+</div>
