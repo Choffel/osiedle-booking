@@ -52,7 +52,7 @@ public class AuthService : IAuthService
      public async Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct = default)
     {
         var identityResult = await _identityAccountService.CreateIdentityAsync(
-            request.Email,  request.FirstName, request.Password, ct);
+            request.Email, request.Email, request.Password, ct);
 
         if (identityResult.IsFailure)
             return Result<Guid>.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст

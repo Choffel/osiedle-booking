@@ -50,14 +50,37 @@ public class AuthenticationControllerTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task Register_DuplicateEmail_Returns400()
+    public async Task Register_DuplicateEmail_Returns409WithDuplicateEmailCode()
     {
         var email = UniqueEmail();
         (await RegisterAsync(email)).EnsureSuccessStatusCode();
 
         var duplicate = await RegisterAsync(email);
 
-        await duplicate.ShouldFailWithAsync(HttpStatusCode.BadRequest, "IdentityError");
+        await duplicate.ShouldFailWithAsync(HttpStatusCode.Conflict, "Identity.DuplicateEmail");
+    }
+
+    [Fact]
+    public async Task Register_SameNamesWithDifferentEmails_Succeeds()
+    {
+        var first = await RegisterAsync(UniqueEmail(), firstName: "Jan");
+        var second = await RegisterAsync(UniqueEmail(), firstName: "Jan");
+
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Register_ExceedingLimit_Returns429()
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            var allowed = await RegisterAsync(UniqueEmail());
+            allowed.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        var rejected = await RegisterAsync(UniqueEmail());
+        rejected.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
     }
 
     // ---------- login ----------

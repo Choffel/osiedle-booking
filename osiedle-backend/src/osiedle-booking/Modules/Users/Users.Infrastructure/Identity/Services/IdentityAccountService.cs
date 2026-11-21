@@ -24,13 +24,19 @@ public class IdentityAccountService : IIdentityAccountService
         {
             Id = Guid.NewGuid(),
             Email = email,
-            UserName = userName
+            UserName = email
         };
 
         var result = await _userManager.CreateAsync(identityUser, password);
 
-        return result.Succeeded
-            ? Result<UserId>.Success(UserId.From(identityUser.Id))
+        if (result.Succeeded)
+            return Result<UserId>.Success(UserId.From(identityUser.Id));
+
+        var duplicateEmail = result.Errors.Any(error =>
+            string.Equals(error.Code, "DuplicateEmail", StringComparison.OrdinalIgnoreCase));
+
+        return duplicateEmail
+            ? Result<UserId>.Failure(IdentityErrors.DuplicateEmail)
             : Result<UserId>.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
                 result.Errors.Select(e => e.Description))));
     }

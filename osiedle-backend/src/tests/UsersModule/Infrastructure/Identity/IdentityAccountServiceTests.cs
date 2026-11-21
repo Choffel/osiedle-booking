@@ -71,6 +71,37 @@ public class IdentityAccountServiceTests
     }
 
     [Fact]
+    public async Task CreateIdentityAsync_ShouldUseEmailAsUserName()
+    {
+        const string email = "jan@example.com";
+        ApplicationUser? created = null;
+        _userManagerMock
+            .Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .Callback<ApplicationUser, string>((u, _) => created = u)
+            .ReturnsAsync(IdentityResult.Success);
+
+        var result = await _sut.CreateIdentityAsync(email, "Jan", "Password1", CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        created!.UserName.Should().Be(email);
+        created.Email.Should().Be(email);
+    }
+
+    [Fact]
+    public async Task CreateIdentityAsync_ShouldReturnDuplicateEmailCode()
+    {
+        _userManagerMock
+            .Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Failed(
+                new IdentityError { Code = "DuplicateEmail", Description = "Email is already taken" }));
+
+        var result = await _sut.CreateIdentityAsync("jan@example.com", "jan@example.com", "Password1");
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(IdentityErrors.DuplicateEmail);
+    }
+
+    [Fact]
     public async Task FindByEmailAsync_ShouldReturnDto_WhenUserExists()
     {
         var user = new ApplicationUser

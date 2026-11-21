@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using osiedle_booking.WebApi.Extensions;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
@@ -17,6 +18,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("register")]
     public async Task<ActionResult<Guid>> Register([FromBody] RegisterUserRequest createUserDto, CancellationToken cancellationToken)
     {
         var result = await _authService.RegisterAsync(createUserDto, cancellationToken);
