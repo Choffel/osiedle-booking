@@ -4,6 +4,9 @@ namespace Users.Application.Errors;
 
 public static class IdentityErrors
 {
+    public static readonly Error DuplicateEmail =
+        Error.Conflict("Identity.DuplicateEmail", "An account with this email address is already registered");
+    
     public static readonly Error NotFound =
         Error.NotFound("IdentityError.NotFound", "User was not found");
     

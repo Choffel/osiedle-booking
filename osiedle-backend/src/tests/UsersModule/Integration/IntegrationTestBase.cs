@@ -4,6 +4,8 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Notifications.Application.Interfaces;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
 using osiedle_booking.BuildingBlocks.Roles;
@@ -61,7 +63,9 @@ public abstract class IntegrationTestBase : IDisposable
                 ["JwtSettings:Issuer"] = "test-issuer",
                 ["JwtSettings:Audience"] = "test-audience",
                 ["JwtSettings:AccessTokenExpiryMinutes"] = "15",
-                ["JwtSettings:RefreshTokenExpiryDays"] = "7"
+                ["JwtSettings:RefreshTokenExpiryDays"] = "7",
+                ["Frontend:Domain"] = "http://localhost:4200"
+
             })
             .Build();
 
@@ -101,6 +105,8 @@ public abstract class IntegrationTestBase : IDisposable
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IUserSessionService, UserSessionService>();
         services.AddScoped<IUserService, UserService>();
+
+        services.AddScoped<INotificationInternalApi>(_ => Mock.Of<INotificationInternalApi>());
 
         Provider = services.BuildServiceProvider();
 

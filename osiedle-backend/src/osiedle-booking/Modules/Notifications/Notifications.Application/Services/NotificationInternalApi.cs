@@ -12,8 +12,8 @@ public class NotificationInternalApi : INotificationInternalApi
         _notificationModule = notificationModule;
     }
     
-    public async Task SendVerificationLinkAsync(string email, string code, CancellationToken ct) 
+    public async Task SendVerificationLinkAsync(string email, string confirmationLink, CancellationToken ct) 
     {
-        await _notificationModule.SendVerificationLinkAsync(email, code, ct);
+        await _notificationModule.SendVerificationLinkAsync(email, confirmationLink, ct);
     }
 }

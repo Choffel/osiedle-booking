@@ -1,5 +1,7 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Notifications.Application.Interfaces;
 using Moq;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
@@ -41,7 +43,9 @@ public class PasswordRecoveryTests
             _userContextMock.Object,
             _unitOfWorkMock.Object,
             _userRepositoryMock.Object,
-            _jwtTokenGeneratorMock.Object);
+            _jwtTokenGeneratorMock.Object,
+            Mock.Of<INotificationInternalApi>(),
+            Mock.Of<IConfiguration>());
     }
 
     private static IdentityUserDto KnownUser(Guid id, string email) =>
