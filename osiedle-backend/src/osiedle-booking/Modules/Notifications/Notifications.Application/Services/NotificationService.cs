@@ -15,12 +15,15 @@ public class NotificationService : INotificationModule
 
     public async Task SendVerificationLinkAsync(string email, string confirmationLink, CancellationToken ct = default)
     {
-        var model = new { Link = confirmationLink };
+        var model = new Dictionary<string, string>
+        {
+            ["link"] = confirmationLink
+        };
         
         await _dispatcher.DispatchAsync(
             channel: NotificationChannel.Email,
             recipient: email,
-            subject: "Link podtwierdzenia konta",
+            subject: "Link potwierdzenia konta",
             templateName: "VerificationLink", 
             model: model,
             ct: ct
