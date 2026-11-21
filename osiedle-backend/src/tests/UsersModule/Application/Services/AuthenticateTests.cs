@@ -1,6 +1,8 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Notifications.Application.Interfaces;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
 using osiedle_booking.BuildingBlocks.ValueObjects;
@@ -44,7 +46,9 @@ public class AuthenticateTests
             _userContextMock.Object,
             _unitOfWorkMock.Object,
             _userRepositoryMock.Object,
-            _jwtTokenGeneratorMock.Object);
+            _jwtTokenGeneratorMock.Object,
+            Mock.Of<INotificationInternalApi>(),
+            Mock.Of<IConfiguration>());
     }
 
     private static IdentityUserDto KnownUser(Guid? id = null) => new(
