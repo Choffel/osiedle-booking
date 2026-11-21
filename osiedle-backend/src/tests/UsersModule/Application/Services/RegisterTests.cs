@@ -54,7 +54,7 @@ public class RegisterTests
         var identityId = Guid.NewGuid();
 
         _identityAccountMock
-            .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CreateIdentityAsync(request.Email, request.Email, request.Password, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<UserId>.Success(UserId.From(identityId)));
         _identityEmailMock
             .Setup(s => s.GenerateEmailConfirmationTokenAsync(UserId.From(identityId), It.IsAny<CancellationToken>()))
@@ -81,7 +81,7 @@ public class RegisterTests
         var request = new RegisterUserRequest("Jan", "Kowalski", "jan@example.com", "Password1");
 
         _identityAccountMock
-            .Setup(s => s.CreateIdentityAsync(request.Email, request.FirstName, request.Password, It.IsAny<CancellationToken>()))
+            .Setup(s => s.CreateIdentityAsync(request.Email, request.Email, request.Password, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<UserId>.Failure(UserErrors.RegistrationFailed));
 
         var result = await _authService.RegisterAsync(request, CancellationToken.None);

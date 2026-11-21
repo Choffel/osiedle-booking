@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Services;
 using Users.Application.DTOs;
+using Users.Application.Errors;
 using Users.Infrastructure.Data;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Infrastructure.Identity.Models;
@@ -47,10 +48,10 @@ public class RegistrationFlowTests : IntegrationTestBase
         var duplicate = await authService.RegisterAsync(
             new RegisterUserRequest("Jan", "Kowalski", email, ValidPassword), CancellationToken.None);
 
-        // Identity errors are passed through as IdentityError-coded failures whose
-        // description contains the raw Identity message.
+        // DuplicateEmail is a dedicated conflict returned by IdentityAccountService.
+
         duplicate.IsSuccess.Should().BeFalse();
-        duplicate.Error.Code.Should().Be("IdentityError");
+        duplicate.Error.Code.Should().Be(IdentityErrors.DuplicateEmail.Code);
 
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var domainUsersCount = await db.Users.AsNoTracking().CountAsync();
