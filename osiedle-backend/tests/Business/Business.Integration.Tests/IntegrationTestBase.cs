@@ -1,7 +1,9 @@
 using Business.Application.Interfaces;
+using Business.Application.Interfaces.Business;
 using Business.Application.Interfaces.Categories.Services;
 using Business.Application.Services.CategoryServices;
 using Business.Infrastructure.Persistence;
+using Business.Infrastructure.Repositories.Business;
 using Business.Infrastructure.UnitOtWork;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +25,7 @@ public abstract class IntegrationTestBase : IDisposable
         services.AddLogging();
         services.AddDbContext<BusinessDbContext>(options => options.UseSqlite(_connection));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IBusinessRepository, BusinessRepository>();
         services.AddScoped<ICategoryService, CategoryService>();
 
         Provider = services.BuildServiceProvider();

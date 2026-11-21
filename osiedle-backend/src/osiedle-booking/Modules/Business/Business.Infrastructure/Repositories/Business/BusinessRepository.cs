@@ -38,6 +38,16 @@ public class BusinessRepository : IBusinessRepository
         return business;
     }
 
+    public async Task<IReadOnlyList<BusinessAggregate>> GetBusinessesByCategoryAsync(
+        Domain.Enums.Category category,
+        CancellationToken ct = default)
+    {
+        return await _context.Businesses
+            .AsNoTracking()
+            .Where(b => b.Category == category)
+            .ToListAsync(ct);
+    }
+
     public Task<bool> EmployeeBelongsToBusinessAsync(
         EmployeeId employeeId, 
         BusinessId businessId, 

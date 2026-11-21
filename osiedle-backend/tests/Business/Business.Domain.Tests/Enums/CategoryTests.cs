@@ -36,4 +36,30 @@ public class CategoryTests
     {
         Assert.Equal(expectedDisplayName, category.ToDisplayName());
     }
+
+    [Theory]
+    [InlineData(Category.Haircut, "haircut")]
+    [InlineData(Category.BeardTrim, "beard-trim")]
+    [InlineData(Category.HairCare, "hair-care")]
+    [InlineData(Category.KidsHaircut, "kids-haircut")]
+    public void ToSlug_ReturnsUrlFriendlySlug(Category category, string expectedSlug)
+    {
+        Assert.Equal(expectedSlug, category.ToSlug());
+    }
+
+    [Theory]
+    [InlineData("haircut", Category.Haircut)]
+    [InlineData("BEARD-TRIM", Category.BeardTrim)]
+    [InlineData(" hair-care ", Category.HairCare)]
+    public void TryFromSlug_ReturnsCategory(string slug, Category expectedCategory)
+    {
+        Assert.True(CategoryExtensions.TryFromSlug(slug, out var category));
+        Assert.Equal(expectedCategory, category);
+    }
+
+    [Fact]
+    public void TryFromSlug_WithInvalidSlug_ReturnsFalse()
+    {
+        Assert.False(CategoryExtensions.TryFromSlug("invalid-category", out _));
+    }
 }

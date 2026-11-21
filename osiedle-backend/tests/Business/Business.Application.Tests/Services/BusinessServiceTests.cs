@@ -25,7 +25,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WithFreeOwner_AddsBusinessAndSaves()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Haircuts and more", "Main Street 1", Category.Haircut);
+        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Haircuts and more", "Main Street 1", Category.Haircut.ToSlug());
         BusinessAggregate? added = null;
 
         _businessRepository
@@ -54,7 +54,7 @@ public class BusinessServiceTests
     [Fact]
     public async Task CreateBusinessAsync_WhenOwnerAlreadyHasBusiness_ReturnsConflict()
     {
-        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Description", "Location", Category.Haircut);
+        var dto = new CreateBusinessDto("Beauty Salon", Guid.NewGuid(), "Description", "Location", Category.Haircut.ToSlug());
 
         _businessRepository
             .Setup(r => r.ExistsByOwnerIdAsync(UserId.From(dto.OwnerId), It.IsAny<CancellationToken>()))
@@ -105,7 +105,7 @@ public class BusinessServiceTests
         var userId = UserId.New();
         var business = BusinessAggregate.Create("Old name", userId, "Old description", "Old location", Category.Haircut);
         var dto = new UpdateBusinessInfoDto(
-            "New name", "New description", "New location", nameof(Category.BeardTrim));
+            "New name", "New description", "New location", Category.BeardTrim.ToSlug());
 
         _businessRepository
             .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
@@ -136,7 +136,7 @@ public class BusinessServiceTests
 
         var result = await _sut.UpdateBusinessInfoAsync(
             userId, businessId,
-            new UpdateBusinessInfoDto("New name", "New description", "New location", nameof(Category.BeardTrim)));
+            new UpdateBusinessInfoDto("New name", "New description", "New location", Category.BeardTrim.ToSlug()));
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);

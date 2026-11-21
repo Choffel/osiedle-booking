@@ -36,12 +36,17 @@ public class BusinessService : IBusinessManagementService
             return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
         }
         
+        if (!CategoryExtensions.TryFromSlug(createBusinessDto.Category, out var category))
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
+        }
+
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             ownerId, 
             createBusinessDto.Description, 
             createBusinessDto.Location,
-            createBusinessDto.Category
+            category
             );
         
         _businessRepository.Add(business, cancellationToken);
@@ -73,8 +78,7 @@ public class BusinessService : IBusinessManagementService
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
         
-        if (!Enum.TryParse<Category>(updateBusinessInfoDto.NewCategory, true, out var category) ||
-            !Enum.IsDefined(category))
+        if (!CategoryExtensions.TryFromSlug(updateBusinessInfoDto.NewCategory, out var category))
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
         }
