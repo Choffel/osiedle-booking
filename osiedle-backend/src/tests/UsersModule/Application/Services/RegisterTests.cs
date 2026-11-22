@@ -83,7 +83,7 @@ public class RegisterTests
         _notificationInternalApiMock.Verify(
             n => n.SendVerificationLinkAsync(
                 request.Email,
-                "http://localhost:4200/Authentication/confirm-email?token=confirm-token",
+                "http://localhost:4200/Authentication/confirm-email?email=jan%40example.com&token=confirm-token",
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
