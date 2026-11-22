@@ -16,8 +16,6 @@ using Users.Infrastructure.Data;
 using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
 using osiedle_booking.WebApi.Data;
-using UsersDbContext = Users.Infrastructure.Data.ApplicationDbContext;
-using BookingsDbContext = Bookings.Infrastructure.Data.ApplicationDbContext;
 
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -107,7 +105,7 @@ builder.Services.AddSwaggerGen(options =>
 
 
 
-builder.Services.AddDbContext<UsersDbContext>(options =>
+builder.Services.AddDbContext<Users.Infrastructure.Data.ApplicationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("Database"),
         npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
@@ -140,13 +138,13 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
 
-    var dbContext = services.GetRequiredService<UsersDbContext>();
+    var dbContext = services.GetRequiredService<Users.Infrastructure.Data.ApplicationDbContext>();
     await dbContext.Database.MigrateAsync();
 
     var businessDbContext = services.GetRequiredService<BusinessDbContext>();
     await businessDbContext.Database.MigrateAsync();
 
-    var bookingsDbContext = services.GetRequiredService<BookingsDbContext>();
+    var bookingsDbContext = services.GetRequiredService<Bookings.Infrastructure.Data.ApplicationDbContext>();
     await bookingsDbContext.Database.MigrateAsync();
 
     if (app.Environment.IsDevelopment() && app.Configuration.GetValue("SeedData:Enabled", true))
