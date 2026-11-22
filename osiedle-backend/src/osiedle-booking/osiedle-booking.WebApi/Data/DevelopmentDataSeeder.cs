@@ -179,23 +179,23 @@ public sealed class DevelopmentDataSeeder
 
         var servicesToSeed = new[]
         {
-            BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
+            BookableService.Create(BookableServiceIdValue.From(ServiceGuid), BusinessIdValue.From(BusinessGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
                 "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, TimeSpan.FromMinutes(60)),
-            BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
+            BookableService.Create(BookableServiceIdValue.From(SecondServiceId), BusinessIdValue.From(BusinessGuid), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
                 "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, TimeSpan.FromMinutes(45)),
-            BookableService.Create(BookableServiceIdValue.From(FourthServiceId), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
+            BookableService.Create(BookableServiceIdValue.From(FourthServiceId), BusinessIdValue.From(BusinessGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
                 "Oczyszczanie twarzy", "Manualne i ultradźwiękowe oczyszczanie skóry.", 150m, TimeSpan.FromMinutes(75)),
-            BookableService.Create(BookableServiceIdValue.From(FifthServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
+            BookableService.Create(BookableServiceIdValue.From(FifthServiceId), BusinessIdValue.From(BusinessGuid), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
                 "Strzyżenie + broda", "Kompleksowe strzyżenie z modelowaniem brody.", 130m, TimeSpan.FromMinutes(60)),
-            BookableService.Create(BookableServiceIdValue.From(SixthServiceId), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
+            BookableService.Create(BookableServiceIdValue.From(SixthServiceId), BusinessIdValue.From(BusinessGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
                 "Regeneracja dłoni", "Pielęgnacja dłoni z maską regenerującą.", 80m, TimeSpan.FromMinutes(40)),
-            BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
+            BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), BusinessIdValue.From(SecondBusinessId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
                 "Masaż relaksacyjny", "Masaż całego ciała.", 180m, TimeSpan.FromMinutes(90)),
-            BookableService.Create(BookableServiceIdValue.From(SeventhServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
+            BookableService.Create(BookableServiceIdValue.From(SeventhServiceId), BusinessIdValue.From(SecondBusinessId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
                 "Depilacja łydek", "Depilacja woskiem łydek.", 90m, TimeSpan.FromMinutes(35)),
-            BookableService.Create(BookableServiceIdValue.From(EighthServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
+            BookableService.Create(BookableServiceIdValue.From(EighthServiceId), BusinessIdValue.From(SecondBusinessId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
                 "Depilacja pach", "Szybki zabieg depilacji pach.", 60m, TimeSpan.FromMinutes(20)),
-            BookableService.Create(BookableServiceIdValue.From(NinthServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
+            BookableService.Create(BookableServiceIdValue.From(NinthServiceId), BusinessIdValue.From(SecondBusinessId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
                 "Masaż pleców", "Rozluźniający masaż pleców.", 130m, TimeSpan.FromMinutes(50))
         };
 
