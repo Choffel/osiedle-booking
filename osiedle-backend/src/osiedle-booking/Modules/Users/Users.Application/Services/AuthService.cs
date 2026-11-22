@@ -73,7 +73,7 @@ public class AuthService : IAuthService
         if (token.IsFailure)
             return Result<Guid>.Failure(token.Error);
 
-        var confirmationLink = CreateEmailConfirmationLink(token.Value);
+        var confirmationLink = CreateEmailConfirmationLink(request.Email, token.Value);
         await _notificationInternalApi.SendVerificationLinkAsync(request.Email, confirmationLink, ct);
 
         _logger.LogInformation("Email confirmation link for user {UserId}: {Link}", user.Id, confirmationLink);
@@ -83,12 +83,12 @@ public class AuthService : IAuthService
         return Result<Guid>.Success(user.Id.Value);
     }
 
-    private string CreateEmailConfirmationLink(string token)
+    private string CreateEmailConfirmationLink(string email, string token)
     {
         var frontendDomain = _configuration["Frontend:Domain"]?.TrimEnd('/')
                              ?? throw new InvalidOperationException("Frontend:Domain is missing in configuration.");
 
-        return $"{frontendDomain}/Authentication/confirm-email?token={Uri.EscapeDataString(token)}";
+        return $"{frontendDomain}/Authentication/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
     }
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken ct = default)
