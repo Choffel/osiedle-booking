@@ -8,10 +8,10 @@ public class BlobPathGenerator : IBlobPathGenerator
 {
     private const string DefaultContainerName = "images";
 
-    public string GenerateBlobName(FileCategory category, Guid? targetId, FileId fileId, string fileName)
+    public string GenerateBlobName(FileCategory category, Guid targetId, FileId fileId, string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        var targetSegment = targetId.HasValue ? targetId.Value.ToString("D") : "unassigned";
+        var targetSegment = targetId.ToString("D");
 
         return category switch
         {
