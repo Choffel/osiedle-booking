@@ -32,7 +32,6 @@ public class BusinessService : IBusinessManagementService
             ownerId, 
             cancellationToken);
         
-        
         if (existingBusiness)
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
@@ -43,11 +42,13 @@ public class BusinessService : IBusinessManagementService
             return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
         }
 
+        var location = Location.Create(createBusinessDto.Location.City, createBusinessDto.Location.Street);
+
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             ownerId, 
             createBusinessDto.Description, 
-            createBusinessDto.Location,
+            location,
             category
             );
         
@@ -69,6 +70,7 @@ public class BusinessService : IBusinessManagementService
     public async Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(
         int page = 1,
         int pageSize = DefaultPageSize,
+        string? city = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedPage = Math.Max(1, page);
@@ -77,6 +79,7 @@ public class BusinessService : IBusinessManagementService
         var pagedBusinesses = await _businessRepository.GetBusinessesAsync(
             normalizedPage,
             normalizedPageSize,
+            city,
             cancellationToken);
 
         return Result.Success(pagedBusinesses);
@@ -94,7 +97,8 @@ public class BusinessService : IBusinessManagementService
         if (business.OwnerId != userId)
             return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
         
-        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
+        var newLocation = Location.Create(updateBusinessInfoDto.NewLocation.City, updateBusinessInfoDto.NewLocation.Street);
+        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, newLocation);
         
         if (!CategoryExtensions.TryFromSlug(updateBusinessInfoDto.NewCategory, out var category))
         {
@@ -110,7 +114,6 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        
         var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
@@ -118,11 +121,9 @@ public class BusinessService : IBusinessManagementService
         if (business.OwnerId != userId)
             return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
 
-        
         business.ArchiveBusiness();
         
-        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return  business.ToResponseDto();
+        return business.ToResponseDto();
     }
 }
