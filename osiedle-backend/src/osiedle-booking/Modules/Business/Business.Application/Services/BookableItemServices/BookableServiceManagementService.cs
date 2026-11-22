@@ -11,7 +11,7 @@ using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
 namespace Business.Application.Services.BookableItemServices;
-
+//business id 
 public class BookableServiceManagementService : IBookableServiceManagementService
 {
     private readonly IBookableServiceRepository _bookableServiceRepository;
