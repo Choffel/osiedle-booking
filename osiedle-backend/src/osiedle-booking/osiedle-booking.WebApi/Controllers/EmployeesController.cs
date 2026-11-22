@@ -33,6 +33,15 @@ public class EmployeesController : ControllerBase
         var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
         return (await _employeeManagementService.CreateEmployeeAsync(userId, dto, ct)).ToActionResult();
     }
+    
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<EmployeeResponseDto>>> GetAllEmployeesByBusinessIdAsync(
+        Guid businessId,
+        CancellationToken ct = default)
+    {
+        var business = BusinessId.From(businessId);
+        return (await _employeeManagementService.GetAllEmployeesByBusinessIdAsync(business, ct)).ToActionResult();
+    }
 
     [HttpPut("{employeeId:guid}/profile")]
     public async Task<ActionResult> UpdateProfileAsync(

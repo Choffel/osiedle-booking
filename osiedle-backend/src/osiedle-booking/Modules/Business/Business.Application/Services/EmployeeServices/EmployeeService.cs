@@ -1,4 +1,5 @@
 ﻿using Business.Application.DTOs.EmployeeDTOs;
+using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
 using Business.Application.Interfaces.Employee;
@@ -63,7 +64,18 @@ public class EmployeeService : IEmployeeManagementService
 
         return Result.Success(employee.Id);
     }
-    
+
+    public async Task<Result<IReadOnlyCollection<EmployeeResponseDto>>> GetAllEmployeesByBusinessIdAsync(BusinessId businessId, CancellationToken ct)
+    {
+        var employees = await _employeeRepository
+            .GetAllEmployeesByBusinessIdAsync(businessId, ct);
+
+        IReadOnlyCollection<EmployeeResponseDto> employeeDtos =
+            employees.Select(employee => employee.ToResponseDto()).ToList();
+
+        return Result.Success(employeeDtos);
+    }
+
     public async Task<Result> UpdateProfileAsync(UserId currentUserId, EmployeeId employeeId, UpdateEmployeeProfileDto dto, CancellationToken ct = default)
     {
         var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
