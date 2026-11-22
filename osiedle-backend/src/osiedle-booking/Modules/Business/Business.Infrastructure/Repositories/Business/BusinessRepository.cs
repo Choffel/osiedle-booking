@@ -1,9 +1,11 @@
-﻿using Business.Application.DTOs.BusinessDTOs;
+﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
@@ -37,7 +39,34 @@ public class BusinessRepository : IBusinessRepository
             .FirstOrDefaultAsync(b => b.Id == businessId, ct);
         return business;
     }
-
+    
+    public async Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        var query = _context.Businesses
+            .AsNoTracking();
+        
+        var totalCount = await query.CountAsync(ct);
+        if (totalCount == 0)
+            return new PagedResult<BusinessShortInfoDto>([], 0, page, pageSize);
+        
+        var items = await query
+                .OrderBy(b => b.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new BusinessShortInfoDto(
+                    b.Id.Value,
+                    b.OwnerId.Value,
+                    b.Name,
+                    b.Description,
+                    b.Location
+                ))
+            .ToListAsync(ct);
+        return new PagedResult<BusinessShortInfoDto>(items, totalCount, page, pageSize);
+    }
+    
     public async Task<IReadOnlyList<BusinessAggregate>> GetBusinessesByCategoryAsync(
         Domain.Enums.Category category,
         CancellationToken ct = default)
