@@ -145,7 +145,7 @@ namespace Business.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("BusinessId")
+                    b.Property<Guid>("BusinessId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Category")
@@ -235,7 +235,9 @@ namespace Business.Infrastructure.Migrations
                 {
                     b.HasOne("Business.Domain.Aggregates.Business", null)
                         .WithMany("Services")
-                        .HasForeignKey("BusinessId");
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Business.Domain.Aggregates.Employee", null)
                         .WithMany("BookableServices")
