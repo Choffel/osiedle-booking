@@ -30,6 +30,9 @@ public class Business : AggregateRoot<BusinessId>
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Business name cannot be empty.", nameof(name));
 
+        if (string.IsNullOrWhiteSpace(location.City) || string.IsNullOrWhiteSpace(location.Street))
+            throw new ArgumentException("Business location cannot be empty.", nameof(location));
+
         if (string.IsNullOrWhiteSpace(description))
             throw new ArgumentException("Business description cannot be empty.", nameof(description));
 
@@ -92,6 +95,9 @@ public class Business : AggregateRoot<BusinessId>
         
         if (string.IsNullOrWhiteSpace(newDescription))
             throw new ArgumentException("New business description cannot be empty.", nameof(newDescription));
+
+        if (string.IsNullOrWhiteSpace(newLocation.City) || string.IsNullOrWhiteSpace(newLocation.Street))
+            throw new ArgumentException("New business location cannot be empty.", nameof(newLocation));
 
         Name = newName;
         Location = newLocation;
