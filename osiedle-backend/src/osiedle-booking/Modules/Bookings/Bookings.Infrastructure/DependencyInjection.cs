@@ -18,8 +18,7 @@ public static class DependencyInjection
     {
         #region Database
         var connectionString = configuration.GetConnectionString("Database")
-                               ?? configuration["CONNECTION_STRING"]
-                               ?? throw new InvalidOperationException("Database connection string is missing.");
+                               ?? configuration["CONNECTION_STRING"];
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
         #endregion
