@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<IFileModule, FileService>();
+        services.AddScoped<IFileInternalApi, FileInternalApi>();
 
         return services;
     }

@@ -180,8 +180,20 @@ public class StoredFile : AggregateRoot<FileId>
             serviceId);
     }
 
-    public void UpdateStorageLocation(string blobName, string blobUri, long sizeInBytes)
+    public void UpdateStorageLocation(
+        string originalFileName,
+        ContentType contentType,
+        string containerName,
+        string blobName,
+        string blobUri,
+        long sizeInBytes)
     {
+        if (string.IsNullOrWhiteSpace(originalFileName))
+            throw new ArgumentException("Original file name cannot be empty.", nameof(originalFileName));
+
+        if (string.IsNullOrWhiteSpace(containerName))
+            throw new ArgumentException("Container name cannot be empty.", nameof(containerName));
+
         if (string.IsNullOrWhiteSpace(blobName))
             throw new ArgumentException("Blob name cannot be empty.", nameof(blobName));
 
@@ -191,6 +203,9 @@ public class StoredFile : AggregateRoot<FileId>
         if (sizeInBytes <= 0)
             throw new ArgumentOutOfRangeException(nameof(sizeInBytes), "File size must be greater than zero.");
 
+        OriginalFileName = originalFileName;
+        ContentType = contentType;
+        ContainerName = containerName;
         BlobName = blobName;
         BlobUri = blobUri;
         SizeInBytes = sizeInBytes;

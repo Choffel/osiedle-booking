@@ -85,19 +85,7 @@ public class FileService : IFileService, IFileModule
 
         return file.ToResponseDto();
     }
-
-    public async Task<Result<FileResponseDto>> GetLatestImageAsync(
-        Guid targetId,
-        FileCategory category,
-        CancellationToken cancellationToken = default)
-    {
-        var file = await _fileRepository.GetLatestByTargetIdAsync(targetId, category, cancellationToken);
-        if (file is null)
-            return Result<FileResponseDto>.Failure(FileErrors.NotFound);
-
-        return file.ToResponseDto();
-    }
-
+    
     public async Task<Result<IReadOnlyList<FileResponseDto>>> GetServicePhotosAsync(
         Guid serviceId,
         CancellationToken cancellationToken = default)
@@ -148,48 +136,70 @@ public class FileService : IFileService, IFileModule
 
     public Task<Result<FileResponseDto>> UploadImageAsync(
         FileCategory category,
-        Guid? targetId,
+        Guid targetId,
         FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
         return UploadInternalAsync(category, targetId, request, cancellationToken);
     }
-
-    public Task<Result<FileResponseDto>> GetImageByIdAsync(
+    
+    public async Task<Result<FileResponseDto>> UpdateImageAsync(
         FileId fileId,
-        CancellationToken cancellationToken = default)
-    {
-        return GetFileByIdAsync(fileId, cancellationToken);
-    }
-
-    public async Task<Result<string>> GetLatestImageUrlAsync(
-        Guid targetId,
         FileCategory category,
+        Guid targetId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
-        var file = await _fileRepository.GetLatestByTargetIdAsync(targetId, category, cancellationToken);
+        if (targetId == Guid.Empty)
+            return Result<FileResponseDto>.Failure(FileErrors.TargetEntityRequired);
+
+        var file = await _fileRepository.GetByIdAsync(fileId, cancellationToken);
         if (file is null)
-            return Result<string>.Failure(FileErrors.NotFound);
+            return Result<FileResponseDto>.Failure(FileErrors.NotFound);
 
-        return Result<string>.Success(file.BlobUri);
-    }
+        if (file.Category != category || file.RelatedEntityId != targetId)
+            return Result<FileResponseDto>.Failure(FileErrors.NotFound);
 
-    public async Task<Result<IReadOnlyList<FileResponseDto>>> GetImagesByTargetIdAsync(
-        Guid targetId,
-        FileCategory category,
-        CancellationToken cancellationToken = default)
-    {
-        var files = await _fileRepository.GetByTargetIdAsync(targetId, category, cancellationToken);
-        IReadOnlyList<FileResponseDto> result = files.Select(f => f.ToResponseDto()).ToList();
-        return Result<IReadOnlyList<FileResponseDto>>.Success(result);
+        var validationResult = _imageValidator.Validate(request, category);
+        if (validationResult.IsFailure)
+            return Result<FileResponseDto>.Failure(validationResult.Error);
+
+        var containerName = _blobPathGenerator.GetContainerName(category);
+        var blobName = _blobPathGenerator.GenerateBlobName(category, targetId, fileId, request.FileName);
+
+        var blobUri = await _blobStorageService.UploadAsync(
+            containerName,
+            blobName,
+            request.Content,
+            request.ContentType,
+            cancellationToken);
+
+        await _blobStorageService.DeleteAsync(
+            file.ContainerName,
+            file.BlobName,
+            cancellationToken);
+
+        file.UpdateStorageLocation(
+            request.FileName,
+            ContentType.From(request.ContentType),
+            containerName,
+            blobName,
+            blobUri,
+            request.Length);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return file.ToResponseDto();
     }
 
     private async Task<Result<FileResponseDto>> UploadInternalAsync(
         FileCategory category,
-        Guid? targetId,
+        Guid targetId,
         FileUploadRequest request,
         CancellationToken cancellationToken)
     {
+        if (targetId == Guid.Empty)
+            return Result<FileResponseDto>.Failure(FileErrors.TargetEntityRequired);
+
         var validationResult = _imageValidator.Validate(request, category);
         if (validationResult.IsFailure)
             return Result<FileResponseDto>.Failure(validationResult.Error);
@@ -206,16 +216,22 @@ public class FileService : IFileService, IFileModule
             cancellationToken);
 
         var contentType = ContentType.From(request.ContentType);
-        var storedFile = StoredFile.Create(
-            fileId,
-            request.FileName,
-            contentType,
-            category,
-            containerName,
-            blobName,
-            blobUri,
-            request.Length,
-            targetId);
+        var storedFile = category switch
+        {
+            FileCategory.CompanyAvatar => StoredFile.CreateCompanyAvatar(
+                fileId, request.FileName, contentType, containerName, blobName, blobUri,
+                request.Length, targetId),
+            FileCategory.CompanyCover => StoredFile.CreateCompanyCover(
+                fileId, request.FileName, contentType, containerName, blobName, blobUri,
+                request.Length, targetId),
+            FileCategory.EmployeeAvatar => StoredFile.CreateEmployeeAvatar(
+                fileId, request.FileName, contentType, containerName, blobName, blobUri,
+                request.Length, targetId),
+            FileCategory.ServicePhoto => StoredFile.CreateServicePhoto(
+                fileId, request.FileName, contentType, containerName, blobName, blobUri,
+                request.Length, targetId),
+            _ => throw new ArgumentOutOfRangeException(nameof(category), category, null)
+        };
 
         _fileRepository.Add(storedFile);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
