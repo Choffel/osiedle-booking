@@ -92,9 +92,6 @@ public class Business : AggregateRoot<BusinessId>
         
         if (string.IsNullOrWhiteSpace(newDescription))
             throw new ArgumentException("New business description cannot be empty.", nameof(newDescription));
-        
-        if (string.IsNullOrWhiteSpace(newLocation))
-            throw new ArgumentException("New business location cannot be empty.", nameof(newLocation));
 
         Name = newName;
         Location = newLocation;
