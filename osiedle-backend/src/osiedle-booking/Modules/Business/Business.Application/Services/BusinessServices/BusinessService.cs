@@ -76,10 +76,12 @@ public class BusinessService : IBusinessManagementService
         var normalizedPage = Math.Max(1, page);
         var normalizedPageSize = Math.Clamp(pageSize, 1, MaxPageSize);
 
+        var normalizedCity = string.IsNullOrWhiteSpace(city) ? null : city.Trim();
+        
         var pagedBusinesses = await _businessRepository.GetBusinessesAsync(
             normalizedPage,
             normalizedPageSize,
-            city,
+            normalizedCity,
             cancellationToken);
 
         return Result.Success(pagedBusinesses);
