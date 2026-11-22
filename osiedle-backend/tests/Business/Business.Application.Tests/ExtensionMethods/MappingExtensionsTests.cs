@@ -1,3 +1,4 @@
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.ExtensionMethods;
 using Business.Domain.Enums;
 using Business.Domain.ValueObject;
@@ -15,7 +16,8 @@ public class MappingExtensionsTests
     public void ToResponseDto_MapsBusinessFields()
     {
         var ownerId = UserId.New();
-        var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", "Location", Category.Haircut);
+        var location = Location.Create("Warsaw", "Main Street 1");
+        var business = BusinessAggregate.Create("Beauty Salon", ownerId, "Description", location, Category.Haircut);
 
         var dto = business.ToResponseDto();
 
@@ -23,7 +25,7 @@ public class MappingExtensionsTests
         Assert.Equal(ownerId.Value, dto.OwnerId);
         Assert.Equal(business.Name, dto.Name);
         Assert.Equal(business.Description, dto.Description);
-        Assert.Equal(business.Location, dto.Location);
+        Assert.Equal(new LocationDto("Warsaw", "Main Street 1"), dto.Location);
         Assert.Equal(nameof(BusinessStatus.Active), dto.Status);
         Assert.Equal(business.CreatedAt, dto.CreatedAt);
         Assert.Equal(business.UpdatedAt, dto.UpdatedAt);

@@ -32,7 +32,7 @@ public class BusinessInternalApiTests
     public async Task GetBusinessInfoAsync_WhenBusinessExists_ReturnsShortInfo()
     {
         var shortInfo = new BusinessShortInfoDto(
-            Guid.NewGuid(), Guid.NewGuid(), "Beauty Salon", "Description", "Location");
+            Guid.NewGuid(), Guid.NewGuid(), "Beauty Salon", "Description", new LocationDto("Warsaw", "Location"));
         _businessRepository
             .Setup(r => r.GetShortInfoAsync(It.IsAny<BusinessId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shortInfo);
