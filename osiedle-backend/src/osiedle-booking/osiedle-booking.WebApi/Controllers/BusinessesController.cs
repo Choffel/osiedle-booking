@@ -47,9 +47,10 @@ public class BusinessesController : ControllerBase
     public async Task<ActionResult<PagedResult<BusinessShortInfoDto>>> GetBusinesses(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 3,
+        [FromQuery] string? city = null,
         CancellationToken cancellationToken = default)
     {
-        return (await _businessManagementService.GetBusinessesAsync(page, pageSize, cancellationToken))
+        return (await _businessManagementService.GetBusinessesAsync(page, pageSize, city, cancellationToken))
             .ToActionResult();
     }
 
