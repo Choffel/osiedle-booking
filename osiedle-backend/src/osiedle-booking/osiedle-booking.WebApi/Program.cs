@@ -1,29 +1,24 @@
-using System.Text.Json.Serialization;
 using Bookings.Infrastructure;
 using Bookings.Infrastructure.Data;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
 using Business.Infrastructure.Persistence;
-using Files.Domain.ValueObjects;
-using Files.Infrastructure;
-using Files.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Notifications.Infrastructure;
 using osiedle_booking.BuildingBlocks;
-using osiedle_booking.BuildingBlocks.Roles;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
-using Users.Infrastructure.Data.InitialData;
 using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
 using osiedle_booking.WebApi.Data;
 using UsersDbContext = Users.Infrastructure.Data.ApplicationDbContext;
 using BookingsDbContext = Bookings.Infrastructure.Data.ApplicationDbContext;
+
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +33,6 @@ builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
 builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
-builder.Services.AddFilesInfrastructure(builder.Configuration, connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 #endregion
@@ -46,7 +40,6 @@ builder.Services.AddProblemDetails();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<BusinessId>(BusinessId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(
@@ -55,8 +48,6 @@ builder.Services.AddControllers()
             new GuidValueObjectJsonConverter<BookableServiceId>(BookableServiceId.From, id => id.Value));
         options.JsonSerializerOptions.Converters.Add(
             new GuidValueObjectJsonConverter<WorkingHoursId>(WorkingHoursId.From, id => id.Value));
-        options.JsonSerializerOptions.Converters.Add(
-            new GuidValueObjectJsonConverter<FileId>(FileId.From, id => id.Value));
     });
 builder.Services.AddEndpointsApiExplorer();
 
@@ -114,6 +105,19 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
+
+
+builder.Services.AddDbContext<UsersDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
+
+builder.Services.AddDbContext<BusinessDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Business")));
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -136,31 +140,23 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
 
-    if (!app.Environment.IsEnvironment("Testing"))
+    var dbContext = services.GetRequiredService<UsersDbContext>();
+    await dbContext.Database.MigrateAsync();
+
+    var businessDbContext = services.GetRequiredService<BusinessDbContext>();
+    await businessDbContext.Database.MigrateAsync();
+
+    var bookingsDbContext = services.GetRequiredService<BookingsDbContext>();
+    await bookingsDbContext.Database.MigrateAsync();
+
+    if (app.Environment.IsDevelopment() && app.Configuration.GetValue("SeedData:Enabled", true))
     {
-        var dbContext = services.GetRequiredService<UsersDbContext>();
-        await dbContext.Database.MigrateAsync();
-
-        var businessDbContext = services.GetRequiredService<BusinessDbContext>();
-        await businessDbContext.Database.MigrateAsync();
-
-        var filesDbContext = services.GetRequiredService<FilesDbContext>();
-        await filesDbContext.Database.MigrateAsync();
-
-        var bookingsDbContext = services.GetRequiredService<BookingsDbContext>();
-        await bookingsDbContext.Database.MigrateAsync();
-
-        await RoleInitData.InitializeAsync(UserRoles.All, roleManager);
-
-        if (app.Environment.IsDevelopment() && app.Configuration.GetValue("SeedData:Enabled", true))
-        {
-            await new DevelopmentDataSeeder().SeedAsync(
-                services.GetRequiredService<UserManager<ApplicationUser>>(),
-                roleManager,
-                dbContext,
-                businessDbContext,
-                bookingsDbContext);
-        }
+        await new DevelopmentDataSeeder().SeedAsync(
+            services.GetRequiredService<UserManager<ApplicationUser>>(),
+            roleManager,
+            dbContext,
+            businessDbContext,
+            bookingsDbContext);
     }
 }
 
