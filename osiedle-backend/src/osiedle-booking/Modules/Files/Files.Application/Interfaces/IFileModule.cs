@@ -9,22 +9,15 @@ public interface IFileModule
 {
     Task<Result<FileResponseDto>> UploadImageAsync(
         FileCategory category,
-        Guid? targetId,
+        Guid targetId,
         FileUploadRequest request,
         CancellationToken cancellationToken = default);
-
-    Task<Result<FileResponseDto>> GetImageByIdAsync(
+    
+    Task<Result<FileResponseDto>> UpdateImageAsync(
         FileId fileId,
-        CancellationToken cancellationToken = default);
-
-    Task<Result<string>> GetLatestImageUrlAsync(
-        Guid targetId,
         FileCategory category,
-        CancellationToken cancellationToken = default);
-
-    Task<Result<IReadOnlyList<FileResponseDto>>> GetImagesByTargetIdAsync(
         Guid targetId,
-        FileCategory category,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default);
 
     Task<Result> DeleteFileAsync(

@@ -98,5 +98,4 @@ public class FilesController : ControllerBase
     {
         return (await _fileService.DeleteFileAsync(FileId.From(fileId), ct)).ToActionResult();
     }
-
 }
