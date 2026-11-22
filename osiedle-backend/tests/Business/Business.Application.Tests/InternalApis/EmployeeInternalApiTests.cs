@@ -64,7 +64,7 @@ public class EmployeeInternalApiTests
     [Fact]
     public async Task GetShortInfoAsync_WhenEmployeeExists_ReturnsShortInfo()
     {
-        var shortInfo = new EmployeeShortInfoDto(Guid.NewGuid(), "Jan", "Kowalski", "Barber");
+        var shortInfo = new EmployeeShortInfoDto(Guid.NewGuid(), "Jan", "Kowalski", "Barber", "test");
         _employeeRepository
             .Setup(r => r.GetShortInfoAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shortInfo);
