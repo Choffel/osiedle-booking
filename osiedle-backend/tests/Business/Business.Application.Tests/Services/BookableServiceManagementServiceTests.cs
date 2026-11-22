@@ -27,6 +27,18 @@ public class BookableServiceManagementServiceTests
             _unitOfWork.Object);
     }
 
+    private static Business.Domain.Aggregates.Employee CreateEmployee(EmployeeId employeeId)
+    {
+        return Business.Domain.Aggregates.Employee.Create(
+            employeeId,
+            BusinessId.New(),
+            "Jan",
+            "Kowalski",
+            "Barber",
+            null,
+            $"emp-{employeeId.Value:N}@example.com");
+    }
+
     [Fact]
     public async Task CreateBookableServiceAsync_WhenCategoryInvalid_ReturnsInvalidCategory()
     {
@@ -45,8 +57,8 @@ public class BookableServiceManagementServiceTests
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Business.Domain.Aggregates.Employee?)null);
 
         var result = await _sut.CreateBookableServiceAsync(dto, CancellationToken.None);
 
@@ -60,9 +72,10 @@ public class BookableServiceManagementServiceTests
     public async Task CreateBookableServiceAsync_WhenNameAlreadyTaken_ReturnsConflict()
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        var employeeId = EmployeeId.From(dto.EmployeeId);
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(r => r.GetEmployeeByIdAsync(employeeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateEmployee(employeeId));
         _bookableServiceRepository
             .Setup(r => r.ExistsByNameForEmployeeAsync(
                 dto.ServiceName, It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -80,11 +93,12 @@ public class BookableServiceManagementServiceTests
     public async Task CreateBookableServiceAsync_WithValidData_AddsServiceAndSaves()
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        var employeeId = EmployeeId.From(dto.EmployeeId);
         BookableService? added = null;
 
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(r => r.GetEmployeeByIdAsync(employeeId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateEmployee(employeeId));
         _bookableServiceRepository
             .Setup(r => r.ExistsByNameForEmployeeAsync(
                 dto.ServiceName, It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -112,7 +126,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenCategoryInvalid_ReturnsInvalidCategory()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
             service.EmployeeId, "invalid-category", "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
@@ -130,7 +144,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
             EmployeeId.New(), Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
@@ -168,7 +182,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenNewNameIsTaken_ReturnsConflict()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
             service.EmployeeId, Category.BeardTrim.ToSlug(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
@@ -196,7 +210,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WithNewAvailableName_UpdatesServiceAndSaves()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
             service.EmployeeId, Category.BeardTrim.ToSlug(), "Beard trim", "New description", 60m, TimeSpan.FromMinutes(30));
 
@@ -230,7 +244,7 @@ public class BookableServiceManagementServiceTests
     public async Task UpdateBookableServiceAsync_WhenNameIsUnchanged_DoesNotCheckNameAvailability()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         var dto = new UpdateBookableServiceDto(
             service.EmployeeId, Category.Haircut.ToSlug(), "Haircut", "New description", 60m, TimeSpan.FromMinutes(30));
 
@@ -272,7 +286,7 @@ public class BookableServiceManagementServiceTests
     public async Task DeleteBookableServiceAsync_WhenAlreadyArchived_ReturnsConflict()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         service.ArchiveService();
 
         _bookableServiceRepository
@@ -290,7 +304,7 @@ public class BookableServiceManagementServiceTests
     public async Task DeleteBookableServiceAsync_WithActiveService_ArchivesAndSaves()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
 
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
@@ -310,7 +324,7 @@ public class BookableServiceManagementServiceTests
     public async Task ActivateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -326,7 +340,7 @@ public class BookableServiceManagementServiceTests
     public async Task ActivateBookableServiceAsync_WhenServiceInactive_ActivatesAndSaves()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         service.DeactivateService();
 
         _bookableServiceRepository
@@ -352,7 +366,7 @@ public class BookableServiceManagementServiceTests
     public async Task DeactivateBookableServiceAsync_WhenServiceDoesNotBelongToEmployee_ReturnsAccessDenied()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _bookableServiceRepository
             .Setup(r => r.GetByIdAsync(It.IsAny<BookableServiceId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(service);
@@ -368,7 +382,7 @@ public class BookableServiceManagementServiceTests
     public async Task DeactivateBookableServiceAsync_WhenServiceActive_DeactivatesAndSaves()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
 
         _bookableServiceRepository
             .Setup(r => r.BelongsToEmployeeAsync(

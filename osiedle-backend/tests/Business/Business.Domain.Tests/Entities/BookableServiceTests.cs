@@ -10,12 +10,14 @@ public class BookableServiceTests
     [Fact]
     public void Create_WithValidData_InitializesActiveService()
     {
+        var businessId = BusinessId.New();
         var employeeId = EmployeeId.New();
         var before = DateTime.UtcNow;
 
-        var service = BookableService.Create(employeeId, Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+        var service = BookableService.Create(businessId, employeeId, Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         Assert.NotEqual(Guid.Empty, service.Id.Value);
+        Assert.Equal(businessId, service.BusinessId);
         Assert.Equal(employeeId, service.EmployeeId);
         Assert.Equal(Category.Haircut, service.Category);
         Assert.Equal("Haircut", service.ServiceName);
@@ -30,17 +32,18 @@ public class BookableServiceTests
     [Fact]
     public void Create_WithInvalidCategory_Throws()
     {
+        var businessId = BusinessId.New();
         var employeeId = EmployeeId.New();
 
         Assert.Throws<ArgumentException>(() => BookableService.Create(
-            employeeId, (Category)999, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45)));
+            businessId, employeeId, (Category)999, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45)));
     }
 
     [Fact]
     public void UpdateInfo_UpdatesFieldsAndSetsUpdatedAt()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         service.UpdateInfo(Category.BeardTrim, "Beard trim", "Beard shaping", 30m, TimeSpan.FromMinutes(20));
 
@@ -56,7 +59,7 @@ public class BookableServiceTests
     public void UpdateInfo_WithInvalidCategory_Throws()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         Assert.Throws<ArgumentException>(() => service.UpdateInfo(
             (Category)999, "Beard trim", "Beard shaping", 30m, TimeSpan.FromMinutes(20)));
@@ -71,7 +74,7 @@ public class BookableServiceTests
     public void Create_WithInvalidData_Throws(string name, string description, decimal price, int durationMinutes)
     {
         Assert.Throws<ArgumentException>(() => BookableService.Create(
-            EmployeeId.New(), Category.Haircut, name, description, price, TimeSpan.FromMinutes(durationMinutes)));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, name, description, price, TimeSpan.FromMinutes(durationMinutes)));
     }
 
     [Theory]
@@ -81,7 +84,7 @@ public class BookableServiceTests
     public void UpdateInfo_WithInvalidData_Throws(string name, string description, decimal price, int durationMinutes)
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         Assert.Throws<ArgumentException>(() => service.UpdateInfo(
             Category.Haircut, name, description, price, TimeSpan.FromMinutes(durationMinutes)));
@@ -91,7 +94,7 @@ public class BookableServiceTests
     public void DeactivateService_SetsInactiveStatusAndIsIdempotent()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         service.DeactivateService();
         var firstUpdatedAt = service.UpdatedAt;
@@ -105,7 +108,7 @@ public class BookableServiceTests
     public void ActivateService_SetsActiveStatus()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
         service.DeactivateService();
 
         service.ActivateService();
@@ -118,7 +121,7 @@ public class BookableServiceTests
     public void ActivateService_WhenAlreadyActive_DoesNotChangeUpdatedAt()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         service.ActivateService();
 
@@ -130,7 +133,7 @@ public class BookableServiceTests
     public void ArchiveService_SetsArchivedStatus()
     {
         var service = BookableService.Create(
-            EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            BusinessId.New(), EmployeeId.New(), Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         service.ArchiveService();
 

@@ -276,13 +276,21 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
         // BookableServices.EmployeeId is a foreign key to Employees (configured from
         // the Employee aggregate), so the employee row must exist first.
+        var business = Business.Domain.Aggregates.Business.Create(
+            "Test Business",
+            UserId.New(),
+            "Test business for service seeding",
+            Location.Create("Warsaw", "Test Street 1"),
+            Category.Haircut);
+        db.Businesses.Add(business);
+
         var employee = Employee.Create(
-            businessId: null, "Test", "Employee", "Barber", null, $"emp-{Guid.NewGuid():N}@example.com");
+            business.Id, "Test", "Employee", "Barber", null, $"emp-{Guid.NewGuid():N}@example.com");
         db.Employees.Add(employee);
         await db.SaveChangesAsync();
 
         var service = BookableService.Create(
-            employee.Id, Category.Haircut, "Strzyzenie", "Test service", price, duration ?? TimeSpan.FromMinutes(30));
+            business.Id, employee.Id, Category.Haircut, "Strzyzenie", "Test service", price, duration ?? TimeSpan.FromMinutes(30));
         db.BookableServices.Add(service);
         await db.SaveChangesAsync();
 

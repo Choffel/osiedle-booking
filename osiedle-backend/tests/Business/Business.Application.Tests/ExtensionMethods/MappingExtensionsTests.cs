@@ -51,9 +51,10 @@ public class MappingExtensionsTests
     [Fact]
     public void ToDto_MapsBookableServiceFields()
     {
+        var businessId = BusinessId.New();
         var employeeId = EmployeeId.New();
         var service = BusinessServiceEntity.Create(
-            employeeId, Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
+            businessId, employeeId, Category.Haircut, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45));
 
         var dto = service.ToDto();
 
