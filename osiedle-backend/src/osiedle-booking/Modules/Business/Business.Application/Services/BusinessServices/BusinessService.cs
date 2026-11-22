@@ -60,11 +60,11 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
-        if (business == null)
+        var business = await _businessRepository.GetBusinessByIdForReadAsync(businessId, cancellationToken);
+        if (business is null)
             return BusinessErrors.NotFound;
 
-        return business.ToResponseDto();
+        return Result.Success(business);
     }
 
     public async Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(
