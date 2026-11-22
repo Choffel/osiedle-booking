@@ -1,5 +1,7 @@
 ﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.DTOs.BusinessDTOs;
+using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
@@ -36,6 +38,47 @@ public class BusinessRepository : IBusinessRepository
         var business = await _context.Businesses
             .Include(s => s.Services)
             .FirstOrDefaultAsync(b => b.Id == businessId, ct);
+        return business;
+    }
+    
+    public async Task<BusinessResponseDto?> GetBusinessByIdForReadAsync(BusinessId businessId, CancellationToken ct = default)
+    {
+        var business = await _context.Businesses
+            .AsNoTracking()
+            .Where(b => b.Id == businessId)
+            .Select(b => new BusinessResponseDto(
+                b.Id.Value,
+                b.OwnerId.Value,
+                b.Name,
+                b.Description,
+                new LocationDto(b.Location.City, b.Location.Street),
+                b.Services
+                    .Select(s => new ServiceShortInfoDto(
+                        s.Id.Value,
+                        s.EmployeeId.Value,
+                        s.Category,
+                        s.ServiceName,
+                        s.Price,
+                        s.Duration
+                    ))
+                    .ToList(),
+                _context.Employees
+                    .Where(e => e.BusinessId == b.Id)
+                    .Select(e => new EmployeeShortInfoDto(
+                        e.Id.Value,
+                        e.FirstName,
+                        e.LastName,
+                        e.Position,
+                        "test"
+                    ))
+                    .ToList(),
+                b.Status.ToString(),
+                b.Category.ToString(),
+                b.CreatedAt,
+                b.UpdatedAt
+            ))
+            .FirstOrDefaultAsync(ct);
+
         return business;
     }
     

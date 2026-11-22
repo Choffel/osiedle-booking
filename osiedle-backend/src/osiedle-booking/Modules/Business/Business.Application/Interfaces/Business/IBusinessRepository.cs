@@ -1,4 +1,5 @@
-﻿using Business.Application.DTOs.BusinessDTOs;
+﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
@@ -15,6 +16,7 @@ public interface IBusinessRepository
     Task<bool> ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
     
     Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default);
+    Task<BusinessResponseDto?> GetBusinessByIdForReadAsync(BusinessId businessId, CancellationToken ct = default);
 
     Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(
         int page,
