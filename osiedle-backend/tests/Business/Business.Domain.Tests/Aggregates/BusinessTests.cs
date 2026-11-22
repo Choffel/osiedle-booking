@@ -8,19 +8,22 @@ namespace Business.Domain.Tests.Aggregates;
 public class BusinessTests
 {
     private static readonly UserId OwnerId = UserId.New();
+    private static readonly Location ValidLocation = Location.Create("Warsaw", "Main Street 1");
 
     [Fact]
     public void Create_WithValidData_InitializesActiveAggregate()
     {
         var before = DateTime.UtcNow;
 
-        var business = BusinessAggregate.Create("Beauty Salon", OwnerId, "Haircuts and more", "Main Street 1", Category.Haircut);
+        var business = BusinessAggregate.Create("Beauty Salon", OwnerId, "Haircuts and more", ValidLocation, Category.Haircut);
 
         Assert.NotEqual(Guid.Empty, business.Id.Value);
         Assert.Equal("Beauty Salon", business.Name);
         Assert.Equal(OwnerId, business.OwnerId);
         Assert.Equal("Haircuts and more", business.Description);
-        Assert.Equal("Main Street 1", business.Location);
+        Assert.Equal(ValidLocation, business.Location);
+        Assert.Equal("Warsaw", business.Location.City);
+        Assert.Equal("Main Street 1", business.Location.Street);
         Assert.Equal(BusinessStatus.Active, business.Status);
         Assert.InRange(business.CreatedAt, before, DateTime.UtcNow);
         Assert.Null(business.UpdatedAt);
@@ -34,7 +37,7 @@ public class BusinessTests
     [InlineData("   ")]
     public void Create_WithEmptyName_Throws(string name)
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create(name, OwnerId, "Description", "Location", Category.Haircut));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create(name, OwnerId, "Description", ValidLocation, Category.Haircut));
     }
 
     [Theory]
@@ -42,51 +45,57 @@ public class BusinessTests
     [InlineData("   ")]
     public void Create_WithEmptyDescription_Throws(string description)
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", OwnerId, description, "Location", Category.Haircut));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", OwnerId, description, ValidLocation, Category.Haircut));
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Create_WithEmptyLocation_Throws(string location)
+    [Fact]
+    public void Create_WithDefaultLocation_Throws()
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", OwnerId, "Description", location, Category.Haircut));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", OwnerId, "Description", default, Category.Haircut));
     }
 
     [Fact]
     public void Create_WithEmptyOwnerId_Throws()
     {
-        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", UserId.From(Guid.Empty), "Description", "Location", Category.Haircut));
+        Assert.Throws<ArgumentException>(() => BusinessAggregate.Create("Name", UserId.From(Guid.Empty), "Description", ValidLocation, Category.Haircut));
     }
 
     [Fact]
     public void UpdateInfo_UpdatesFieldsAndSetsUpdatedAt()
     {
-        var business = BusinessAggregate.Create("Old name", OwnerId, "Old description", "Old location", Category.Haircut);
+        var business = BusinessAggregate.Create("Old name", OwnerId, "Old description", ValidLocation, Category.Haircut);
+        var newLocation = Location.Create("Krakow", "New Street 2");
 
-        business.UpdateInfo("New name", "New description", "New location");
+        business.UpdateInfo("New name", "New description", newLocation);
 
         Assert.Equal("New name", business.Name);
         Assert.Equal("New description", business.Description);
-        Assert.Equal("New location", business.Location);
+        Assert.Equal(newLocation, business.Location);
         Assert.NotNull(business.UpdatedAt);
     }
 
-    [Theory]
-    [InlineData("", "Description", "Location")]
-    [InlineData("Name", "", "Location")]
-    [InlineData("Name", "Description", "")]
-    public void UpdateInfo_WithEmptyValues_Throws(string name, string description, string location)
+    [Fact]
+    public void UpdateInfo_WithDefaultLocation_Throws()
     {
-        var business = BusinessAggregate.Create("Old name", OwnerId, "Old description", "Old location", Category.Haircut);
+        var business = BusinessAggregate.Create("Old name", OwnerId, "Old description", ValidLocation, Category.Haircut);
 
-        Assert.Throws<ArgumentException>(() => business.UpdateInfo(name, description, location));
+        Assert.Throws<ArgumentException>(() => business.UpdateInfo("New name", "New description", default));
+    }
+
+    [Theory]
+    [InlineData("", "Description")]
+    [InlineData("Name", "")]
+    public void UpdateInfo_WithEmptyValues_Throws(string name, string description)
+    {
+        var business = BusinessAggregate.Create("Old name", OwnerId, "Old description", ValidLocation, Category.Haircut);
+
+        Assert.Throws<ArgumentException>(() => business.UpdateInfo(name, description, ValidLocation));
     }
 
     [Fact]
     public void ArchiveBusiness_SetsArchivedStatusAndDeletedAt()
     {
-        var business = BusinessAggregate.Create("Name", OwnerId, "Description", "Location", Category.Haircut);
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
 
         business.ArchiveBusiness();
 
@@ -97,7 +106,7 @@ public class BusinessTests
     [Fact]
     public void AddEmployee_AddsEmployeeOnlyOnce()
     {
-        var business = BusinessAggregate.Create("Name", OwnerId, "Description", "Location", Category.Haircut);
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
         var employeeId = EmployeeId.New();
 
         business.AddEmployee(employeeId);
@@ -110,7 +119,7 @@ public class BusinessTests
     [Fact]
     public void AddService_WhenBusinessIsArchived_Throws()
     {
-        var business = BusinessAggregate.Create("Name", OwnerId, "Description", "Location", Category.Haircut);
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
         business.ArchiveBusiness();
 
         Assert.Throws<InvalidOperationException>(() =>

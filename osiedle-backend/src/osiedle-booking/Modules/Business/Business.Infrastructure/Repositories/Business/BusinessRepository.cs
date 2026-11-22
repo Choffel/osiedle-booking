@@ -1,9 +1,11 @@
-﻿using Business.Application.DTOs.BusinessDTOs;
+﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
 
@@ -16,7 +18,6 @@ public class BusinessRepository : IBusinessRepository
     {
         _context = context;
     }
-    
     
     public async Task<bool> ExistsByIdAsync(BusinessId businessId, CancellationToken ct = default)
     {
@@ -37,7 +38,40 @@ public class BusinessRepository : IBusinessRepository
             .FirstOrDefaultAsync(b => b.Id == businessId, ct);
         return business;
     }
+    
+    public async Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(
+        int page,
+        int pageSize,
+        string? city = null,
+        CancellationToken ct = default)
+    {
+        var query = _context.Businesses
+            .AsNoTracking();
 
+        if (city is not null)
+            query = query.Where(b => b.Location.City == city);
+        
+        var totalCount = await query.CountAsync(ct);
+        if (totalCount == 0)
+            return new PagedResult<BusinessShortInfoDto>([], 0, page, pageSize);
+        
+        var items = await query
+                .OrderBy(b => b.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(b => new BusinessShortInfoDto(
+                    b.Id.Value,
+                    b.OwnerId.Value,
+                    b.Name,
+                    "https://d375139ucebi94.cloudfront.net/region2/pl/150097/biz_photo/9ce3b7f3d76445d4a52769cba5d256-tommy-barbershop-biz-photo-6582403c3ded446184d893e5a2777a-booksy.jpeg?size=640x427",
+                    5,
+                    b.Description,
+                    new LocationDto(b.Location.City, b.Location.Street)
+                ))
+            .ToListAsync(ct);
+        return new PagedResult<BusinessShortInfoDto>(items, totalCount, page, pageSize);
+    }
+    
     public async Task<IReadOnlyList<BusinessAggregate>> GetBusinessesByCategoryAsync(
         Domain.Enums.Category category,
         CancellationToken ct = default)
@@ -72,8 +106,10 @@ public class BusinessRepository : IBusinessRepository
                 s.Id.Value,
                 s.OwnerId.Value,
                 s.Name,
+                "https://d375139ucebi94.cloudfront.net/region2/pl/150097/biz_photo/9ce3b7f3d76445d4a52769cba5d256-tommy-barbershop-biz-photo-6582403c3ded446184d893e5a2777a-booksy.jpeg?size=640x427",
+                5,
                 s.Description,
-                s.Location
+                new LocationDto(s.Location.City, s.Location.Street)
             ))
             .FirstOrDefaultAsync(ct);
 

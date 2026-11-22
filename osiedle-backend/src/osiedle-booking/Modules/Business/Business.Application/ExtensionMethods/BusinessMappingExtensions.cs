@@ -1,4 +1,5 @@
 ﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BusinessDTOs;
 using Business.Domain.Enums;
 
 namespace Business.Application.ExtensionMethods;
@@ -13,7 +14,7 @@ public static class BusinessMappingExtensions
             business.OwnerId.Value,
             business.Name,
             business.Description,
-            business.Location,
+            new LocationDto(business.Location.City, business.Location.Street),
             business.Status.ToString(),
             business.Category.ToSlug(),
             business.CreatedAt,

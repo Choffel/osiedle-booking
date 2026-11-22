@@ -15,6 +15,8 @@ public class BusinessService : IBusinessManagementService
 {
     private readonly IBusinessRepository _businessRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private const int DefaultPageSize = 3;
+    private const int MaxPageSize = 50;
 
     public BusinessService(IBusinessRepository businessRepository, IUnitOfWork unitOfWork)
     {
@@ -30,7 +32,6 @@ public class BusinessService : IBusinessManagementService
             ownerId, 
             cancellationToken);
         
-        
         if (existingBusiness)
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
@@ -41,11 +42,13 @@ public class BusinessService : IBusinessManagementService
             return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
         }
 
+        var location = Location.Create(createBusinessDto.Location.City, createBusinessDto.Location.Street);
+
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
             ownerId, 
             createBusinessDto.Description, 
-            createBusinessDto.Location,
+            location,
             category
             );
         
@@ -64,6 +67,26 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
+    public async Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(
+        int page = 1,
+        int pageSize = DefaultPageSize,
+        string? city = null,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedPage = Math.Max(1, page);
+        var normalizedPageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+
+        var normalizedCity = string.IsNullOrWhiteSpace(city) ? null : city.Trim();
+        
+        var pagedBusinesses = await _businessRepository.GetBusinessesAsync(
+            normalizedPage,
+            normalizedPageSize,
+            normalizedCity,
+            cancellationToken);
+
+        return Result.Success(pagedBusinesses);
+    }
+
     public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
@@ -76,7 +99,8 @@ public class BusinessService : IBusinessManagementService
         if (business.OwnerId != userId)
             return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
         
-        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
+        var newLocation = Location.Create(updateBusinessInfoDto.NewLocation.City, updateBusinessInfoDto.NewLocation.Street);
+        business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, newLocation);
         
         if (!CategoryExtensions.TryFromSlug(updateBusinessInfoDto.NewCategory, out var category))
         {
@@ -92,7 +116,6 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
-        
         var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
@@ -100,11 +123,9 @@ public class BusinessService : IBusinessManagementService
         if (business.OwnerId != userId)
             return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
 
-        
         business.ArchiveBusiness();
         
-        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return  business.ToResponseDto();
+        return business.ToResponseDto();
     }
 }
