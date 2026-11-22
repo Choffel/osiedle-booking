@@ -1,5 +1,4 @@
 using Files.Application.DTOs;
-using Files.Domain.Enums;
 using Files.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
@@ -7,24 +6,48 @@ namespace Files.Application.Interfaces;
 
 public interface IFileInternalApi
 {
-    Task<Result<FileResponseDto>> UploadImageAsync(
-        FileCategory category,
-        Guid? targetId,
+    Task<Result<FileResponseDto>> UploadServicePhotoAsync(
+        Guid serviceId,
         FileUploadRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<Result<FileResponseDto>> GetImageByIdAsync(
+    Task<Result<FileResponseDto>> UploadCompanyAvatarAsync(
+        Guid companyId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileResponseDto>> UploadCompanyCoverAsync(
+        Guid companyId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileResponseDto>> UploadEmployeeAvatarAsync(
+        Guid employeeId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileResponseDto>> UpdateServicePhotoAsync(
         FileId fileId,
+        Guid serviceId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<Result<string>> GetLatestImageUrlAsync(
-        Guid targetId,
-        FileCategory category,
+    Task<Result<FileResponseDto>> UpdateCompanyAvatarAsync(
+        FileId fileId,
+        Guid companyId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<Result<IReadOnlyList<FileResponseDto>>> GetImagesByTargetIdAsync(
-        Guid targetId,
-        FileCategory category,
+    Task<Result<FileResponseDto>> UpdateCompanyCoverAsync(
+        FileId fileId,
+        Guid companyId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<FileResponseDto>> UpdateEmployeeAvatarAsync(
+        FileId fileId,
+        Guid employeeId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default);
 
     Task<Result> DeleteFileAsync(

@@ -15,36 +15,108 @@ public class FileInternalApi : IFileInternalApi
         _fileModule = fileModule;
     }
 
-    public Task<Result<FileResponseDto>> UploadImageAsync(
-        FileCategory category,
-        Guid? targetId,
+    public Task<Result<FileResponseDto>> UploadServicePhotoAsync(
+        Guid serviceId,
         FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
-        return _fileModule.UploadImageAsync(category, targetId, request, cancellationToken);
+        return _fileModule.UploadImageAsync(
+            FileCategory.ServicePhoto,
+            serviceId,
+            request,
+            cancellationToken);
     }
 
-    public Task<Result<FileResponseDto>> GetImageByIdAsync(
+    public Task<Result<FileResponseDto>> UploadCompanyAvatarAsync(
+        Guid companyId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return _fileModule.UploadImageAsync(
+            FileCategory.CompanyAvatar,
+            companyId,
+            request,
+            cancellationToken);
+    }
+
+    public Task<Result<FileResponseDto>> UploadCompanyCoverAsync(
+        Guid companyId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return _fileModule.UploadImageAsync(
+            FileCategory.CompanyCover,
+            companyId,
+            request,
+            cancellationToken);
+    }
+
+    public Task<Result<FileResponseDto>> UploadEmployeeAvatarAsync(
+        Guid employeeId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return _fileModule.UploadImageAsync(
+            FileCategory.EmployeeAvatar,
+            employeeId,
+            request,
+            cancellationToken);
+    }
+
+    public Task<Result<FileResponseDto>> UpdateServicePhotoAsync(
         FileId fileId,
+        Guid serviceId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
-        return _fileModule.GetImageByIdAsync(fileId, cancellationToken);
+        return _fileModule.UpdateImageAsync(
+            fileId,
+            FileCategory.ServicePhoto,
+            serviceId,
+            request,
+            cancellationToken);
     }
 
-    public Task<Result<string>> GetLatestImageUrlAsync(
-        Guid targetId,
-        FileCategory category,
+    public Task<Result<FileResponseDto>> UpdateCompanyAvatarAsync(
+        FileId fileId,
+        Guid companyId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
-        return _fileModule.GetLatestImageUrlAsync(targetId, category, cancellationToken);
+        return _fileModule.UpdateImageAsync(
+            fileId,
+            FileCategory.CompanyAvatar,
+            companyId,
+            request,
+            cancellationToken);
     }
 
-    public Task<Result<IReadOnlyList<FileResponseDto>>> GetImagesByTargetIdAsync(
-        Guid targetId,
-        FileCategory category,
+    public Task<Result<FileResponseDto>> UpdateCompanyCoverAsync(
+        FileId fileId,
+        Guid companyId,
+        FileUploadRequest request,
         CancellationToken cancellationToken = default)
     {
-        return _fileModule.GetImagesByTargetIdAsync(targetId, category, cancellationToken);
+        return _fileModule.UpdateImageAsync(
+            fileId,
+            FileCategory.CompanyCover,
+            companyId,
+            request,
+            cancellationToken);
+    }
+
+    public Task<Result<FileResponseDto>> UpdateEmployeeAvatarAsync(
+        FileId fileId,
+        Guid employeeId,
+        FileUploadRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return _fileModule.UpdateImageAsync(
+            fileId,
+            FileCategory.EmployeeAvatar,
+            employeeId,
+            request,
+            cancellationToken);
     }
 
     public Task<Result> DeleteFileAsync(
