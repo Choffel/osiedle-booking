@@ -5,5 +5,5 @@ public record BusinessShortInfoDto(
     Guid OwnerId,
     string Name,             
     string Description,     
-    string Location
-    );
+    LocationDto Location
+);
