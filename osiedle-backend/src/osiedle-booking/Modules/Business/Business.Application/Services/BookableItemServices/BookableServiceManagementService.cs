@@ -35,13 +35,19 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
         }
 
-        bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
-        if (!employeeExists)
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        if (employee is null)
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
+        }
+
+        if (employee.BusinessId is not BusinessId businessId)
         {
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
         }
 
         var bookableService = BookableService.Create(
+            businessId,
             employeeId,
             category,
             bookableServiceDto.ServiceName,
