@@ -31,6 +31,10 @@ public class WorkingHours : Entity<WorkingHoursId>
         var id = WorkingHoursId.New();
         return new WorkingHours(id, employeeId, date, startTime, endTime);
     }
+
+    public static WorkingHours Create(WorkingHoursId id, EmployeeId employeeId, DateOnly date,
+        TimeOnly startTime, TimeOnly endTime)
+        => new(id, employeeId, date, startTime, endTime);
     
     public void UpdateTime(TimeOnly startTime, TimeOnly endTime)
     {

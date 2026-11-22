@@ -57,9 +57,16 @@ public class Business : AggregateRoot<BusinessId>
         return new Business(businessId, name, location, ownerId, description, category);
     }
 
-    //TODO: add connect service also to business(owner can adding service to business)
-    public void AddService(BusinessId businessId, EmployeeId employeeId, Category category, string name, 
+    public static Business Create(BusinessId id, string name, UserId ownerId, string description,
+        string location, Category category)
+        => new(id, name, location, ownerId, description, category);
+
+    public void AddService(BusinessId businessId, EmployeeId employeeId, Category category, string name,
         string description, decimal price, TimeSpan durationMinutes)
+        => AddService(employeeId, category, name, description, price, durationMinutes);
+
+    public void AddService(EmployeeId employeeId, Category category, string name, string description,
+        decimal price, TimeSpan durationMinutes)
     {
         if (Status == BusinessStatus.Archived)
             throw new InvalidOperationException("Cannot modify an archived business.");

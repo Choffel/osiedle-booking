@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Bookings.Infrastructure;
+using Bookings.Infrastructure.Data;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Business.Infrastructure;
@@ -13,13 +14,17 @@ using Microsoft.OpenApi.Models;
 using Notifications.Infrastructure;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Roles;
+using osiedle_booking.WebApi.Data;
 using osiedle_booking.WebApi.Errors;
 using osiedle_booking.WebApi.Json;
 using Users.Infrastructure;
 using Users.Infrastructure.Data;
 using Users.Infrastructure.Data.InitialData;
+using Users.Infrastructure.Identity;
 using Users.Infrastructure.Identity.Models;
-    
+using UsersDbContext = Users.Infrastructure.Data.ApplicationDbContext;
+using BookingsDbContext = Bookings.Infrastructure.Data.ApplicationDbContext;
+
 DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +115,19 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
+
+
+builder.Services.AddDbContext<Users.Infrastructure.Data.ApplicationDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Users")));
+
+builder.Services.AddDbContext<BusinessDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory_Business")));
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -134,7 +152,7 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
 
     if (!app.Environment.IsEnvironment("Testing"))
     {
-        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        var dbContext = services.GetRequiredService<UsersDbContext>();
         await dbContext.Database.MigrateAsync();
 
         var businessDbContext = services.GetRequiredService<BusinessDbContext>();
@@ -143,7 +161,20 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
         var filesDbContext = services.GetRequiredService<FilesDbContext>();
         await filesDbContext.Database.MigrateAsync();
 
+        var bookingsDbContext = services.GetRequiredService<BookingsDbContext>();
+        await bookingsDbContext.Database.MigrateAsync();
+
         await RoleInitData.InitializeAsync(UserRoles.All, roleManager);
+
+        if (app.Environment.IsDevelopment() && app.Configuration.GetValue("SeedData:Enabled", true))
+        {
+            await new DevelopmentDataSeeder().SeedAsync(
+                services.GetRequiredService<UserManager<ApplicationUser>>(),
+                roleManager,
+                dbContext,
+                businessDbContext,
+                bookingsDbContext);
+        }
     }
 }
 

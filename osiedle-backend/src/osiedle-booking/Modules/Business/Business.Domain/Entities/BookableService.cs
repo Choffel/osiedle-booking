@@ -34,6 +34,10 @@ public class BookableService : Entity<BookableServiceId>
         var id = BookableServiceId.New();
         return new BookableService(id, employeeId, category, serviceName, description, price, duration);
     }
+
+    public static BookableService Create(BookableServiceId id, EmployeeId employeeId, Category category,
+        string serviceName, string description, decimal price, TimeSpan duration)
+        => new(id, employeeId, category, serviceName, description, price, duration);
     
     public void UpdateInfo(Category category, string serviceName, string description, decimal price, TimeSpan duration)
     {
