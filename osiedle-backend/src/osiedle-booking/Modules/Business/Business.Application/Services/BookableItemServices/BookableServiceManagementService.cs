@@ -30,19 +30,25 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
     {
         var employeeId = EmployeeId.From(bookableServiceDto.EmployeeId);
 
-        var bookableService = BookableService.Create(
-            employeeId,
-            bookableServiceDto.ServiceName,
-            bookableServiceDto.ServiceDescription,
-            bookableServiceDto.ServicePrice,
-            bookableServiceDto.ServiceDuration
-        );
+        if (!CategoryExtensions.TryFromSlug(bookableServiceDto.Category, out var category))
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
+        }
 
         bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
         if (!employeeExists)
         {
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
         }
+
+        var bookableService = BookableService.Create(
+            employeeId,
+            category,
+            bookableServiceDto.ServiceName,
+            bookableServiceDto.ServiceDescription,
+            bookableServiceDto.ServicePrice,
+            bookableServiceDto.ServiceDuration
+        );
 
         bool isNameTaken = await _bookableServiceRepository.ExistsByNameForEmployeeAsync(bookableService.ServiceName, employeeId, ct);
         if (isNameTaken)
@@ -89,7 +95,13 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
         }
     }
     
+    if (!CategoryExtensions.TryFromSlug(dto.Category, out var category))
+    {
+        return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
+    }
+    
     bookableService.UpdateInfo(
+        category,
         dto.ServiceName,
         dto.ServiceDescription,
         dto.ServicePrice,

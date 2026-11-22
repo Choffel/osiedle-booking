@@ -50,14 +50,14 @@ public class AuthenticationControllerTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
-    public async Task Register_DuplicateEmail_Returns400()
+    public async Task Register_DuplicateEmail_Returns409()
     {
         var email = UniqueEmail();
         (await RegisterAsync(email)).EnsureSuccessStatusCode();
 
         var duplicate = await RegisterAsync(email);
 
-        await duplicate.ShouldFailWithAsync(HttpStatusCode.BadRequest, "IdentityError");
+        await duplicate.ShouldFailWithAsync(HttpStatusCode.Conflict, "Identity.DuplicateEmail");
     }
 
     // ---------- login ----------

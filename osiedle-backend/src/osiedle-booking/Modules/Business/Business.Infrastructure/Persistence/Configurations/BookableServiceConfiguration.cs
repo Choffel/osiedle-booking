@@ -1,15 +1,15 @@
 ﻿using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Business.Infrastructure.Persistence.Configurations;
 
 public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Domain.Entities.BookableService>
 {
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Business.Domain.Entities.BookableService> builder)
+    public void Configure(EntityTypeBuilder<Business.Domain.Entities.BookableService> builder)
     {
         builder.ToTable("BookableServices");
-
 
         builder.HasKey(x => x.Id);
         
@@ -27,6 +27,13 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
             .IsRequired();
         
         builder.HasIndex(s => s.EmployeeId);
+
+        builder.Property(x => x.Category)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.HasIndex(x => x.Category);
         
         builder.Property(x => x.ServiceName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Price).IsRequired().HasColumnType("numeric(18,2)");

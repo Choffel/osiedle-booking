@@ -1,10 +1,12 @@
 using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.Interfaces;
+using Business.Application.Interfaces.Business;
 using Business.Application.Interfaces.Employee;
 using Business.Application.Services.EmployeeServices;
 using Business.Domain.Entities;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using EmployeeAggregate = Business.Domain.Aggregates.Employee;
 
 namespace Business.Application.Tests.Services;
@@ -14,6 +16,7 @@ public class EmployeeWorkingHoursServiceTests
     private static readonly DateOnly Date = new(2026, 10, 23);
 
     private readonly Mock<IEmployeeRepository> _employeeRepository = new();
+    private readonly Mock<IBusinessRepository> _businessRepository = new();
     private readonly Mock<IEmployeeWorkingHoursRepository> _workingHoursRepository = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly EmployeeWorkingHoursService _sut;
@@ -23,6 +26,7 @@ public class EmployeeWorkingHoursServiceTests
         _sut = new EmployeeWorkingHoursService(
             _employeeRepository.Object,
             _workingHoursRepository.Object,
+            _businessRepository.Object,
             _unitOfWork.Object);
     }
 
@@ -35,7 +39,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((EmployeeAggregate?)null);
 
-        var result = await _sut.SetWorkingHoursAsync(employeeId, dto);
+        var result = await _sut.SetWorkingHoursAsync(UserId.New(), employeeId, dto);
 
         Assert.True(result.IsFailure);
         Assert.Equal(EmployeeErrors.NotFound, result.Error);
@@ -45,8 +49,9 @@ public class EmployeeWorkingHoursServiceTests
     [Fact]
     public async Task SetWorkingHoursAsync_WhenNoEntryForDate_AddsWorkingHoursAndSaves()
     {
+        var currentUserId = UserId.New();
         var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com", currentUserId);
         var dto = new SetWorkingHoursDto(Date, new TimeOnly(9, 0), new TimeOnly(17, 0));
         WorkingHours? added = null;
 
@@ -63,7 +68,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.SetWorkingHoursAsync(employee.Id, dto);
+        var result = await _sut.SetWorkingHoursAsync(currentUserId, employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(added);
@@ -77,8 +82,9 @@ public class EmployeeWorkingHoursServiceTests
     [Fact]
     public async Task SetWorkingHoursAsync_WhenEntryExists_UpdatesWorkingHoursAndSaves()
     {
+        var currentUserId = UserId.New();
         var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com", currentUserId);
         var existing = WorkingHours.Create(employee.Id, Date, new TimeOnly(8, 0), new TimeOnly(16, 0));
         var dto = new SetWorkingHoursDto(Date, new TimeOnly(10, 0), new TimeOnly(18, 0));
 
@@ -92,7 +98,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.SetWorkingHoursAsync(employee.Id, dto);
+        var result = await _sut.SetWorkingHoursAsync(currentUserId, employee.Id, dto);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(dto.StartTime, existing.StartTime);
@@ -104,9 +110,14 @@ public class EmployeeWorkingHoursServiceTests
     [Fact]
     public async Task ClearWorkingHoursAsync_WhenEntryExists_RemovesAndSaves()
     {
+        var currentUserId = UserId.New();
         var employee = EmployeeAggregate.Create(
-            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
+            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com", currentUserId);
         var existing = WorkingHours.Create(employee.Id, Date, new TimeOnly(9, 0), new TimeOnly(17, 0));
+
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
 
         _workingHoursRepository
             .Setup(r => r.GetWorkingHoursByDateAsync(It.IsAny<EmployeeId>(), Date, It.IsAny<CancellationToken>()))
@@ -117,7 +128,7 @@ public class EmployeeWorkingHoursServiceTests
             .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var result = await _sut.ClearWorkingHoursAsync(employee.Id, Date);
+        var result = await _sut.ClearWorkingHoursAsync(currentUserId, employee.Id, Date);
 
         Assert.True(result.IsSuccess);
         _workingHoursRepository.Verify(r => r.RemoveWorkingHours(existing), Times.Once);
@@ -127,11 +138,17 @@ public class EmployeeWorkingHoursServiceTests
     [Fact]
     public async Task ClearWorkingHoursAsync_WhenEntryMissing_DoesNotSave()
     {
+        var currentUserId = UserId.New();
+        var employee = EmployeeAggregate.Create(
+            null, "Jan", "Kowalski", "Barber", "Great", "jan@example.com", currentUserId);
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
         _workingHoursRepository
             .Setup(r => r.GetWorkingHoursByDateAsync(It.IsAny<EmployeeId>(), Date, It.IsAny<CancellationToken>()))
             .ReturnsAsync((WorkingHours?)null);
 
-        var result = await _sut.ClearWorkingHoursAsync(EmployeeId.New(), Date);
+        var result = await _sut.ClearWorkingHoursAsync(currentUserId, employee.Id, Date);
 
         Assert.True(result.IsSuccess);
         _workingHoursRepository.Verify(r => r.RemoveWorkingHours(It.IsAny<WorkingHours>()), Times.Never);

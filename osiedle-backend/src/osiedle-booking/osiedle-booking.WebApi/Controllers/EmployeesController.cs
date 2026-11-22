@@ -1,13 +1,17 @@
+using System.Security.Claims;
 using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.Interfaces.Employee;
 using Business.Domain.ValueObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using osiedle_booking.WebApi.Extensions;
 
 namespace osiedle_booking.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeManagementService _employeeManagementService;
@@ -26,7 +30,8 @@ public class EmployeesController : ControllerBase
         [FromBody] EmployeeCreateDto dto,
         CancellationToken ct = default)
     {
-        return (await _employeeManagementService.CreateEmployeeAsync(dto, ct)).ToActionResult();
+        var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+        return (await _employeeManagementService.CreateEmployeeAsync(userId, dto, ct)).ToActionResult();
     }
 
     [HttpPut("{employeeId:guid}/profile")]
@@ -36,8 +41,9 @@ public class EmployeesController : ControllerBase
         CancellationToken ct = default)
     {
         var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeManagementService.UpdateProfileAsync(employee, dto, ct))
+        var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+
+        return (await _employeeManagementService.UpdateProfileAsync(userId, employee, dto, ct))
             .ToActionResult();
     }
 
@@ -47,8 +53,9 @@ public class EmployeesController : ControllerBase
         CancellationToken ct = default)
     {
         var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeManagementService.DeactivateEmployeeAsync(employee, ct))
+        var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+
+        return (await _employeeManagementService.DeactivateEmployeeAsync(userId, employee, ct))
             .ToActionResult();
     }
 
@@ -59,8 +66,9 @@ public class EmployeesController : ControllerBase
         CancellationToken ct = default)
     {
         var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(employee, dto, ct)).ToActionResult();
+        var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+
+        return (await _employeeWorkingHoursService.SetWorkingHoursAsync(userId, employee, dto, ct)).ToActionResult();
     }
 
     [HttpDelete("{employeeId:guid}/working-hours")]
@@ -70,7 +78,8 @@ public class EmployeesController : ControllerBase
         CancellationToken ct = default)
     {
         var employee = EmployeeId.From(employeeId);
-        
-        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(employee, date, ct)).ToActionResult();
+        var userId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+
+        return (await _employeeWorkingHoursService.ClearWorkingHoursAsync(userId, employee, date, ct)).ToActionResult();
     }
 }

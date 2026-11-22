@@ -44,6 +44,10 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
             .HasMaxLength(500)
             .IsRequired();
         
+        builder.Property(b => b.Category)
+            .HasConversion<string>()
+            .IsRequired();
+
         builder.HasQueryFilter(b => b.DeletedAt == null);
     }
 }

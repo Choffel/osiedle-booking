@@ -3,8 +3,8 @@ using Bookings.Domain.Entities.Booking.Value_objects;
 using Bookings.Infrastructure.Data;
 using Business.Domain.Aggregates;
 using Business.Domain.Entities;
+using Business.Domain.Enums;
 using Business.Domain.ValueObjects;
-using Business.Domain.ValueObjects.Category;
 using Business.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +20,6 @@ using DomainUser = Users.Domain.Entity.User.User;
 using BusinessIdValue = Business.Domain.ValueObjects.BusinessId;
 using EmployeeIdValue = Business.Domain.ValueObjects.EmployeeId;
 using BookableServiceIdValue = Business.Domain.ValueObject.BookableServiceId;
-using CategoryIdValue = Business.Domain.ValueObjects.Category.CategoryId;
 using WorkingHoursIdValue = Business.Domain.ValueObjects.WorkingHoursId;
 using BookingBusinessId = Bookings.Domain.Entities.Booking.Value_objects.BusinessId;
 using BookingServiceId = Bookings.Domain.Entities.Booking.Value_objects.ServiceId;
@@ -38,8 +37,6 @@ public sealed class DevelopmentDataSeeder
 
     private static readonly Guid BusinessGuid = Guid.Parse("20000000-0000-0000-0000-000000000001");
     private static readonly Guid SecondBusinessId = Guid.Parse("20000000-0000-0000-0000-000000000002");
-    private static readonly Guid CategoryBeautyId = Guid.Parse("30000000-0000-0000-0000-000000000001");
-    private static readonly Guid CategoryWellnessId = Guid.Parse("30000000-0000-0000-0000-000000000002");
     private static readonly Guid EmployeeGuid = Guid.Parse("40000000-0000-0000-0000-000000000001");
     private static readonly Guid SecondEmployeeId = Guid.Parse("40000000-0000-0000-0000-000000000002");
     private static readonly Guid SecondBusinessEmployeeId = Guid.Parse("40000000-0000-0000-0000-000000000003");
@@ -128,13 +125,6 @@ public sealed class DevelopmentDataSeeder
         BusinessDbContext db,
         CancellationToken cancellationToken)
     {
-        if (!await db.Categories.AnyAsync(category => category.Id == CategoryIdValue.From(CategoryBeautyId), cancellationToken))
-        {
-            db.Categories.AddRange(
-                Category.Create(CategoryIdValue.From(CategoryBeautyId), "Beauty", "beauty", 1),
-                Category.Create(CategoryIdValue.From(CategoryWellnessId), "Wellness", "wellness", 2));
-        }
-
         if (!await db.Businesses.AnyAsync(business => business.Id == BusinessIdValue.From(BusinessGuid), cancellationToken))
         {
             db.Businesses.AddRange(
@@ -143,13 +133,15 @@ public sealed class DevelopmentDataSeeder
                     "Pracownia Urody",
                     UserId.From(OwnerId),
                     "Kameralne studio stylizacji i pielęgnacji.",
-                    "ul. Główna 10, Warszawa"),
+                    "ul. Główna 10, Warszawa",
+                    Category.FacialCare),
                 DomainBusiness.Create(
                     BusinessIdValue.From(SecondBusinessId),
                     "Studio Harmonia",
                     UserId.From(AdminId),
                     "Gabinet masażu i usług wellness.",
-                    "ul. Parkowa 5, Kraków"));
+                    "ul. Parkowa 5, Kraków",
+                    Category.Waxing));
         }
 
         if (!await db.Employees.AnyAsync(employee => employee.Id == EmployeeIdValue.From(EmployeeGuid), cancellationToken))
@@ -168,11 +160,11 @@ public sealed class DevelopmentDataSeeder
         if (!await db.BookableServices.AnyAsync(service => service.Id == BookableServiceIdValue.From(ServiceGuid), cancellationToken))
         {
             db.Set<BookableService>().AddRange(
-                BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid),
+                BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
                     "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, TimeSpan.FromMinutes(60)),
-                BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId),
+                BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
                     "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, TimeSpan.FromMinutes(45)),
-                BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId),
+                BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
                     "Masaż relaksacyjny", "Masaż całego ciała.", 180m, TimeSpan.FromMinutes(90)));
         }
 

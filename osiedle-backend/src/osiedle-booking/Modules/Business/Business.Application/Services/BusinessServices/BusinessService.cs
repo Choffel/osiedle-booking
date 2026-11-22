@@ -3,6 +3,7 @@ using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.ExtensionMethods;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
+using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
@@ -23,20 +24,30 @@ public class BusinessService : IBusinessManagementService
 
     public async Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken = default)
     {
+        var ownerId = UserId.From(createBusinessDto.OwnerId);
+        
         var existingBusiness = await _businessRepository.ExistsByOwnerIdAsync(
-            createBusinessDto.OwnerId, 
+            ownerId, 
             cancellationToken);
+        
         
         if (existingBusiness)
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.AlreadyExists);
         }
         
+        if (!CategoryExtensions.TryFromSlug(createBusinessDto.Category, out var category))
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
+        }
+
         var business = Domain.Aggregates.Business.Create(
             createBusinessDto.Name, 
-            createBusinessDto.OwnerId, 
+            ownerId, 
             createBusinessDto.Description, 
-            createBusinessDto.Location);
+            createBusinessDto.Location,
+            category
+            );
         
         _businessRepository.Add(business, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -53,7 +64,7 @@ public class BusinessService : IBusinessManagementService
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId,
+    public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId,
         UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken = default)
     {
         var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
@@ -62,21 +73,32 @@ public class BusinessService : IBusinessManagementService
         {
             return Result<BusinessResponseDto>.Failure(BusinessErrors.NotFound);
         }
+        if (business.OwnerId != userId)
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
         
         business.UpdateInfo(updateBusinessInfoDto.NewName, updateBusinessInfoDto.NewDescription, updateBusinessInfoDto.NewLocation);
+        
+        if (!CategoryExtensions.TryFromSlug(updateBusinessInfoDto.NewCategory, out var category))
+        {
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.InvalidCategory);
+        }
+
+        business.ChangeCategory(category);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return business.ToResponseDto();
     }
 
-    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken = default)
+    public async Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken = default)
     {
         
         var business = await _businessRepository.GetBusinessByIdAsync(businessId, cancellationToken);
 
         if (business is null)
             return BusinessErrors.NotFound;
+        if (business.OwnerId != userId)
+            return Result<BusinessResponseDto>.Failure(BusinessErrors.Forbidden);
 
         
         business.ArchiveBusiness();

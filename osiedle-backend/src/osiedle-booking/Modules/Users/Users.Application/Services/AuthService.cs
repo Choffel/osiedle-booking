@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Notifications.Application.Interfaces;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.Interfaces;
 using osiedle_booking.BuildingBlocks.Roles;
@@ -31,11 +33,14 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly INotificationInternalApi _notificationInternalApi;
+    private readonly IConfiguration _configuration;
 
     public AuthService( IIdentityCredentialsService identityCredentialsService,
         IIdentityAccountService identityAccountService, IIdentityEmailService identityEmailService,
         ILogger<AuthService> logger, IRoleService roleManager, ITokenService tokenService, IUserContext userContext,
-        IUnitOfWork unitOfWork, IUserRepository userRepository, IJwtTokenGenerator jwtTokenGenerator)
+        IUnitOfWork unitOfWork, IUserRepository userRepository, IJwtTokenGenerator jwtTokenGenerator,
+        INotificationInternalApi notificationInternalApi, IConfiguration configuration)
     {
         _identityCredentialsService = identityCredentialsService; 
         _identityAccountService = identityAccountService;
@@ -47,12 +52,14 @@ public class AuthService : IAuthService
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _notificationInternalApi = notificationInternalApi;
+        _configuration = configuration;
     }
     
      public async Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct = default)
     {
         var identityResult = await _identityAccountService.CreateIdentityAsync(
-            request.Email,  request.FirstName, request.Password, ct);
+            request.Email,  request.Email, request.Password, ct);
 
         if (identityResult.IsFailure)
             return Result<Guid>.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
@@ -62,12 +69,26 @@ public class AuthService : IAuthService
         _userRepository.Add(user);
         
         var token = await _identityEmailService.GenerateEmailConfirmationTokenAsync(user.Id, ct);
-        
-        _logger.LogInformation("Email confirmation token for user {UserId}: {Token}", user.Id, token.Value); // TODO: Fix this when the notification service becomes available 
+
+        if (token.IsFailure)
+            return Result<Guid>.Failure(token.Error);
+
+        var confirmationLink = CreateEmailConfirmationLink(request.Email, token.Value);
+        await _notificationInternalApi.SendVerificationLinkAsync(request.Email, confirmationLink, ct);
+
+        _logger.LogInformation("Email confirmation link for user {UserId}: {Link}", user.Id, confirmationLink);
 
         await _unitOfWork.SaveChangesAsync(ct);
         
         return Result<Guid>.Success(user.Id.Value);
+    }
+
+    private string CreateEmailConfirmationLink(string email, string token)
+    {
+        var frontendDomain = _configuration["Frontend:Domain"]?.TrimEnd('/')
+                             ?? throw new InvalidOperationException("Frontend:Domain is missing in configuration.");
+
+        return $"{frontendDomain}/Authentication/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
     }
     
     public async Task<Result<TokenResponseDto>> AuthenticateAsync(AuthRequest request, CancellationToken ct = default)
@@ -102,7 +123,7 @@ public class AuthService : IAuthService
         
         var token = await _identityCredentialsService.GeneratePasswordResetTokenAsync(UserId.From(user.Value.Id),ct);
         
-        _logger.LogInformation("Password reset token for user {UserId}: {Token}", user.Value.Id, token.Value); // TODO: удалить логирование токена и перенести его отправку на почту когда появиться сервис нотификации
+        _logger.LogInformation("Password reset token for user {UserId}: {Token}", user.Value.Id, token.Value); // TODO: удалить логирование токена и перенести его отправку на почту когда появится сервис нотификации
 
         return Result.Success();
     }

@@ -30,12 +30,22 @@ public class BusinessRepository : IBusinessRepository
         return exist;
     }
 
-    public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct)
+    public async Task<BusinessAggregate?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default)
     {
         var business = await _context.Businesses
             .Include(s => s.Services)
             .FirstOrDefaultAsync(b => b.Id == businessId, ct);
         return business;
+    }
+
+    public async Task<IReadOnlyList<BusinessAggregate>> GetBusinessesByCategoryAsync(
+        Domain.Enums.Category category,
+        CancellationToken ct = default)
+    {
+        return await _context.Businesses
+            .AsNoTracking()
+            .Where(b => b.Category == category)
+            .ToListAsync(ct);
     }
 
     public Task<bool> EmployeeBelongsToBusinessAsync(

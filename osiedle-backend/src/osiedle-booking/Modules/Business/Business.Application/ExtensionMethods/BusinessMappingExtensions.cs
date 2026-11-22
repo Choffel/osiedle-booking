@@ -1,7 +1,9 @@
 ﻿using Business.Application.DTOs;
+using Business.Domain.Enums;
 
 namespace Business.Application.ExtensionMethods;
 
+//TODO: Add services and employee 
 public static class BusinessMappingExtensions
 {
     public static BusinessResponseDto ToResponseDto(this Domain.Aggregates.Business business)
@@ -13,6 +15,7 @@ public static class BusinessMappingExtensions
             business.Description,
             business.Location,
             business.Status.ToString(),
+            business.Category.ToSlug(),
             business.CreatedAt,
             business.UpdatedAt
         );

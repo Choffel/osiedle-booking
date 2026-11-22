@@ -19,6 +19,8 @@ public class Business : AggregateRoot<BusinessId>
     
     private readonly List<EmployeeId> _employeeIds = new();
     public IReadOnlyList<EmployeeId> EmployeeIds => _employeeIds.AsReadOnly();
+    
+    public Category Category { get; private set; }
    
     
     
@@ -26,7 +28,7 @@ public class Business : AggregateRoot<BusinessId>
     
     private Business() { }
 
-    private Business(BusinessId id, string name, string location, UserId ownerId, string description) : base(id)
+    private Business(BusinessId id, string name, string location, UserId ownerId, string description, Category category) : base(id)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Business name cannot be empty.", nameof(name));
@@ -44,20 +46,27 @@ public class Business : AggregateRoot<BusinessId>
         OwnerId = ownerId;
         Description = description;
         Location = location;
+        Category = category;
         Status = BusinessStatus.Active;
         CreatedAt = DateTime.UtcNow;
     }
     
-    public static Business Create(string name, UserId ownerId, string description, string location)
+    public static Business Create(string name, UserId ownerId, string description, string location, Category category)
     {
         var businessId = BusinessId.New();
-        return new Business(businessId, name, location, ownerId, description);
+        return new Business(businessId, name, location, ownerId, description, category);
     }
 
-    public static Business Create(BusinessId id, string name, UserId ownerId, string description, string location)
-        => new(id, name, location, ownerId, description);
+    public static Business Create(BusinessId id, string name, UserId ownerId, string description,
+        string location, Category category)
+        => new(id, name, location, ownerId, description, category);
 
-    public void AddService(EmployeeId employeeId, string name, string description, decimal price, TimeSpan durationMinutes)
+    public void AddService(BusinessId businessId, EmployeeId employeeId, Category category, string name,
+        string description, decimal price, TimeSpan durationMinutes)
+        => AddService(employeeId, category, name, description, price, durationMinutes);
+
+    public void AddService(EmployeeId employeeId, Category category, string name, string description,
+        decimal price, TimeSpan durationMinutes)
     {
         if (Status == BusinessStatus.Archived)
             throw new InvalidOperationException("Cannot modify an archived business.");
@@ -65,11 +74,10 @@ public class Business : AggregateRoot<BusinessId>
         if (_services.Any(s => s.ServiceName == name))
             throw new InvalidOperationException("Service with this name already exists.");
         
-        //TODO: fix ANY method to check if employee is associated with this business
-        if(!_services.Any(s => s.EmployeeId == employeeId))
+        if(!_employeeIds.Contains(employeeId))
             throw new InvalidOperationException("Employee is not associated with this business.");
 
-        var service = BookableService.Create(employeeId, name, description, price, durationMinutes);
+        var service = BookableService.Create(employeeId, category, name, description, price, durationMinutes);
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;
@@ -104,5 +112,14 @@ public class Business : AggregateRoot<BusinessId>
     {
         Status = BusinessStatus.Archived;
         DeletedAt = DateTime.UtcNow;
+    }
+    
+    public void ChangeCategory(Category newCategory)
+    {
+        if (!Enum.IsDefined(newCategory))
+            throw new ArgumentException("Invalid business category.", nameof(newCategory));
+
+        Category = newCategory;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

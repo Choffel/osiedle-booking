@@ -13,11 +13,14 @@ public interface IBusinessRepository
     
     Task<bool>ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
     
-    Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct);
+    Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Domain.Aggregates.Business>> GetBusinessesByCategoryAsync(
+        Domain.Enums.Category category,
+        CancellationToken ct = default);
     
     Task<bool> EmployeeBelongsToBusinessAsync(EmployeeId employeeId, BusinessId businessId, CancellationToken ct);
     
-    //TODO: relocate to bookable repository
     Task<bool> BookableServiceBelongsToBusinessAsync(BookableServiceId serviceId, BusinessId businessId, CancellationToken ct);
     
     void Add(Domain.Aggregates.Business business, CancellationToken ct);

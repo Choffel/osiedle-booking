@@ -12,8 +12,8 @@ public interface IBusinessManagementService
     
     Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken);
     
-    Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(BusinessId businessId, UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken);
+    Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId, UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken);
     
-    Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(BusinessId businessId, CancellationToken cancellationToken);
+    Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken);
     
 }

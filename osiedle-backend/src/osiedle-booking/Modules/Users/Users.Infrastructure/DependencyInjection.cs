@@ -32,7 +32,10 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Database")
                                ?? configuration["CONNECTION_STRING"];
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(
+                connectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                    "__EFMigrationsHistory_Users")));
         #endregion
 
         #region Identity
