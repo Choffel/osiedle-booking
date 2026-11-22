@@ -36,7 +36,7 @@ var connectionString = builder.Configuration.GetConnectionString("Database")
 builder.Services.AddBuildingBlocks();
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddBusinessInfrastructure(connectionString);
-builder.Services.AddBookingInfrastructure(builder.Configuration, connectionString);
+builder.Services.AddBookingInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddFilesInfrastructure(builder.Configuration, connectionString);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

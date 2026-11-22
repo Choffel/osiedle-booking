@@ -15,20 +15,11 @@ namespace Bookings.Infrastructure;
 public static class DependencyInjection
 {
     public static IServiceCollection AddBookingInfrastructure(this IServiceCollection services, IConfiguration configuration)
-        => services.AddBookingInfrastructure(configuration, null);
-
-    public static IServiceCollection AddBookingInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        string? connectionString)
     {
         #region Database
-        connectionString ??= configuration.GetConnectionString("Database")
-                               ?? configuration["CONNECTION_STRING"];
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException("Database connection string is missing.");
-        }
+        var connectionString = configuration.GetConnectionString("Database")
+                               ?? configuration["CONNECTION_STRING"]
+                               ?? throw new InvalidOperationException("Database connection string is missing.");
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
         #endregion
