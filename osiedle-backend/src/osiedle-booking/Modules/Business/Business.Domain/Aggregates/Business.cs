@@ -60,9 +60,13 @@ public class Business : AggregateRoot<BusinessId>
 
     public void AddService(BusinessId businessId, EmployeeId employeeId, Category category, string name,
         string description, decimal price, TimeSpan durationMinutes)
-        => AddService(employeeId, category, name, description, price, durationMinutes);
+        => AddServiceInternal(businessId, employeeId, category, name, description, price, durationMinutes);
 
     public void AddService(EmployeeId employeeId, Category category, string name, string description,
+        decimal price, TimeSpan durationMinutes)
+        => AddServiceInternal(Id, employeeId, category, name, description, price, durationMinutes);
+
+    private void AddServiceInternal(BusinessId businessId, EmployeeId employeeId, Category category, string name, string description,
         decimal price, TimeSpan durationMinutes)
     {
         if(Status == BusinessStatus.Archived)
@@ -74,7 +78,7 @@ public class Business : AggregateRoot<BusinessId>
         if(!_employeeIds.Contains(employeeId))
             throw new InvalidOperationException("Employee is not associated with this business.");
 
-        var service = BookableService.Create(employeeId, category, name, description, price, durationMinutes);
+        var service = BookableService.Create(businessId, employeeId, category, name, description, price, durationMinutes);
         
         _services.Add(service);
         UpdatedAt = DateTime.UtcNow;
