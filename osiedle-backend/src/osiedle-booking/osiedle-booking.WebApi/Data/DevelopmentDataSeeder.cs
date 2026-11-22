@@ -133,14 +133,14 @@ public sealed class DevelopmentDataSeeder
                     "Pracownia Urody",
                     UserId.From(OwnerId),
                     "Kameralne studio stylizacji i pielęgnacji.",
-                    "ul. Główna 10, Warszawa",
+                    Location.Create("Warszawa", "ul. Główna 10"),
                     Category.FacialCare),
                 DomainBusiness.Create(
                     BusinessIdValue.From(SecondBusinessId),
                     "Studio Harmonia",
                     UserId.From(AdminId),
                     "Gabinet masażu i usług wellness.",
-                    "ul. Parkowa 5, Kraków",
+                    Location.Create("Kraków", "ul. Parkowa 5"),
                     Category.Waxing));
         }
 
