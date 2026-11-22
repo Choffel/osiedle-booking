@@ -125,60 +125,88 @@ public sealed class DevelopmentDataSeeder
         BusinessDbContext db,
         CancellationToken cancellationToken)
     {
-        if (!await db.Businesses.AnyAsync(business => business.Id == BusinessIdValue.From(BusinessGuid), cancellationToken))
+        var businessesToSeed = new[]
         {
-            db.Businesses.AddRange(
-                DomainBusiness.Create(
-                    BusinessIdValue.From(BusinessGuid),
-                    "Pracownia Urody",
-                    UserId.From(OwnerId),
-                    "Kameralne studio stylizacji i pielęgnacji.",
-                    Location.Create("Warszawa", "ul. Główna 10"),
-                    Category.FacialCare),
-                DomainBusiness.Create(
-                    BusinessIdValue.From(SecondBusinessId),
-                    "Studio Harmonia",
-                    UserId.From(AdminId),
-                    "Gabinet masażu i usług wellness.",
-                    Location.Create("Kraków", "ul. Parkowa 5"),
-                    Category.Waxing));
+            DomainBusiness.Create(
+                BusinessIdValue.From(BusinessGuid),
+                "Pracownia Urody",
+                UserId.From(OwnerId),
+                "Kameralne studio stylizacji i pielęgnacji.",
+                Location.Create("Warszawa", "ul. Główna 10"),
+                Category.FacialCare),
+            DomainBusiness.Create(
+                BusinessIdValue.From(SecondBusinessId),
+                "Studio Harmonia",
+                UserId.From(AdminId),
+                "Gabinet masażu i usług wellness.",
+                Location.Create("Kraków", "ul. Parkowa 5"),
+                Category.Waxing)
+        };
+
+        foreach (var business in businessesToSeed)
+        {
+            if (!await db.Businesses.AnyAsync(existing => existing.Id == business.Id, cancellationToken))
+            {
+                db.Businesses.Add(business);
+            }
         }
 
-        if (!await db.Employees.AnyAsync(employee => employee.Id == EmployeeIdValue.From(EmployeeGuid), cancellationToken))
+        var employeesToSeed = new[]
         {
-            db.Employees.AddRange(
-                Employee.Create(EmployeeIdValue.From(EmployeeGuid), BusinessIdValue.From(BusinessGuid), "Katarzyna", "Nowak",
-                    "Stylistka", "Doświadczona stylistka paznokci.", "kasia@pracownia.local"),
-                Employee.Create(EmployeeIdValue.From(SecondEmployeeId), BusinessIdValue.From(BusinessGuid), "Tomasz", "Lis",
-                    "Barber", "Specjalista od klasycznych cięć.", "tomasz@pracownia.local"),
-                Employee.Create(EmployeeIdValue.From(SecondBusinessEmployeeId), BusinessIdValue.From(SecondBusinessId), "Ewa", "Mazur",
-                    "Masażystka", "Certyfikowana terapeutka.", "ewa@harmonia.local"));
+            Employee.Create(EmployeeIdValue.From(EmployeeGuid), BusinessIdValue.From(BusinessGuid), "Katarzyna", "Nowak",
+                "Stylistka", "Doświadczona stylistka paznokci.", "kasia@pracownia.local"),
+            Employee.Create(EmployeeIdValue.From(SecondEmployeeId), BusinessIdValue.From(BusinessGuid), "Tomasz", "Lis",
+                "Barber", "Specjalista od klasycznych cięć.", "tomasz@pracownia.local"),
+            Employee.Create(EmployeeIdValue.From(SecondBusinessEmployeeId), BusinessIdValue.From(SecondBusinessId), "Ewa", "Mazur",
+                "Masażystka", "Certyfikowana terapeutka.", "ewa@harmonia.local")
+        };
+
+        foreach (var employee in employeesToSeed)
+        {
+            if (!await db.Employees.AnyAsync(existing => existing.Id == employee.Id, cancellationToken))
+            {
+                db.Employees.Add(employee);
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);
 
-        if (!await db.BookableServices.AnyAsync(service => service.Id == BookableServiceIdValue.From(ServiceGuid), cancellationToken))
+        var servicesToSeed = new[]
         {
-            db.Set<BookableService>().AddRange(
-                BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
-                    "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, TimeSpan.FromMinutes(60)),
-                BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
-                    "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, TimeSpan.FromMinutes(45)),
-                BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
-                    "Masaż relaksacyjny", "Masaż całego ciała.", 180m, TimeSpan.FromMinutes(90)));
+            BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
+                "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, TimeSpan.FromMinutes(60)),
+            BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
+                "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, TimeSpan.FromMinutes(45)),
+            BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
+                "Masaż relaksacyjny", "Masaż całego ciała.", 180m, TimeSpan.FromMinutes(90))
+        };
+
+        foreach (var service in servicesToSeed)
+        {
+            if (!await db.BookableServices.AnyAsync(existing => existing.Id == service.Id, cancellationToken))
+            {
+                db.BookableServices.Add(service);
+            }
         }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var firstWorkingHoursId = WorkingHoursIdValue.From(Guid.Parse("70000000-0000-0000-0000-000000000001"));
-        if (!await db.WorkingHours.AnyAsync(hours => hours.Id == firstWorkingHoursId, cancellationToken))
+        var workingHoursToSeed = new[]
         {
-            db.WorkingHours.AddRange(
-                WorkingHours.Create(firstWorkingHoursId,
-                    EmployeeIdValue.From(EmployeeGuid), today, new TimeOnly(9, 0), new TimeOnly(17, 0)),
-                WorkingHours.Create(WorkingHoursIdValue.From(Guid.Parse("70000000-0000-0000-0000-000000000002")),
-                    EmployeeIdValue.From(SecondEmployeeId), today, new TimeOnly(10, 0), new TimeOnly(18, 0)),
-                WorkingHours.Create(WorkingHoursIdValue.From(Guid.Parse("70000000-0000-0000-0000-000000000003")),
-                    EmployeeIdValue.From(SecondBusinessEmployeeId), today, new TimeOnly(8, 0), new TimeOnly(16, 0)));
+            WorkingHours.Create(firstWorkingHoursId,
+                EmployeeIdValue.From(EmployeeGuid), today, new TimeOnly(9, 0), new TimeOnly(17, 0)),
+            WorkingHours.Create(WorkingHoursIdValue.From(Guid.Parse("70000000-0000-0000-0000-000000000002")),
+                EmployeeIdValue.From(SecondEmployeeId), today, new TimeOnly(10, 0), new TimeOnly(18, 0)),
+            WorkingHours.Create(WorkingHoursIdValue.From(Guid.Parse("70000000-0000-0000-0000-000000000003")),
+                EmployeeIdValue.From(SecondBusinessEmployeeId), today, new TimeOnly(8, 0), new TimeOnly(16, 0))
+        };
+
+        foreach (var hours in workingHoursToSeed)
+        {
+            if (!await db.WorkingHours.AnyAsync(existing => existing.Id == hours.Id, cancellationToken))
+            {
+                db.WorkingHours.Add(hours);
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);
