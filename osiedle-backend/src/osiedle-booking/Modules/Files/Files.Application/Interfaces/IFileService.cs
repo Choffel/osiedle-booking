@@ -31,11 +31,6 @@ public interface IFileService
         FileId fileId,
         CancellationToken cancellationToken = default);
 
-    Task<Result<FileResponseDto>> GetLatestImageAsync(
-        Guid targetId,
-        FileCategory category,
-        CancellationToken cancellationToken = default);
-
     Task<Result<IReadOnlyList<FileResponseDto>>> GetServicePhotosAsync(
         Guid serviceId,
         CancellationToken cancellationToken = default);
