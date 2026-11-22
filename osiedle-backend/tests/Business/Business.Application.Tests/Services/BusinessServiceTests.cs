@@ -1,5 +1,7 @@
 using Business.Application.DTOs;
+using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.DTOs.BusinessDTOs;
+using Business.Application.DTOs.EmployeeDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
 using Business.Application.Services.BusinessServices;
@@ -77,16 +79,29 @@ public class BusinessServiceTests
     {
         var userId = UserId.New();
         var business = BusinessAggregate.Create("Beauty Salon", userId, "Description", ValidLocation, Category.Haircut);
+        var businessResponse = new BusinessResponseDto(
+            business.Id.Value,
+            business.OwnerId.Value,
+            business.Name,
+            business.Description,
+            ValidLocationDto,
+            new List<ServiceShortInfoDto>(),
+            new List<EmployeeShortInfoDto>(),
+            business.Status.ToString(),
+            Category.Haircut.ToSlug(),
+            business.CreatedAt,
+            business.UpdatedAt);
+
         _businessRepository
-            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(business);
+            .Setup(r => r.GetBusinessByIdForReadAsync(business.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(businessResponse);
 
         var result = await _sut.GetBusinessByIdAsync(business.Id);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(business.Id.Value, result.Value.Id);
-        Assert.Equal(business.Name, result.Value.Name);
-        Assert.Equal(business.Status.ToString(), result.Value.Status);
+        Assert.Equal(businessResponse.Id, result.Value.Id);
+        Assert.Equal(businessResponse.Name, result.Value.Name);
+        Assert.Equal(businessResponse.Status, result.Value.Status);
         Assert.Equal(ValidLocationDto, result.Value.Location);
     }
 
