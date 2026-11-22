@@ -58,7 +58,8 @@ public class EmployeeRepository : IEmployeeRepository
                 e.Id.Value,
                 e.FirstName,
                 e.LastName,
-                e.Position
+                e.Position,
+                "test"
             ))
             .SingleOrDefaultAsync(ct);
     }
