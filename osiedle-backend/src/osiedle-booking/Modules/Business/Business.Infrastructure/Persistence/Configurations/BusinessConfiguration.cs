@@ -40,9 +40,18 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
             .HasConversion<string>() 
             .IsRequired();
 
-        builder.Property(b => b.Location)
-            .HasMaxLength(500)
-            .IsRequired();
+        builder.ComplexProperty(b => b.Location, locationBuilder =>
+        {
+            locationBuilder.Property(l => l.City)
+                .HasColumnName("location_city")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            locationBuilder.Property(l => l.Street)
+                .HasColumnName("location_street")
+                .HasMaxLength(200)
+                .IsRequired();
+        });
         
         builder.Property(b => b.Category)
             .HasConversion<string>()

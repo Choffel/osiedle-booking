@@ -83,7 +83,7 @@ public class EmployeeServiceTests
         var dto = new EmployeeCreateDto(businessId, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
         EmployeeAggregate? added = null;
         var business = Business.Domain.Aggregates.Business.Create(
-            "Salon", currentUserId, "Description", "Location", Category.Haircut);
+            "Salon", currentUserId, "Description", Location.Create("Warsaw", "Location"), Category.Haircut);
         businessId = business.Id;
         dto = dto with { BusinessId = businessId.Value };
 
@@ -303,7 +303,7 @@ public class EmployeeServiceTests
         var ownerUserId = UserId.New();
         var currentUserId = UserId.New();
         var business = Business.Domain.Aggregates.Business.Create(
-            "Salon", ownerUserId, "Description", "Location", Category.Haircut);
+            "Salon", ownerUserId, "Description", Location.Create("Warsaw", "Location"), Category.Haircut);
         var employee = EmployeeAggregate.Create(
             business.Id, "Jan", "Kowalski", "Barber", "Great", "jan@example.com");
 

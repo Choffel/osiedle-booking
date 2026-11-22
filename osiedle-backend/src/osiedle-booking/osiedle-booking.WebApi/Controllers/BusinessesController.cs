@@ -5,6 +5,7 @@ using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using osiedle_booking.WebApi.Extensions;
 
@@ -39,6 +40,18 @@ public class BusinessesController : ControllerBase
     {
         var business = BusinessId.From(businessId);
         return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
+    }
+    
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<ActionResult<PagedResult<BusinessShortInfoDto>>> GetBusinesses(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 3,
+        [FromQuery] string? city = null,
+        CancellationToken cancellationToken = default)
+    {
+        return (await _businessManagementService.GetBusinessesAsync(page, pageSize, city, cancellationToken))
+            .ToActionResult();
     }
 
     [HttpPut("{businessId:guid}")]
