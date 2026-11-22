@@ -151,6 +151,9 @@ using (var scope = app.Services.CreateScope()) // TODO: refactor this to a prope
     var roleManager = services.GetRequiredService<RoleManager<RoleIdentity>>();
 
     if (!app.Environment.IsEnvironment("Testing"))
+    {
+        var dbContext = services.GetRequiredService<UsersDbContext>();
+        await dbContext.Database.MigrateAsync();
 
         var businessDbContext = services.GetRequiredService<BusinessDbContext>();
         await businessDbContext.Database.MigrateAsync();
