@@ -63,6 +63,8 @@ public class BusinessRepository : IBusinessRepository
                     b.Id.Value,
                     b.OwnerId.Value,
                     b.Name,
+                    "https://d375139ucebi94.cloudfront.net/region2/pl/150097/biz_photo/9ce3b7f3d76445d4a52769cba5d256-tommy-barbershop-biz-photo-6582403c3ded446184d893e5a2777a-booksy.jpeg?size=640x427",
+                    5,
                     b.Description,
                     new LocationDto(b.Location.City, b.Location.Street)
                 ))
@@ -104,6 +106,8 @@ public class BusinessRepository : IBusinessRepository
                 s.Id.Value,
                 s.OwnerId.Value,
                 s.Name,
+                "https://d375139ucebi94.cloudfront.net/region2/pl/150097/biz_photo/9ce3b7f3d76445d4a52769cba5d256-tommy-barbershop-biz-photo-6582403c3ded446184d893e5a2777a-booksy.jpeg?size=640x427",
+                5,
                 s.Description,
                 new LocationDto(s.Location.City, s.Location.Street)
             ))
