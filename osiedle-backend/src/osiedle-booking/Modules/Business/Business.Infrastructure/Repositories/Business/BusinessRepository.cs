@@ -19,7 +19,6 @@ public class BusinessRepository : IBusinessRepository
         _context = context;
     }
     
-    
     public async Task<bool> ExistsByIdAsync(BusinessId businessId, CancellationToken ct = default)
     {
         return await _context.Businesses.AnyAsync(b => b.Id == businessId, ct);
@@ -43,10 +42,14 @@ public class BusinessRepository : IBusinessRepository
     public async Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(
         int page,
         int pageSize,
+        string? city = null,
         CancellationToken ct = default)
     {
         var query = _context.Businesses
             .AsNoTracking();
+
+        if (city is not null)
+            query = query.Where(b => b.Location.City == city);
         
         var totalCount = await query.CountAsync(ct);
         if (totalCount == 0)
@@ -61,7 +64,7 @@ public class BusinessRepository : IBusinessRepository
                     b.OwnerId.Value,
                     b.Name,
                     b.Description,
-                    b.Location
+                    new LocationDto(b.Location.City, b.Location.Street)
                 ))
             .ToListAsync(ct);
         return new PagedResult<BusinessShortInfoDto>(items, totalCount, page, pageSize);
@@ -102,7 +105,7 @@ public class BusinessRepository : IBusinessRepository
                 s.OwnerId.Value,
                 s.Name,
                 s.Description,
-                s.Location
+                new LocationDto(s.Location.City, s.Location.Street)
             ))
             .FirstOrDefaultAsync(ct);
 

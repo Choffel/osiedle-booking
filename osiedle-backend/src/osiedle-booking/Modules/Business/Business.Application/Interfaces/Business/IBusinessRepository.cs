@@ -8,15 +8,19 @@ namespace Business.Application.Interfaces.Business;
 
 public interface IBusinessRepository
 {
-    Task <BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct);
+    Task<BusinessShortInfoDto?> GetShortInfoAsync(BusinessId businessId, CancellationToken ct);
     
     Task<bool> ExistsByIdAsync(BusinessId businessId, CancellationToken ct);
     
-    Task<bool>ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
+    Task<bool> ExistsByOwnerIdAsync(UserId userId, CancellationToken ct);
     
     Task<Domain.Aggregates.Business?> GetBusinessByIdAsync(BusinessId businessId, CancellationToken ct = default);
-    Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(int page,
-        int pageSize, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<BusinessShortInfoDto>> GetBusinessesAsync(
+        int page,
+        int pageSize,
+        string? city = null,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Domain.Aggregates.Business>> GetBusinessesByCategoryAsync(
         Domain.Enums.Category category,
