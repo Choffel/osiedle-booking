@@ -15,6 +15,8 @@ public class BusinessService : IBusinessManagementService
 {
     private readonly IBusinessRepository _businessRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private const int DefaultPageSize = 3;
+    private const int MaxPageSize = 50;
 
     public BusinessService(IBusinessRepository businessRepository, IUnitOfWork unitOfWork)
     {
@@ -62,6 +64,22 @@ public class BusinessService : IBusinessManagementService
             return BusinessErrors.NotFound;
 
         return business.ToResponseDto();
+    }
+
+    public async Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(
+        int page = 1,
+        int pageSize = DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedPage = Math.Max(1, page);
+        var normalizedPageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+
+        var pagedBusinesses = await _businessRepository.GetBusinessesAsync(
+            normalizedPage,
+            normalizedPageSize,
+            cancellationToken);
+
+        return Result.Success(pagedBusinesses);
     }
 
     public async Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId,

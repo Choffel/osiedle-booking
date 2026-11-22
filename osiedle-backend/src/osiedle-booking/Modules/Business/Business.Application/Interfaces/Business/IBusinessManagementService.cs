@@ -9,11 +9,10 @@ namespace Business.Application.Interfaces.Business;
 public interface IBusinessManagementService
 {
     Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken);
-    
     Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken);
-    
+    Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(int page,
+        int pageSize, CancellationToken cancellationToken = default);
     Task<Result<BusinessResponseDto>> UpdateBusinessInfoAsync(UserId userId, BusinessId businessId, UpdateBusinessInfoDto updateBusinessInfoDto, CancellationToken cancellationToken);
-    
     Task<Result<BusinessResponseDto>> ArchiveBusinessAsync(UserId userId, BusinessId businessId, CancellationToken cancellationToken);
     
 }
