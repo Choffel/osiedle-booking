@@ -76,8 +76,7 @@ public class Business : AggregateRoot<BusinessId>
 
         var service = BookableService.Create(employeeId, category, name, description, price, durationMinutes);
         
-        _services.Add(service);
-        UpdatedAt = DateTime.UtcNow;
+        _services.Add(service); UpdatedAt = DateTime.UtcNow;
     }
 
     public void AddEmployee(EmployeeId employeeId)
