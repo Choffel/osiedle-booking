@@ -71,6 +71,7 @@ export class BookingModalComponent {
   private readonly bookingsService = inject(BookingsService);
   private readonly authService = inject(AuthService);
 
+  readonly businessId = input.required<string>();
   readonly service = input.required<BusinessServiceItemDto>();
   readonly employee = input<BusinessEmployeeDto | null>(null);
 
@@ -87,8 +88,8 @@ export class BookingModalComponent {
   readonly isLoadingSlots = signal<boolean>(true);
 
   readonly showPassword = signal<boolean>(false);
-  readonly isSubmittingLogin = signal<boolean>(false);
-  readonly loginError = signal<string | null>(null);
+  readonly isSubmitting = signal<boolean>(false);
+  readonly errorMessage = signal<string | null>(null);
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -181,26 +182,20 @@ export class BookingModalComponent {
 
   goToLoginStep(): void {
     const slot = this.selectedSlot();
-    console.log('Клик по кнопке! Слот:', slot, 'Токен:', localStorage.getItem('access_token'));
     if (!slot) return;
 
-    // Проверяем напрямую наличие токена в localStorage, чтобы не зависеть от рассинхрона сигналов
-    const hasToken = !!localStorage.getItem('access_token');
+    this.errorMessage.set(null);
 
-    if (hasToken) {
-      this.confirmSelection.emit({
-        service: this.service(),
-        slot,
-      });
+    if (localStorage.getItem('access_token')) {
+      this.submitBooking(slot);
       return;
     }
 
-    this.loginError.set(null);
     this.step.set(2);
   }
 
   goBackToSlotStep(): void {
-    this.loginError.set(null);
+    this.errorMessage.set(null);
     this.step.set(1);
   }
 
@@ -213,24 +208,72 @@ export class BookingModalComponent {
     const slot = this.selectedSlot();
     if (!slot) return;
 
-    this.isSubmittingLogin.set(true);
-    this.loginError.set(null);
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
-    const payload = this.loginForm.getRawValue();
+    const credentials = this.loginForm.getRawValue();
 
-    this.authService.login(payload).subscribe({
-      next: () => {
-        this.isSubmittingLogin.set(false);
-        this.confirmSelection.emit({
-          service: this.service(),
-          slot,
-        });
-      },
-      error: () => {
-        this.isSubmittingLogin.set(false);
-        this.loginError.set('Nieprawidłowy adres e-mail lub hasło.');
-      },
-    });
+    this.authService
+      .login(credentials)
+      .pipe(
+        catchError((err) => {
+          this.errorMessage.set('Nieprawidłowy adres e-mail lub hasło.');
+          throw err;
+        }),
+        switchMap(() =>
+          this.bookingsService.createBooking({
+            businessId: this.businessId(),
+            staffId: this.service().employeeId,
+            serviceId: this.service().bookableServiceId,
+            startTime: slot.start,
+            endTime: slot.end,
+          }),
+        ),
+      )
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.confirmSelection.emit({
+            service: this.service(),
+            slot,
+          });
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          if (!this.errorMessage()) {
+            this.errorMessage.set(
+              err?.error?.detail ?? 'Nie udało się zarezerwować wizyty. Spróbuj ponownie.',
+            );
+          }
+        },
+      });
+  }
+
+  private submitBooking(slot: AvailableSlotDto): void {
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
+
+    this.bookingsService
+      .createBooking({
+        businessId: this.businessId(),
+        staffId: this.service().employeeId,
+        serviceId: this.service().bookableServiceId,
+        startTime: slot.start,
+        endTime: slot.end,
+      })
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.confirmSelection.emit({
+            service: this.service(),
+            slot,
+          });
+        },
+        error: () => {
+          this.isSubmitting.set(false);
+          this.errorMessage.set('Nie udało się zarezerwować wizyty. Wybierz inny termin.');
+        },
+      });
   }
 
   private buildNextDays(count: number): DayOption[] {

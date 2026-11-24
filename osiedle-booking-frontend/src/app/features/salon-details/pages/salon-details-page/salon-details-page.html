@@ -55,16 +55,17 @@
         <app-booking-sidebar [business]="salon" />
       </aside>
     </div>
+
+    @if (bookingModalService(); as selectedService) {
+      <app-booking-modal
+        [businessId]="salon.id"
+        [service]="selectedService"
+        [employee]="bookingModalEmployee()"
+        (closeModal)="onCloseBookingModal()"
+        (confirmSelection)="onConfirmBookingSlot($event)"
+      />
+    }
   } @else {
     <div class="salon-page__loading">Ładowanie danych salonu...</div>
-  }
-
-  @if (bookingModalService(); as selectedService) {
-    <app-booking-modal
-      [service]="selectedService"
-      [employee]="bookingModalEmployee()"
-      (closeModal)="onCloseBookingModal()"
-      (confirmSelection)="onConfirmBookingSlot($event)"
-    />
   }
 </main>

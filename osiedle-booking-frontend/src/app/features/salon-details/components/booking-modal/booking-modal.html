@@ -303,9 +303,9 @@
           Wpisz swój adres e-mail i hasło powiązane z Twoim kontem.
         </p>
 
-        @if (loginError(); as error) {
-          <div class="login-step__error">{{ error }}</div>
-        }
+      @if (errorMessage(); as error) {
+        <div class="login-step__error">{{ error }}</div>
+      }
 
         <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLoginAndBook()">
           <div class="login-form__field">
@@ -361,9 +361,9 @@
           <button
             type="submit"
             class="login-form__submit"
-            [disabled]="isSubmittingLogin()"
+            [disabled]="isSubmitting()"
           >
-            <span>{{ isSubmittingLogin() ? 'Logowanie...' : 'Zaloguj i zarezerwuj wizytę' }}</span>
+            <span>{{ isSubmitting() ? 'Rezerwowanie...' : 'Zaloguj i zarezerwuj wizytę' }}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
