@@ -6,6 +6,7 @@ using Bookings.Domain.Entities.Booking.Value_objects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using osiedle_booking.BuildingBlocks;
+using osiedle_booking.BuildingBlocks.ValueObjects;
 using osiedle_booking.WebApi.Extensions;
 
 
@@ -33,7 +34,9 @@ public class BookingsController : ControllerBase
     [HttpPost("booking")]
     public async Task<ActionResult> CreateBookingAsync([FromQuery]  CreateBookingRequest request, CancellationToken ct)
     {
-        var result = await _bookingService.CreateBookingAsync(request, ct);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        
+        var result = await _bookingService.CreateBookingAsync(request, ClientId.From(userId), ct);
         return result.ToActionResult();
     }
     

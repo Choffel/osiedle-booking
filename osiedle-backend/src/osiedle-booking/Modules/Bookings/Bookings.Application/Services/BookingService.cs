@@ -69,7 +69,7 @@ public class BookingService : IBookingService
         return result;
     }
 
-    public async Task<Result> CreateBookingAsync(CreateBookingRequest request, CancellationToken ct)
+    public async Task<Result> CreateBookingAsync(CreateBookingRequest request, ClientId clientId, CancellationToken ct)
     {
             var slot = TimeSlot.Create(request.StartTime, request.EndTime);
 
@@ -97,7 +97,7 @@ public class BookingService : IBookingService
             var booking = Booking.Create(
                 StaffId.From(request.StaffId),
                 BusinessId.From(request.BusinessId),
-                ClientId.From(request.ClientId),
+                clientId,
                 ServiceId.From(request.ServiceId),
                 slot,
                 moneyMok
