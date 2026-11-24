@@ -1,6 +1,8 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { ApiErrorResponse, AuthService } from '../../services/auth.service';
 import { PasswordInputComponent } from '../../../../shared/components/password-input/password-input';
 
 @Component({
@@ -10,10 +12,12 @@ import { PasswordInputComponent } from '../../../../shared/components/password-i
   templateUrl: './register-page.html',
 })
 export class RegisterPageComponent {
-  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   readonly isLoading = signal(false);
   readonly serverError = signal<string | null>(null);
+  readonly isRegistered = signal(false);
+  readonly registeredEmail = signal('');
 
   readonly registerForm = new FormGroup({
     email: new FormControl('', {
@@ -48,14 +52,44 @@ export class RegisterPageComponent {
       return;
     }
 
+    this.isLoading.set(true);
+    this.serverError.set(null);
+
     const raw = this.registerForm.getRawValue();
     const payload = {
-      email: raw.email.trim(),
       firstName: raw.firstName.trim(),
       lastName: raw.lastName.trim(),
+      email: raw.email.trim(),
       password: raw.password,
     };
 
-    console.log('Register payload:', payload);
+    this.authService.register(payload).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.registeredEmail.set(payload.email);
+        this.isRegistered.set(true);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isLoading.set(false);
+        this.serverError.set(this.mapError(err));
+      },
+    });
+  }
+
+  private mapError(err: HttpErrorResponse): string {
+    let apiError: ApiErrorResponse | undefined;
+    try {
+      apiError = typeof err.error === 'string' ? JSON.parse(err.error) : err.error;
+    } catch {
+      apiError = undefined;
+    }
+
+    switch (apiError?.code) {
+      case 'Identity.DuplicateEmail':
+      case 'User.EmailAlreadyExists':
+        return 'Konto z tym adresem e-mail już istnieje.';
+      default:
+        return apiError?.detail || 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.';
+    }
   }
 }

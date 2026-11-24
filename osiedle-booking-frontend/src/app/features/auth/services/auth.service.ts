@@ -1,41 +1,42 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
-import { LoginRequest, LoginResponse } from '../models/auth.models';
+import { LoginRequest, LoginResponse, RegisterRequest } from '../models/auth.models';
+import { TokenService } from './token.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly tokenService = inject(TokenService);
 
-  private readonly accessTokenKey = 'access_token';
-  private readonly refreshTokenKey = 'refresh_token';
-
-  readonly isAuthenticated = signal<boolean>(!!localStorage.getItem(this.accessTokenKey));
+  readonly isAuthenticated = this.tokenService.isAuthenticated;
 
   login(payload: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/Authentication/login', payload).pipe(
       tap((response) => {
-        this.saveTokens(response);
+        this.tokenService.saveTokens(response);
       }),
     );
   }
 
+  register(payload: RegisterRequest): Observable<string> {
+    return this.http.post('/api/Authentication/register', payload, {
+      responseType: 'text',
+    });
+  }
+
   logout(): void {
-    localStorage.removeItem(this.accessTokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
-    this.isAuthenticated.set(false);
+    this.tokenService.clearTokens();
   }
 
-  getAccessToken(): string | null {
-    return localStorage.getItem(this.accessTokenKey);
-  }
-
-  private saveTokens(tokens: LoginResponse): void {
-    localStorage.setItem(this.accessTokenKey, tokens.accessToken);
-    localStorage.setItem(this.refreshTokenKey, tokens.refreshToken);
-    this.isAuthenticated.set(true);
+  confirmEmail(email: string, token: string): Observable<string> {
+    return this.http.post(
+      '/api/Authentication/confirm-email',
+      { email, token },
+      { responseType: 'text' },
+    );
   }
 }
 

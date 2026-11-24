@@ -22,7 +22,15 @@ export const routes: Routes = [
     children: [
       { path: 'register', component: RegisterPageComponent },
       { path: 'user-flow', component: UserFlowPageComponent },
-      { path: 'login', component: LoginPageComponent }
+      { path: 'login', component: LoginPageComponent },
+      {
+        path: 'Authentication/confirm-email',
+        loadComponent: () =>
+          import('./features/auth/pages/confirm-email-page-component/confirm-email-page-component').then(
+            (m) => m.ConfirmEmailPageComponent,
+          ),
+      },
+
     ],
   },
 ];

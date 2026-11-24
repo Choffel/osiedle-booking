@@ -7,3 +7,10 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}

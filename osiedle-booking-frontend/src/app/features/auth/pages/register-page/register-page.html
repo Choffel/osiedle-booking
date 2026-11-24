@@ -12,6 +12,25 @@
     <p class="register-card__subtitle">Podaj swoje dane, aby utworzyć konto</p>
   </div>
 
+  @if (isRegistered()) {
+    <div class="modal-backdrop">
+      <div class="modal-card" role="dialog" aria-modal="true">
+        <div class="modal-card__icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg>
+        </div>
+        <h2 class="modal-card__title">Sprawdź swoją skrzynkę e-mail</h2>
+        <p class="modal-card__text">
+          Wysłaliśmy link potwierdzający na adres <strong>{{ registeredEmail() }}</strong>.
+          Kliknij go, aby aktywować konto i się zalogować.
+        </p>
+        <a routerLink="/login" class="btn btn--primary modal-card__btn">Przejdź do logowania</a>
+      </div>
+    </div>
+  }
+
   <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
     <!-- E-mail -->
     <div class="form-field">
@@ -138,7 +157,7 @@
 
     <!-- Przyciski -->
     <div class="register-form__actions">
-      <a routerLink="/register" class="btn btn--secondary">
+      <a routerLink="/login" class="btn btn--secondary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5" />
           <path d="m12 19-7-7 7-7" />

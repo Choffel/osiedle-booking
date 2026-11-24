@@ -1,0 +1,38 @@
+<div class="confirm-card">
+  @switch (status()) {
+    @case ('loading') {
+      <div class="confirm-card__icon confirm-card__icon--loading">
+        <div class="spinner"></div>
+      </div>
+      <h1 class="confirm-card__title">Potwierdzanie adresu e-mail</h1>
+      <p class="confirm-card__text">Trwa weryfikacja Twojego linku aktywacyjnego, proszę czekać...</p>
+    }
+
+    @case ('success') {
+      <div class="confirm-card__icon confirm-card__icon--success">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <path d="m9 11 3 3L22 4" />
+        </svg>
+      </div>
+      <h1 class="confirm-card__title">Adres e-mail potwierdzony!</h1>
+      <p class="confirm-card__text">
+        Twoje konto w Barberio jest już aktywne. Za chwilę przekierujemy Cię na stronę logowania.
+      </p>
+      <a routerLink="/login" class="btn btn--primary confirm-card__btn">Przejdź do logowania</a>
+    }
+
+    @case ('error') {
+      <div class="confirm-card__icon confirm-card__icon--error">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="m15 9-6 6" />
+          <path d="m9 9 6 6" />
+        </svg>
+      </div>
+      <h1 class="confirm-card__title">Nie udało się potwierdzić konta</h1>
+      <p class="confirm-card__text">{{ errorMessage() }}</p>
+      <a routerLink="/login" class="btn btn--secondary confirm-card__btn">Wróć do logowania</a>
+    }
+  }
+</div>
