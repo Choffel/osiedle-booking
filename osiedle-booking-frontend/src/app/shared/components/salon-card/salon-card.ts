@@ -1,14 +1,15 @@
 import { Component, input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {Salon, Services} from '../../../shared/Interfaces/Services';
+import { BusinessDto } from '../../../core/models/business.dto';
 
 @Component({
-  imports: [RouterLink],
   selector: 'app-salon-card',
-  styleUrl: './salon-card.scss',
+  standalone: true,
+  imports: [DecimalPipe, RouterLink],
   templateUrl: './salon-card.html',
+  styleUrl: './salon-card.scss',
 })
 export class SalonCardComponent {
-  salon = input.required<Salon>();
+  readonly salon = input.required<BusinessDto>();
 }
-  

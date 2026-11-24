@@ -2,8 +2,8 @@
   <span class="category-chips__label">KATEGORIE:</span>
 
   <div class="category-chips__list">
-    @for (category of categories(); track category.slug) {
-      <button type="button" class="chip-btn">{{ category.name }}</button>
+    @for (category of categories(); track category.id) {
+      <button type="button" class="chip-btn">{{ category.displayName }}</button>
     }
   </div>
 </div>

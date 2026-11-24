@@ -4,7 +4,7 @@
   <app-category-chips />
   <section class="salons-section">
     <div class="salons-section__container">
-      
+
       <div class="salons-section__header">
         <div class="salons-section__title-group">
           <span class="salons-section__badge">• WOLNE SLOTY BEZ CZEKANIA</span>
@@ -21,7 +21,7 @@
 
       <!-- Твоя готовая сетка с карточками -->
       <div class="salons-grid">
-        @for (salonItem of salons; track salonItem.name) {
+        @for (salonItem of salons(); track salonItem.businessId) {
           <app-salon-card [salon]="salonItem" />
         }
       </div>
@@ -30,7 +30,3 @@
   </section>
   <app-features-list />
 </main>
-
-<footer>
-  <app-footer />
-</footer>

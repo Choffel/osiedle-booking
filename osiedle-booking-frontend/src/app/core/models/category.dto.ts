@@ -1,5 +1,5 @@
 export interface CategoryDto {
-  readonly name: string;
+  readonly id: number;
+  readonly displayName: string;
   readonly slug: string;
-  readonly displayOrder: number;
 }
