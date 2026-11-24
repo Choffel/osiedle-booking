@@ -1,47 +1,35 @@
-<div class="services-catalog">
-  <!-- 1. Шапка каталога -->
-  <div class="services-catalog__header">
-    <div>
-      <h2 class="services-catalog__title">Katalog usług</h2>
-      <p class="services-catalog__subtitle">Wybierz zabieg i dopasuj dogodny termin</p>
-    </div>
-    <span class="services-catalog__badge">
-      <span class="icon">🕒</span> Błyskawiczne potwierdzenie online
-    </span>
-  </div>
-
-  <!-- 2. Секция категории (например, Strzyżenie męskie) -->
-  <div class="services-category">
-    <h3 class="services-category__title">
-      <span class="dot"></span> Strzyżenie męskie
-    </h3>
-
-    <div class="services-list">
-      @for (service of salon().services; track service.name) {
-        <div class="service-card">
-          <!-- Левая часть: инфо об услуге -->
-          <div class="service-card__info">
-            <div class="service-card__title-row">
-              <h4 class="service-card__name">{{ service.name }}</h4>
-            </div>
-            <p class="service-card__description">{{ service.description }}</p>
-            <div class="service-card__duration">
-              <span class="icon">🕒</span> {{ service.duration }}
-            </div>
-          </div>
-
-          <!-- Правая часть: цена и кнопка -->
-          <div class="service-card__action">
-            <span class="service-card__price">{{ service.price }} PLN</span>
-            <button 
-              type="button" 
-              class="btn-book"
-              (click)="selectService.emit(salon())">
-              Zarezerwuj
-            </button>
-          </div>
+<div class="service-list">
+  @for (service of services(); track service.bookableServiceId) {
+    <div class="service-item">
+      <div class="service-item__info">
+        <div class="service-item__header">
+          <h3 class="service-item__name">{{ service.serviceName }}</h3>
+          <span class="service-item__tag">{{ service.category }}</span>
         </div>
-      }
+
+        <div class="service-item__meta">
+          <span class="service-item__duration">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ formatDuration(service.duration) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="service-item__actions">
+        <span class="service-item__price">{{ service.price }} PLN</span>
+        <button
+          type="button"
+          class="service-item__btn"
+          (click)="selectService.emit(service)"
+        >
+          Zarezerwuj
+        </button>
+      </div>
     </div>
-  </div>
+  } @empty {
+    <p class="service-list__empty">Brak dostępnych usług w tym salonie.</p>
+  }
 </div>

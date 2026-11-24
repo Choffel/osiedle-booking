@@ -1,12 +1,13 @@
 import { Component, input } from '@angular/core';
-import { Service } from '../../../../shared/Interfaces/Services'; // Путь к твоему файлу моделей
+import { BusinessDetailsDto } from '../../../../core/models/business.dto';
 
 @Component({
-  imports: [],
   selector: 'app-booking-sidebar',
-  styleUrl: './booking-sidebar.scss',
+  standalone: true,
+  imports: [],
   templateUrl: './booking-sidebar.html',
+  styleUrl: './booking-sidebar.scss',
 })
-export class BookingSidebarComponent { // Не забудь поправить имя класса на BookingSidebarComponent
-  selectedService = input<Service | null>(null);
+export class BookingSidebarComponent {
+  readonly business = input.required<BusinessDetailsDto>();
 }

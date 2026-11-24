@@ -1,13 +1,19 @@
-import { Component, input, output, Service } from '@angular/core';
-import { Salon } from '../../../../shared/Interfaces/Services';
+import { Component, input, output } from '@angular/core';
+import { BusinessServiceItemDto } from '../../../../core/models/business.dto';
 
 @Component({
-  imports: [],
   selector: 'app-service-list',
-  styleUrl: './service-list.scss',
+  standalone: true,
+  imports: [],
   templateUrl: './service-list.html',
+  styleUrl: './service-list.scss',
 })
-export class ServiceList {
-  salon = input.required<Salon>();
-  selectService = output<Salon>();
+export class ServiceListComponent {
+  readonly services = input.required<readonly BusinessServiceItemDto[]>();
+  readonly selectService = output<BusinessServiceItemDto>();
+
+  formatDuration(duration: string): string {
+    const [hours = 0, minutes = 0] = duration.split(':').map(Number);
+    return `${hours * 60 + minutes} min`;
+  }
 }

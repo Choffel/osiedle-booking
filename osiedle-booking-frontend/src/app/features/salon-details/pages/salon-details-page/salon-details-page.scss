@@ -1,23 +1,122 @@
-.home-container {
-  margin: 0 auto;
-  padding: 0 32px;
-  width: 100%;
-}
-
-.salon-details-container {
+.salon-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 32px 64px;
-  width: 100%;
+  padding: 24px 20px 64px;
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 32px;
+    margin-top: 32px;
+    align-items: start;
+
+    @media (max-width: 960px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  &__sidebar {
+    position: sticky;
+    top: 24px;
+  }
+
+  &__loading {
+    padding: 80px 0;
+    text-align: center;
+    color: #6b7280;
+    font-size: 15px;
+  }
 }
 
-.salon-details-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px; // Левая колонка гибкая, сайдбар 360px
-  gap: 32px;
-  align-items: start;
+.salon-section {
+  &__header {
+    margin-bottom: 16px;
+  }
 
-  @media (max-width: 960px) {
-    grid-template-columns: 1fr;
+  &__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  &__subtitle {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.employee-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+
+  &__avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--initials {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e6f7f3;
+      color: #008f73;
+      font-weight: 700;
+      font-size: 16px;
+    }
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  &__position {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #00a887;
+    font-weight: 500;
+  }
+  .salon-page {
+    // ...
+    &__hero {
+      width: 100%;
+      height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #f3f4f6;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      @media (max-width: 640px) {
+        height: 260px;
+      }
+    }
   }
 }

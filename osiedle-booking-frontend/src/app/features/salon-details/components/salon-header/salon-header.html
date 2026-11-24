@@ -1,49 +1,30 @@
-<div class="salon-header">
-  <!-- 1. Хлебные крошки -->
-  <nav class="breadcrumbs">
-    <a href="#">Strona główna</a> &rsaquo; 
-    <a href="#">Warszawa</a> &rsaquo; 
-    <span>{{ salon().name }}</span>
+<header class="salon-header">
+  <nav class="salon-header__breadcrumbs">
+    <a routerLink="/">Główna</a>
+    <span>›</span>
+    <span>{{ business().location.city }}</span>
+    <span>›</span>
+    <span class="current">{{ business().name }}</span>
   </nav>
 
-  <!-- 2. Заголовок и мета-информация -->
-  <div class="salon-header__main">
-    <div class="salon-header__info">
-      <h1 class="salon-header__title">{{ salon().name }}</h1>
-      
-      <div class="salon-header__meta">
-        <span class="rating">★ {{ salon().rating }} <small>(142 opinii)</small></span>
-        <span class="dot">•</span>
-        <span class="status-badge">Otwarte do 21:00</span>
-        <span class="dot">•</span>
-        <span class="address">📍 {{ salon().address }}</span>
+  <div class="salon-header__top">
+    <div>
+      <div class="salon-header__title-row">
+        <h1 class="salon-header__title">{{ business().name }}</h1>
+        <span class="salon-header__category">{{ business().category }}</span>
       </div>
-    </div>
 
-    <!-- Кнопки действий -->
-    <div class="salon-header__actions">
-      <button type="button" class="btn-action">
-        <span>♡</span> Zapisz
-      </button>
-      <button type="button" class="btn-action">
-        <span>↗</span> Udostępnij
-      </button>
+      <p class="salon-header__address">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span>{{ business().location.street }}, {{ business().location.city }}</span>
+      </p>
     </div>
   </div>
 
-  <!-- 3. Сетка галереи (1 большая + 4 маленьких) -->
-  <div class="gallery-grid">
-    <div class="gallery-grid__main">
-      <img [src]="salon().photo" [alt]="salon().name" />
-    </div>
-    <div class="gallery-grid__sub">
-      <img [src]="salon().photo" alt="Interior 1" />
-      <img [src]="salon().photo" alt="Interior 2" />
-      <img [src]="salon().photo" alt="Interior 3" />
-      <div class="gallery-grid__more">
-        <img [src]="salon().photo" alt="Interior 4" />
-        <span class="overlay">+12 zdjęć</span>
-      </div>
-    </div>
+  <div class="salon-header__hero">
+    <img [src]="coverPhoto()" [alt]="business().name" />
   </div>
-</div>
+</header>

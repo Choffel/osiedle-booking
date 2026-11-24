@@ -1,22 +1,61 @@
-<main class="home-container">
-  @if (salon()) {
-    <app-salon-header [salon]="salon()!" />
-  }
+<main class="salon-page">
+  @if (business(); as salon) {
+    <app-salon-header [business]="salon" [coverPhoto]="coverPhoto" />
 
-    <div class="salon-details-layout">
-      <div class="salon-details-layout__content">
-        @if (salon()) {
-    <app-service-list [salon]="salon()!" />
-  }
+    <div class="salon-page__layout">
+      <div class="salon-page__main">
+        <!-- Каталог услуг -->
+        <section class="salon-section">
+          <div class="salon-section__header">
+            <h2 class="salon-section__title">Katalog usług</h2>
+            <p class="salon-section__subtitle">Wybierz zabieg i przejdź do rezerwacji</p>
+          </div>
+
+          <app-service-list
+            [services]="salon.sevices"
+            (selectService)="onOpenBookingModal($event)"
+          />
+        </section>
+
+        <!-- Команда сотрудников -->
+        @if (salon.employees.length > 0) {
+          <section class="salon-section">
+            <div class="salon-section__header">
+              <h2 class="salon-section__title">Nasz zespół</h2>
+              <p class="salon-section__subtitle">Specjaliści dostępni w tym salonie</p>
+            </div>
+
+            <div class="team-grid">
+              @for (emp of salon.employees; track emp.employeeId) {
+                <div class="employee-card">
+                  @if (isValidUrl(emp.photoUrl)) {
+                    <img
+                      class="employee-card__avatar"
+                      [src]="emp.photoUrl"
+                      [alt]="emp.firstName + ' ' + emp.lastName"
+                    />
+                  } @else {
+                    <div class="employee-card__avatar employee-card__avatar--initials">
+                      {{ getInitials(emp) }}
+                    </div>
+                  }
+
+                  <div class="employee-card__info">
+                    <div class="employee-card__name">{{ emp.firstName }} {{ emp.lastName }}</div>
+                    <div class="employee-card__position">{{ emp.position }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
       </div>
 
-      <div class="salon-details-layout__sidebar">
-        <app-booking-sidebar [selectedService]="selectedService()" />
-      </div>
+      <aside class="salon-page__sidebar">
+        <app-booking-sidebar [business]="salon" />
+      </aside>
     </div>
-
+  } @else {
+    <div class="salon-page__loading">Ładowanie danych salonu...</div>
+  }
 </main>
-
-<footer>
-  <app-footer />
-</footer>
