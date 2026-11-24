@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, switchMap } from 'rxjs';
@@ -7,11 +7,20 @@ import { BusinessEmployeeDto, BusinessServiceItemDto } from '../../../../core/mo
 import { SalonHeaderComponent } from '../../components/salon-header/salon-header';
 import { ServiceListComponent } from '../../components/service-list/service-list';
 import { BookingSidebarComponent } from '../../components/booking-sidebar/booking-sidebar';
+import {
+  BookingModalComponent,
+  BookingSelectionResult,
+} from '../../components/booking-modal/booking-modal';
 
 @Component({
   selector: 'app-salon-details-page',
   standalone: true,
-  imports: [SalonHeaderComponent, ServiceListComponent, BookingSidebarComponent],
+  imports: [
+    SalonHeaderComponent,
+    ServiceListComponent,
+    BookingSidebarComponent,
+    BookingModalComponent,
+  ],
   templateUrl: './salon-details-page.html',
   styleUrl: './salon-details-page.scss',
 })
@@ -31,12 +40,26 @@ export class SalonDetailsPageComponent {
     { initialValue: null },
   );
 
-  // Задел под модальное окно бронирования: когда не null — открываем попап
   readonly bookingModalService = signal<BusinessServiceItemDto | null>(null);
+
+  readonly bookingModalEmployee = computed(() => {
+    const service = this.bookingModalService();
+    const employees = this.business()?.employees ?? [];
+    if (!service) return null;
+    return employees.find((e) => e.employeeId === service.employeeId) ?? null;
+  });
 
   onOpenBookingModal(service: BusinessServiceItemDto): void {
     this.bookingModalService.set(service);
-    console.log('Открываем попап бронирования для услуги:', service);
+  }
+
+  onCloseBookingModal(): void {
+    this.bookingModalService.set(null);
+  }
+
+  onConfirmBookingSlot(selection: BookingSelectionResult): void {
+    console.log('Выбран слот:', selection);
+    // Дальше здесь сделаем переход на шаг 2 или редирект на логин
   }
 
   getInitials(emp: BusinessEmployeeDto): string {

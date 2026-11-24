@@ -1,0 +1,376 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+    @if (step() === 1) {
+      <!-- ==================== ШАГ 1: ВЫБОР ВРЕМЕНИ ==================== -->
+      <div class="booking-modal__header">
+        <div>
+          <span class="booking-modal__step">KROK 1 Z 2</span>
+          <h2 id="booking-modal-title" class="booking-modal__title">Wybór terminu</h2>
+        </div>
+
+        <button
+          type="button"
+          class="booking-modal__close"
+          aria-label="Zamknij"
+          (click)="closeModal.emit()"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 6L6 18" />
+            <path d="M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Карточка выбранной услуги -->
+      <div class="service-summary">
+        <div class="service-summary__icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="6" cy="18" r="3" />
+            <line x1="20" y1="4" x2="8.12" y2="15.88" />
+            <line x1="14.47" y1="14.48" x2="20" y2="20" />
+            <line x1="8.12" y1="8.12" x2="12" y2="12" />
+          </svg>
+        </div>
+
+        <div class="service-summary__details">
+          <div class="service-summary__name">{{ service().serviceName }}</div>
+          <div class="service-summary__meta">
+            <span>{{ formatDuration(service().duration) }}</span>
+            @if (employee(); as emp) {
+              <span>•</span>
+              <span class="service-summary__employee">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {{ emp.firstName }} (przypisany)
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="service-summary__price">{{ service().price }} PLN</div>
+      </div>
+
+      <div class="booking-modal__divider"></div>
+
+      <!-- Выбор дня -->
+      <div class="booking-modal__section">
+        <div class="booking-modal__section-header">
+          <h3 class="booking-modal__section-title">Wybierz dzień</h3>
+
+          <label class="other-day-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span>Inny dzień</span>
+            <input
+              type="date"
+              class="other-day-btn__input"
+              [min]="days[0].isoDate"
+              [value]="selectedDate()"
+              (change)="onDatePickerChange($event)"
+            />
+          </label>
+        </div>
+
+        <div class="days-grid">
+          @for (day of days; track day.isoDate) {
+            <button
+              type="button"
+              class="day-card"
+              [class.day-card--active]="selectedDate() === day.isoDate"
+              (click)="selectedDate.set(day.isoDate)"
+            >
+              @if (day.isToday) {
+                <span class="day-card__top">Dziś</span>
+                <span class="day-card__main">{{ day.dayShort }} {{ day.dayNumber }}</span>
+              } @else {
+                <span class="day-card__top">{{ day.dayShort }}</span>
+                <span class="day-card__main">{{ day.dayNumber }}</span>
+              }
+              <span class="day-card__month">{{ day.monthShort }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Доступные часы -->
+      <div class="booking-modal__section">
+        <h3 class="booking-modal__section-title">Dostępne godziny</h3>
+
+        @if (isLoadingSlots()) {
+          <div class="slots-state">Ładowanie wolnych terminów...</div>
+        } @else if (!hasAnySlots()) {
+          <div class="slots-state">Brak wolnych terminów w wybranym dniu. Wybierz inną datę.</div>
+        } @else {
+          @if (groupedSlots().morning.length > 0) {
+            <div class="time-group">
+              <div class="time-group__label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 18a5 5 0 0 0-10 0" />
+                  <line x1="12" y1="2" x2="12" y2="9" />
+                  <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+                  <line x1="1" y1="18" x2="3" y2="18" />
+                  <line x1="21" y1="18" x2="23" y2="18" />
+                  <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+                </svg>
+                <span>RANO</span>
+              </div>
+
+              <div class="slots-grid">
+                @for (item of groupedSlots().morning; track item.slot.start) {
+                  <button
+                    type="button"
+                    class="slot-btn"
+                    [class.slot-btn--active]="selectedSlot()?.start === item.slot.start"
+                    (click)="selectedSlot.set(item.slot)"
+                  >
+                    {{ item.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          @if (groupedSlots().afternoon.length > 0) {
+            <div class="time-group">
+              <div class="time-group__label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                </svg>
+                <span>POPOŁUDNIE</span>
+              </div>
+
+              <div class="slots-grid">
+                @for (item of groupedSlots().afternoon; track item.slot.start) {
+                  <button
+                    type="button"
+                    class="slot-btn"
+                    [class.slot-btn--active]="selectedSlot()?.start === item.slot.start"
+                    (click)="selectedSlot.set(item.slot)"
+                  >
+                    {{ item.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          @if (groupedSlots().evening.length > 0) {
+            <div class="time-group">
+              <div class="time-group__label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <span>WIECZÓR</span>
+              </div>
+
+              <div class="slots-grid">
+                @for (item of groupedSlots().evening; track item.slot.start) {
+                  <button
+                    type="button"
+                    class="slot-btn"
+                    [class.slot-btn--active]="selectedSlot()?.start === item.slot.start"
+                    (click)="selectedSlot.set(item.slot)"
+                  >
+                    {{ item.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="booking-modal__divider"></div>
+
+      <!-- Футер с итогами -->
+      <div class="booking-modal__footer">
+        <div>
+          <div class="booking-modal__summary-label">PODSUMOWANIE</div>
+          <div class="booking-modal__summary-value">
+            {{ summaryDateText() }}
+            @if (selectedTimeLabel(); as time) {
+              <span> • {{ time }}</span>
+            }
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="booking-modal__submit"
+          [disabled]="!selectedSlot()"
+          (click)="goToLoginStep()"
+        >
+          <span>{{ isAuthenticated() ? 'Zarezerwuj wizytę' : 'Dalej do logowania' }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </button>
+      </div>
+    } @else {
+      <!-- ==================== ШАГ 2: ЛОГИН ==================== -->
+      <div class="booking-modal__nav">
+        <button type="button" class="booking-modal__back" (click)="goBackToSlotStep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          <span>Wstecz</span>
+        </button>
+
+        <button
+          type="button"
+          class="booking-modal__close"
+          aria-label="Zamknij"
+          (click)="closeModal.emit()"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 6L6 18" />
+            <path d="M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Прогресс-бар шагов -->
+      <div class="stepper">
+        <div class="stepper__col">
+          <div class="stepper__label stepper__label--done">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            <span>1. Termin</span>
+          </div>
+          <div class="stepper__bar stepper__bar--active"></div>
+        </div>
+
+        <div class="stepper__col stepper__col--right">
+          <div class="stepper__label stepper__label--current">
+            Krok 2 z 2: Logowanie
+          </div>
+          <div class="stepper__bar stepper__bar--active"></div>
+        </div>
+      </div>
+
+      <!-- Сводка бронирования с кнопкой Zmień -->
+      <div class="service-summary">
+        <div class="service-summary__icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="6" cy="18" r="3" />
+            <line x1="20" y1="4" x2="8.12" y2="15.88" />
+            <line x1="14.47" y1="14.48" x2="20" y2="20" />
+            <line x1="8.12" y1="8.12" x2="12" y2="12" />
+          </svg>
+        </div>
+
+        <div class="service-summary__details">
+          <div class="service-summary__name">
+            {{ service().serviceName }} • {{ service().price }} PLN
+          </div>
+          <div class="service-summary__meta">
+            <span>{{ summaryDateText() }}, {{ selectedTimeLabel() }}</span>
+            @if (employee(); as emp) {
+              <span>•</span>
+              <span>{{ emp.position }} {{ emp.firstName }}</span>
+            }
+          </div>
+        </div>
+
+        <button type="button" class="service-summary__change" (click)="goBackToSlotStep()">
+          Zmień
+        </button>
+      </div>
+
+      <!-- Заголовок и форма логина -->
+      <div class="login-step">
+        <h2 id="booking-modal-title" class="login-step__title">
+          Zaloguj się, aby potwierdzić wizytę
+        </h2>
+        <p class="login-step__subtitle">
+          Wpisz swój adres e-mail i hasło powiązane z Twoim kontem.
+        </p>
+
+        @if (loginError(); as error) {
+          <div class="login-step__error">{{ error }}</div>
+        }
+
+        <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLoginAndBook()">
+          <div class="login-form__field">
+            <label class="login-form__label" for="booking-login-email">
+              Adres e-mail <span>*</span>
+            </label>
+            <input
+              id="booking-login-email"
+              type="email"
+              class="login-form__input"
+              placeholder="jan.kowalski@example.com"
+              formControlName="email"
+            />
+          </div>
+
+          <div class="login-form__field">
+            <div class="login-form__label-row">
+              <label class="login-form__label" for="booking-login-password">
+                Hasło <span>*</span>
+              </label>
+              <a routerLink="/forgot-password" class="login-form__forgot">
+                Nie pamiętasz hasła?
+              </a>
+            </div>
+
+            <div class="login-form__password-wrap">
+              <input
+                id="booking-login-password"
+                [type]="showPassword() ? 'text' : 'password'"
+                class="login-form__input login-form__input--password"
+                placeholder="Wpisz hasło konta"
+                formControlName="password"
+              />
+              <button
+                type="button"
+                class="login-form__eye"
+                aria-label="Pokaż lub ukryj hasło"
+                (click)="showPassword.set(!showPassword())"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="login-form__register-hint">
+            Nie masz jeszcze konta?
+            <a routerLink="/register" (click)="closeModal.emit()">Utwórz konto</a>
+          </p>
+
+          <button
+            type="submit"
+            class="login-form__submit"
+            [disabled]="isSubmittingLogin()"
+          >
+            <span>{{ isSubmittingLogin() ? 'Logowanie...' : 'Zaloguj i zarezerwuj wizytę' }}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    }
+  </div>
+</div>

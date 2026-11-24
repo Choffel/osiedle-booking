@@ -58,4 +58,13 @@
   } @else {
     <div class="salon-page__loading">Ładowanie danych salonu...</div>
   }
+
+  @if (bookingModalService(); as selectedService) {
+    <app-booking-modal
+      [service]="selectedService"
+      [employee]="bookingModalEmployee()"
+      (closeModal)="onCloseBookingModal()"
+      (confirmSelection)="onConfirmBookingSlot($event)"
+    />
+  }
 </main>
