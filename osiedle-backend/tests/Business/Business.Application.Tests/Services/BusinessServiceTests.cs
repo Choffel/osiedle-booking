@@ -1,11 +1,14 @@
 using Business.Application.DTOs;
+using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces;
 using Business.Application.Interfaces.Business;
+using Business.Application.Interfaces.Employee;
 using Business.Application.Services.BusinessServices;
 using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObjects;
+using Business.Domain.Aggregates;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
@@ -18,12 +21,16 @@ public class BusinessServiceTests
     private static readonly LocationDto ValidLocationDto = new("Warsaw", "Main Street 1");
 
     private readonly Mock<IBusinessRepository> _businessRepository = new();
+    private readonly Mock<IEmployeeRepository> _employeeRepository = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly BusinessService _sut;
 
     public BusinessServiceTests()
     {
-        _sut = new BusinessService(_businessRepository.Object, _unitOfWork.Object);
+        _sut = new BusinessService(
+            _businessRepository.Object,
+            _employeeRepository.Object,
+            _unitOfWork.Object);
     }
 
     [Fact]
@@ -102,6 +109,85 @@ public class BusinessServiceTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(BusinessErrors.NotFound, result.Error);
+    }
+
+    [Fact]
+    public async Task AddBookableServiceToBusinessAsync_AddsServiceToBusinessAndEmployee()
+    {
+        var business = BusinessAggregate.Create("Salon", UserId.New(), "Description", ValidLocation, Category.Haircut);
+        var employee = Employee.Create(business.Id, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var dto = new CreateBookableServiceDto(
+            employee.Id.Value, Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+
+        _businessRepository
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(business);
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
+        _unitOfWork
+            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _sut.AddBookableServiceToBusinessAsync(business.OwnerId, business.Id, dto, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        var service = Assert.Single(business.Services);
+        Assert.Same(service, Assert.Single(employee.BookableServices));
+        Assert.Equal(business.Id, service.BusinessId);
+        Assert.Equal(employee.Id, service.EmployeeId);
+        Assert.Equal(service.Id.Value, result.Value.BookableServiceId);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddBookableServiceToBusinessAsync_AllowsSelfEmployedBusinessOwner()
+    {
+        var ownerId = UserId.New();
+        var business = BusinessAggregate.Create("Salon", ownerId, "Description", ValidLocation, Category.Haircut);
+        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com", ownerId);
+        var dto = new CreateBookableServiceDto(
+            employee.Id.Value, Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        _businessRepository
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(business);
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
+        _unitOfWork
+            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _sut.AddBookableServiceToBusinessAsync(ownerId, business.Id, dto, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(business.Id, Assert.Single(business.Services).BusinessId);
+        Assert.Single(employee.BookableServices);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddBookableServiceToBusinessAsync_WhenEmployeeBelongsElsewhere_ReturnsForbidden()
+    {
+        var business = BusinessAggregate.Create("Salon", UserId.New(), "Description", ValidLocation, Category.Haircut);
+        var otherBusiness = BusinessAggregate.Create("Other Salon", UserId.New(), "Description", ValidLocation, Category.Haircut);
+        var employee = Employee.Create(otherBusiness.Id, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var dto = new CreateBookableServiceDto(
+            employee.Id.Value, Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        _businessRepository
+            .Setup(r => r.GetBusinessByIdAsync(business.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(business);
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
+
+        var result = await _sut.AddBookableServiceToBusinessAsync(business.OwnerId, business.Id, dto, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(BookableServiceErrors.EmployeeNotBelongToBusiness, result.Error);
+        Assert.Empty(business.Services);
+        Assert.Empty(employee.BookableServices);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

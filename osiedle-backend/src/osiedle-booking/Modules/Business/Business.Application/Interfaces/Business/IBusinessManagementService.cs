@@ -1,4 +1,5 @@
 ﻿using Business.Application.DTOs;
+using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
@@ -10,6 +11,11 @@ public interface IBusinessManagementService
 {
     Task<Result<BusinessResponseDto>> CreateBusinessAsync(CreateBusinessDto createBusinessDto, CancellationToken cancellationToken);
     Task<Result<BusinessResponseDto>> GetBusinessByIdAsync(BusinessId businessId, CancellationToken cancellationToken);
+    Task<Result<BookableServiceResponseDto>> AddBookableServiceToBusinessAsync(
+        UserId userId,
+        BusinessId businessId,
+        CreateBookableServiceDto dto,
+        CancellationToken cancellationToken);
     Task<Result<PagedResult<BusinessShortInfoDto>>> GetBusinessesAsync(
         int page = 1,
         int pageSize = 3,

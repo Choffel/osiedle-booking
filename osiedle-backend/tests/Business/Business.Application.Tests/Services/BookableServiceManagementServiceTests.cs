@@ -8,6 +8,7 @@ using Business.Domain.Enums;
 using Business.Domain.Errors;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
+using Business.Domain.Aggregates;
 using Moq;
 
 namespace Business.Application.Tests.Services;
@@ -45,8 +46,8 @@ public class BookableServiceManagementServiceTests
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Employee?)null);
 
         var result = await _sut.CreateBookableServiceAsync(dto, CancellationToken.None);
 
@@ -57,12 +58,32 @@ public class BookableServiceManagementServiceTests
     }
 
     [Fact]
+    public async Task CreateBookableServiceAsync_WhenEmployeeBelongsToBusiness_RequiresBusinessCreationFlow()
+    {
+        var employee = Employee.Create(
+            BusinessId.New(), "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var dto = new CreateBookableServiceDto(
+            employee.Id.Value, Category.Haircut.ToSlug(), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        _employeeRepository
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
+
+        var result = await _sut.CreateBookableServiceAsync(dto, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(BookableServiceErrors.BusinessRequired, result.Error);
+        Assert.Empty(employee.BookableServices);
+        _bookableServiceRepository.Verify(r => r.Add(It.IsAny<BookableService>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateBookableServiceAsync_WhenNameAlreadyTaken_ReturnsConflict()
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(r => r.GetEmployeeByIdAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com"));
         _bookableServiceRepository
             .Setup(r => r.ExistsByNameForEmployeeAsync(
                 dto.ServiceName, It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -80,11 +101,13 @@ public class BookableServiceManagementServiceTests
     public async Task CreateBookableServiceAsync_WithValidData_AddsServiceAndSaves()
     {
         var dto = new CreateBookableServiceDto(Guid.NewGuid(), nameof(Category.Haircut), "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        dto = dto with { EmployeeId = employee.Id.Value };
         BookableService? added = null;
 
         _employeeRepository
-            .Setup(r => r.ExistsEmployeeAsync(It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(r => r.GetEmployeeByIdAsync(employee.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employee);
         _bookableServiceRepository
             .Setup(r => r.ExistsByNameForEmployeeAsync(
                 dto.ServiceName, It.IsAny<EmployeeId>(), It.IsAny<CancellationToken>()))
@@ -104,6 +127,7 @@ public class BookableServiceManagementServiceTests
         Assert.Equal(Category.Haircut, added.Category);
         Assert.Equal(dto.ServicePrice, added.Price);
         Assert.Equal(dto.ServiceDuration, added.Duration);
+        Assert.Same(added, Assert.Single(employee.BookableServices));
         _bookableServiceRepository.Verify(r => r.Add(It.IsAny<BookableService>(), It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
