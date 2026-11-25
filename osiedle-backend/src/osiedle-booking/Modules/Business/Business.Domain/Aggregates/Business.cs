@@ -58,25 +58,23 @@ public class Business : AggregateRoot<BusinessId>
         Location location, Category category)
         => new(id, name, location, ownerId, description, category);
 
-    public void AddService(BusinessId businessId, EmployeeId employeeId, Category category, string name,
-        string description, decimal price, TimeSpan durationMinutes)
-        => AddService(employeeId, category, name, description, price, durationMinutes);
-
-    public void AddService(EmployeeId employeeId, Category category, string name, string description,
-        decimal price, TimeSpan durationMinutes)
+    public void AddService(BookableService service)
     {
-        if(Status == BusinessStatus.Archived)
+        ArgumentNullException.ThrowIfNull(service);
+
+        if (Status == BusinessStatus.Archived)
             throw new InvalidOperationException("Cannot modify an archived business.");
 
-        if(_services.Any(s => s.ServiceName == name))
-            throw new InvalidOperationException("Service with this name already exists.");
-        
-        if(!_employeeIds.Contains(employeeId))
-            throw new InvalidOperationException("Employee is not associated with this business.");
+        if (service.BusinessId != Id)
+            throw new InvalidOperationException("Service is not associated with this business.");
 
-        var service = BookableService.Create(employeeId, category, name, description, price, durationMinutes);
-        
-        _services.Add(service); UpdatedAt = DateTime.UtcNow;
+        if (_services.Any(s =>
+                s.Id == service.Id ||
+                string.Equals(s.ServiceName, service.ServiceName, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Service with this name already exists.");
+
+        _services.Add(service);
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void AddEmployee(EmployeeId employeeId)

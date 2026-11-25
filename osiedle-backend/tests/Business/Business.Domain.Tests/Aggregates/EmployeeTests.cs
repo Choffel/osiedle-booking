@@ -1,5 +1,7 @@
 using Business.Domain.Aggregates;
+using Business.Domain.Entities;
 using Business.Domain.Enums;
+using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 
@@ -112,5 +114,39 @@ public class EmployeeTests
         employee.ChangeStatus(EmploymentStatus.Terminated);
 
         Assert.Throws<InvalidOperationException>(() => employee.ChangeStatus(EmploymentStatus.Active));
+    }
+
+    [Fact]
+    public void AddBookableService_AddsServiceAssignedToEmployee()
+    {
+        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var service = BookableService.Create(
+            employee.Id, Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+
+        employee.AddBookableService(service);
+
+        Assert.Same(service, Assert.Single(employee.BookableServices));
+        Assert.NotNull(employee.UpdatedAt);
+    }
+
+    [Fact]
+    public void AddBookableService_RejectsServiceAssignedToAnotherEmployee()
+    {
+        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+
+        Assert.Throws<InvalidOperationException>(() => employee.AddBookableService(service));
+    }
+
+    [Fact]
+    public void AddBookableService_RejectsNonActiveEmployee()
+    {
+        var employee = Employee.Create(null, "Jan", "Kowalski", "Barber", null, "jan@example.com");
+        employee.ChangeStatus(EmploymentStatus.OnLeave);
+        var service = BookableService.Create(
+            employee.Id, Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+
+        Assert.Throws<InvalidOperationException>(() => employee.AddBookableService(service));
     }
 }

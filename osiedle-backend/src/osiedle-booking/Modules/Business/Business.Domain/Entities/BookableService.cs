@@ -8,6 +8,8 @@ namespace Business.Domain.Entities;
 public class BookableService : Entity<BookableServiceId>
 {
     public EmployeeId EmployeeId { get; private set; }
+
+    public BusinessId? BusinessId { get; private set; }
     
     public Category Category { get; private set; }
     
@@ -64,6 +66,18 @@ public class BookableService : Entity<BookableServiceId>
         Description = description;
         Price = price;
         Duration = duration;
+    }
+
+    public void AddToBusiness(BusinessId businessId)
+    {
+        if (BusinessId is not null && BusinessId != businessId)
+            throw new InvalidOperationException("Service is already associated with another business.");
+
+        if (BusinessId == businessId)
+            return;
+
+        BusinessId = businessId;
+        UpdatedAt = DateTime.UtcNow;
     }
     
     public void DeactivateService()

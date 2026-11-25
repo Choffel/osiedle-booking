@@ -2,6 +2,7 @@ using Business.Domain.Entities;
 using Business.Domain.Enums;
 using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
+using Business.Domain.Aggregates;
 
 namespace Business.Domain.Tests.Entities;
 
@@ -34,6 +35,29 @@ public class BookableServiceTests
 
         Assert.Throws<ArgumentException>(() => BookableService.Create(
             employeeId, (Category)999, "Haircut", "Classic haircut", 50m, TimeSpan.FromMinutes(45)));
+    }
+
+    [Fact]
+    public void AddToBusiness_AssociatesServiceWithBusiness()
+    {
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        var businessId = BusinessId.New();
+
+        service.AddToBusiness(businessId);
+
+        Assert.Equal(businessId, service.BusinessId);
+        Assert.NotNull(service.UpdatedAt);
+    }
+
+    [Fact]
+    public void AddToBusiness_CannotAssociateServiceWithAnotherBusiness()
+    {
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(45));
+        service.AddToBusiness(BusinessId.New());
+
+        Assert.Throws<InvalidOperationException>(() => service.AddToBusiness(BusinessId.New()));
     }
 
     [Fact]

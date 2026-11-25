@@ -58,5 +58,11 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business.Domain.Ag
             .IsRequired();
 
         builder.HasQueryFilter(b => b.DeletedAt == null);
+
+        builder.HasMany(b => b.Services)
+            .WithOne()
+            .HasForeignKey(service => service.BusinessId);
+        builder.Navigation(b => b.Services)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

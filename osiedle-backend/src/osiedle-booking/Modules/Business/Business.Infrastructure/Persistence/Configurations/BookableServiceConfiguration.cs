@@ -25,6 +25,13 @@ public class BookableServiceConfiguration : IEntityTypeConfiguration<Business.Do
                 value => EmployeeId.From(value)
             )
             .IsRequired();
+
+        builder.Property(s => s.BusinessId)
+            .HasConversion(
+                id => id != null ? id.Value : (Guid?)null,
+                value => value.HasValue ? BusinessId.From(value.Value) : null);
+
+        builder.HasIndex(s => s.BusinessId);
         
         builder.HasIndex(s => s.EmployeeId);
 
