@@ -21,6 +21,15 @@ public static class BookableServiceErrors
     
     public static readonly Error EmployeeNotFound =
         Error.NotFound("BookableService.EmployeeNotFound", "Employee not found");
+
+    public static readonly Error EmployeeNotBelongToBusiness =
+        Error.Forbidden("BookableService.EmployeeNotBelongToBusiness", "Employee does not belong to this business");
+
+    public static readonly Error EmployeeNotActive =
+        Error.Conflict("BookableService.EmployeeNotActive", "Services can only be assigned to active employees");
+
+    public static readonly Error BusinessRequired =
+        Error.Conflict("BookableService.BusinessRequired", "Employees of a business must add services through that business");
     
     public static readonly Error NotFoundOrAccessDenied =
         Error.NotFound("BookableService.NotfoundOrAccessDenied", "Bookable service not found or access denied");

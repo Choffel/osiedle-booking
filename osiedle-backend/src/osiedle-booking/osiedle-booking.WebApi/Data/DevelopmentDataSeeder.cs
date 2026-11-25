@@ -173,19 +173,25 @@ public sealed class DevelopmentDataSeeder
 
         var servicesToSeed = new[]
         {
-            BookableService.Create(BookableServiceIdValue.From(ServiceGuid), EmployeeIdValue.From(EmployeeGuid), Category.FacialCare,
-                "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, TimeSpan.FromMinutes(60)),
-            BookableService.Create(BookableServiceIdValue.From(SecondServiceId), EmployeeIdValue.From(SecondEmployeeId), Category.Haircut,
-                "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, TimeSpan.FromMinutes(45)),
-            BookableService.Create(BookableServiceIdValue.From(ThirdServiceId), EmployeeIdValue.From(SecondBusinessEmployeeId), Category.Waxing,
-                "Masaż relaksacyjny", "Masaż całego ciała.", 180m, TimeSpan.FromMinutes(90))
+            CreateSeedService(ServiceGuid, EmployeeGuid, BusinessGuid, Category.FacialCare,
+                "Manicure hybrydowy", "Trwały manicure z opracowaniem skórek.", 120m, 60),
+            CreateSeedService(SecondServiceId, SecondEmployeeId, BusinessGuid, Category.Haircut,
+                "Strzyżenie męskie", "Klasyczne strzyżenie i stylizacja.", 90m, 45),
+            CreateSeedService(ThirdServiceId, SecondBusinessEmployeeId, SecondBusinessId, Category.Waxing,
+                "Masaż relaksacyjny", "Masaż całego ciała.", 180m, 90)
         };
 
         foreach (var service in servicesToSeed)
         {
-            if (!await db.BookableServices.AnyAsync(existing => existing.Id == service.Id, cancellationToken))
+            var existing = await db.BookableServices
+                .FirstOrDefaultAsync(candidate => candidate.Id == service.Id, cancellationToken);
+            if (existing is null)
             {
                 db.BookableServices.Add(service);
+            }
+            else
+            {
+                existing.AddToBusiness(service.BusinessId!.Value);
             }
         }
 
@@ -210,6 +216,28 @@ public sealed class DevelopmentDataSeeder
         }
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static BookableService CreateSeedService(
+        Guid serviceId,
+        Guid employeeId,
+        Guid businessId,
+        Category category,
+        string name,
+        string description,
+        decimal price,
+        int durationMinutes)
+    {
+        var service = BookableService.Create(
+            BookableServiceIdValue.From(serviceId),
+            EmployeeIdValue.From(employeeId),
+            category,
+            name,
+            description,
+            price,
+            TimeSpan.FromMinutes(durationMinutes));
+        service.AddToBusiness(BusinessIdValue.From(businessId));
+        return service;
     }
 
     private static async Task SeedBookingsAsync(BookingDbContext db, CancellationToken cancellationToken)

@@ -1,4 +1,6 @@
+using Business.Domain.Entities;
 using Business.Domain.Enums;
+using Business.Domain.ValueObject;
 using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using BusinessAggregate = Business.Domain.Aggregates.Business;
@@ -120,9 +122,52 @@ public class BusinessTests
     public void AddService_WhenBusinessIsArchived_Throws()
     {
         var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        service.AddToBusiness(business.Id);
         business.ArchiveBusiness();
 
-        Assert.Throws<InvalidOperationException>(() =>
-            business.AddService(business.Id, EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30)));
+        Assert.Throws<InvalidOperationException>(() => business.AddService(service));
+    }
+
+    [Fact]
+    public void AddService_AddsBusinessAssociatedService()
+    {
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        service.AddToBusiness(business.Id);
+
+        business.AddService(service);
+
+        Assert.Single(business.Services);
+        Assert.Same(service, Assert.Single(business.Services));
+        Assert.NotNull(business.UpdatedAt);
+    }
+
+    [Fact]
+    public void AddService_RejectsServiceAssignedToDifferentBusiness()
+    {
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
+        var service = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        service.AddToBusiness(BusinessId.New());
+
+        Assert.Throws<InvalidOperationException>(() => business.AddService(service));
+    }
+
+    [Fact]
+    public void AddService_RejectsDuplicateNameIgnoringCase()
+    {
+        var business = BusinessAggregate.Create("Name", OwnerId, "Description", ValidLocation, Category.Haircut);
+        var firstService = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "Haircut", "Description", 50m, TimeSpan.FromMinutes(30));
+        firstService.AddToBusiness(business.Id);
+        business.AddService(firstService);
+        var duplicate = BookableService.Create(
+            EmployeeId.New(), Category.Haircut, "haircut", "Other description", 60m, TimeSpan.FromMinutes(40));
+        duplicate.AddToBusiness(business.Id);
+
+        Assert.Throws<InvalidOperationException>(() => business.AddService(duplicate));
     }
 }

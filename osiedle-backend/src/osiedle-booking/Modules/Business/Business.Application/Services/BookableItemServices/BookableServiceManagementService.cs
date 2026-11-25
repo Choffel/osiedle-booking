@@ -11,7 +11,7 @@ using Business.Domain.ValueObjects;
 using osiedle_booking.BuildingBlocks;
 
 namespace Business.Application.Services.BookableItemServices;
-
+//business id 
 public class BookableServiceManagementService : IBookableServiceManagementService
 {
     private readonly IBookableServiceRepository _bookableServiceRepository;
@@ -35,10 +35,20 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.InvalidCategory);
         }
 
-        bool employeeExists = await _employeeRepository.ExistsEmployeeAsync(employeeId, ct);
-        if (!employeeExists)
+        var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, ct);
+        if (employee is null)
         {
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotFound);
+        }
+
+        if (employee.Status != Business.Domain.Enums.EmploymentStatus.Active)
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.EmployeeNotActive);
+        }
+
+        if (employee.BusinessId is not null)
+        {
+            return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.BusinessRequired);
         }
 
         var bookableService = BookableService.Create(
@@ -56,6 +66,7 @@ public class BookableServiceManagementService : IBookableServiceManagementServic
             return Result.Failure<BookableServiceResponseDto>(BookableServiceErrors.NameAlreadyTaken);
         }
 
+        employee.AddBookableService(bookableService);
         _bookableServiceRepository.Add(bookableService, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         

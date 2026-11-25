@@ -7,6 +7,9 @@ public interface IEmployeeRepository
 {
     Task<Domain.Aggregates.Employee?> GetEmployeeByIdAsync(EmployeeId employeeId, CancellationToken ct = default);
     
+    Task<IReadOnlyCollection<Domain.Aggregates.Employee>> GetAllEmployeesByBusinessIdAsync(BusinessId businessId,
+        CancellationToken ct = default);
+    
     Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default);
     
     Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);

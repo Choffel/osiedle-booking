@@ -23,6 +23,14 @@ public class EmployeeRepository : IEmployeeRepository
             .SingleOrDefaultAsync(e => e.Id == employeeId, ct);
     }
 
+    public async Task<IReadOnlyCollection<Domain.Aggregates.Employee>> GetAllEmployeesByBusinessIdAsync(BusinessId businessId, CancellationToken ct = default)
+    {
+        return await _context.Employees
+            .AsNoTracking()
+            .Where(e => e.BusinessId == businessId)
+            .ToListAsync(ct);
+    }
+
     public Task<bool> ExistsEmployeeAsync(EmployeeId employeeId, CancellationToken ct = default)
     {
         return _context.Employees

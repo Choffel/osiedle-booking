@@ -50,6 +50,23 @@ public class Employee : AggregateRoot<EmployeeId>
         ValidateAndAssign(firstName, lastName, position, review, email);
         UpdatedAt = DateTime.UtcNow; 
     }
+
+    public void AddBookableService(BookableService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+
+        if (Status != EmploymentStatus.Active)
+            throw new InvalidOperationException("Only active employees can be assigned services.");
+
+        if (service.EmployeeId != Id)
+            throw new InvalidOperationException("Service is assigned to another employee.");
+
+        if (_bookableServices.Any(existing => existing.Id == service.Id))
+            return;
+
+        _bookableServices.Add(service);
+        UpdatedAt = DateTime.UtcNow;
+    }
     
     public void ChangeStatus(EmploymentStatus newStatus)
     {

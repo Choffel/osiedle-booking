@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Business.Application.DTOs;
+using Business.Application.DTOs.BookableServiceDTOs;
 using Business.Application.DTOs.BusinessDTOs;
 using Business.Application.Interfaces.Business;
 using Business.Domain.ValueObjects;
@@ -40,6 +41,17 @@ public class BusinessesController : ControllerBase
     {
         var business = BusinessId.From(businessId);
         return (await _businessManagementService.GetBusinessByIdAsync(business, ct)).ToActionResult();
+    }
+
+    [HttpPost("{businessId:guid}/services")]
+    public async Task<ActionResult<BookableServiceResponseDto>> AddBookableServiceToBusinessAsync(
+        [FromRoute] Guid businessId,
+        [FromBody] CreateBookableServiceDto dto,
+        CancellationToken ct = default)
+    {
+        var ownerId = UserId.From(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+        return (await _businessManagementService.AddBookableServiceToBusinessAsync(
+            ownerId, BusinessId.From(businessId), dto, ct)).ToActionResult();
     }
     
     [HttpGet]
