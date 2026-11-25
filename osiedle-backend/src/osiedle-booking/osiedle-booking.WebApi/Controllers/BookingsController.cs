@@ -31,6 +31,7 @@ public class BookingsController : ControllerBase
         return (await _bookingService.GetAvailableSlotsAsync(request, ct)).ToActionResult();
     }
     
+    [Authorize]
     [HttpPost("booking")]
     public async Task<ActionResult> CreateBookingAsync([FromQuery]  CreateBookingRequest request, CancellationToken ct)
     {
