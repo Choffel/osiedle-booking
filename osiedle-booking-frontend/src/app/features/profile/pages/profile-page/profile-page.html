@@ -1,0 +1,74 @@
+<main class="profile-page">
+  <div class="profile-page__container">
+    @if (profile(); as user) {
+      <app-profile-hero
+        [fullName]="user.fullName"
+        [email]="user.email"
+        [memberSince]="user.memberSince"
+        [avatarUrl]="user.avatarUrl"
+        [isVerified]="user.isVerified"
+        (editProfile)="onEditProfile()"
+      />
+
+      <app-profile-stats
+        [completedCount]="user.completedVisitsCount"
+        [upcomingCount]="upcomingVisits().length"
+        [favoritesCount]="favoriteSalons().length"
+      />
+
+      <div class="profile-layout">
+        <div class="profile-layout__main">
+          <app-upcoming-visit-card
+            [visits]="upcomingVisits()"
+            (reschedule)="onRescheduleVisit($event)"
+            (cancel)="onCancelVisit($event)"
+          />
+
+          <app-visit-history-list
+            [visits]="pastVisits()"
+            [totalCount]="user.completedVisitsCount"
+            (bookAgain)="onBookAgain($event)"
+          />
+        </div>
+
+        <aside class="profile-layout__sidebar">
+          <app-favorite-salons-widget [salons]="favoriteSalons()" />
+
+          <app-email-notifications-widget
+            [enabled]="emailRemindersEnabled()"
+            [selectedHours]="selectedReminderHours()"
+            [options]="reminderOptions"
+            (enabledChange)="emailRemindersEnabled.set($event)"
+            (hoursChange)="selectedReminderHours.set($event)"
+          />
+
+          <section class="support-card">
+            <div class="support-card__icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+              </svg>
+            </div>
+
+            <div class="support-card__body">
+              <h4 class="support-card__title">Potrzebujesz pomocy?</h4>
+              <p class="support-card__text">
+                Nasz zespół wsparcia Barberio jest dostępny codziennie od 8:00 do 20:00.
+              </p>
+              <a routerLink="/" class="support-card__link">Centrum Pomocy Barberio →</a>
+            </div>
+          </section>
+
+          <button type="button" class="logout-btn" (click)="onLogout()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Wyloguj się z konta</span>
+          </button>
+        </aside>
+      </div>
+    }
+  </div>
+</main>

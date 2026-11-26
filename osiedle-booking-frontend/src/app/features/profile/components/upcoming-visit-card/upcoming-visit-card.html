@@ -1,0 +1,96 @@
+<section class="visits-section">
+  <div class="visits-section__header">
+    <div class="visits-section__title-wrap">
+      <span class="visits-section__dot"></span>
+      <h2 class="visits-section__title">Nadchodząca wizyta</h2>
+    </div>
+
+    @if (visits().length > 0) {
+      <span class="status-badge status-badge--confirmed">{{ visits()[0].statusLabel }}</span>
+    }
+  </div>
+
+  @for (visit of visits(); track visit.bookingId) {
+    <article class="upcoming-card">
+      <div class="upcoming-card__top">
+        <div class="upcoming-card__salon">
+          @if (visit.coverUrl) {
+            <img class="upcoming-card__thumb" [src]="visit.coverUrl" [alt]="visit.salonName" />
+          } @else {
+            <div class="upcoming-card__thumb upcoming-card__thumb--placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="6" cy="6" r="3" />
+                <circle cx="6" cy="18" r="3" />
+                <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                <line x1="8.12" y1="8.12" x2="12" y2="12" />
+              </svg>
+            </div>
+          }
+
+          <div>
+            <div class="upcoming-card__category">{{ visit.categoryLabel }}</div>
+            <h3 class="upcoming-card__salon-name">{{ visit.salonName }}</h3>
+            <div class="upcoming-card__address">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>{{ visit.address }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="upcoming-card__price-col">
+          <div class="upcoming-card__price">{{ visit.price }} PLN</div>
+          <div class="upcoming-card__payment">{{ visit.paymentNote }}</div>
+        </div>
+      </div>
+
+      <div class="upcoming-card__divider"></div>
+
+      <div class="upcoming-card__details">
+        <div class="detail-col">
+          <div class="detail-col__label">USŁUGA</div>
+          <div class="detail-col__value">{{ visit.serviceName }}</div>
+          <div class="detail-col__sub">Czas: {{ visit.durationMinutes }} min</div>
+        </div>
+
+        <div class="detail-col">
+          <div class="detail-col__label">DATA I GODZINA</div>
+          <div class="detail-col__value detail-col__value--accent">{{ visit.dateLabel }}</div>
+          <div class="detail-col__sub">{{ visit.timeRangeLabel }}</div>
+        </div>
+
+        <div class="detail-col">
+          <div class="detail-col__label">SPECJALISTA</div>
+          <div class="detail-col__staff">
+            <span class="detail-col__staff-badge">{{ visit.staffInitial }}</span>
+            <span class="detail-col__value">{{ visit.staffName }}</span>
+          </div>
+          <div class="detail-col__sub">{{ visit.staffRole }}</div>
+        </div>
+      </div>
+
+      <div class="upcoming-card__divider"></div>
+
+      <div class="upcoming-card__actions">
+        <button type="button" class="upcoming-card__reschedule-btn" (click)="reschedule.emit(visit)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>Zmień termin</span>
+        </button>
+
+        <button type="button" class="upcoming-card__cancel-btn" (click)="cancel.emit(visit)">
+          <span>× Odwołaj wizytę</span>
+        </button>
+      </div>
+    </article>
+  } @empty {
+    <div class="empty-card">Brak zaplanowanych wizyt.</div>
+  }
+</section>

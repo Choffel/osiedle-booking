@@ -1,0 +1,66 @@
+<section class="visits-section">
+  <div class="visits-section__header">
+    <h2 class="visits-section__title">Historia ostatnich wizyt</h2>
+    <span class="visits-section__counter">
+      Pokazano {{ visibleVisits().length }} z {{ totalCount() }}
+    </span>
+  </div>
+
+  <div class="history-list">
+    @for (item of visibleVisits(); track item.bookingId) {
+      <article class="history-card">
+        <div class="history-card__date-box">
+          <span class="history-card__day">{{ item.dayNumber }}</span>
+          <span class="history-card__month">{{ item.monthShort }}</span>
+        </div>
+
+        <div class="history-card__info">
+          <div class="history-card__title-row">
+            <h3 class="history-card__salon">{{ item.salonName }}</h3>
+            <span class="status-badge status-badge--completed">{{ item.statusLabel }}</span>
+          </div>
+
+          <div class="history-card__service">
+            {{ item.serviceName }} • {{ item.durationMinutes }} min • {{ item.price }} PLN
+          </div>
+
+          <div class="history-card__meta">
+            <span>Barber: <strong>{{ item.staffName }}</strong></span>
+            <span>•</span>
+            <span>{{ item.fullDateTimeLabel }}</span>
+          </div>
+        </div>
+
+        <div class="history-card__right">
+          @if (item.rating !== null) {
+            <span class="history-card__rating">★ Opinia {{ item.rating.toFixed(1) }}</span>
+          }
+
+          <button type="button" class="history-card__rebook-btn" (click)="bookAgain.emit(item)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <span>Zarezerwuj ponownie</span>
+          </button>
+        </div>
+      </article>
+    }
+  </div>
+
+  @if (remainingCount() > 0 || isExpanded()) {
+    <button type="button" class="history-expand-btn" (click)="toggleExpand()">
+      @if (!isExpanded()) {
+        <span>Rozwiń pełną historię (pozostało {{ remainingCount() }})</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      } @else {
+        <span>Zwiń historię</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      }
+    </button>
+  }
+</section>

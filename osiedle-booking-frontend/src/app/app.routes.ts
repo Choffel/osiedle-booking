@@ -6,6 +6,7 @@ import {MainLayoutComponent} from './core/layouts/main-layout/main-layout';
 import {AuthLayoutComponent} from './core/layouts/auth-layout/auth-layout';
 import { UserFlowPageComponent } from './features/auth/pages/user-flow/user-flow';
 import { LoginPageComponent } from './features/auth/pages/login-page/login-page';
+import {ProfilePageComponent} from "./features/profile/pages/profile-page/profile-page";
 
 export const routes: Routes = [
   {
@@ -13,6 +14,7 @@ export const routes: Routes = [
     component: MainLayoutComponent,
     children: [
       { path: '', component: HomePageComponent },
+      { path: 'profile', component: ProfilePageComponent },
       { path: 'salons/:id', component: SalonDetailsPageComponent },
     ],
   },
@@ -30,7 +32,6 @@ export const routes: Routes = [
             (m) => m.ConfirmEmailPageComponent,
           ),
       },
-
     ],
   },
 ];

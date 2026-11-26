@@ -1,0 +1,49 @@
+<section class="sidebar-card">
+  <div class="notify-header">
+    <div>
+      <h3 class="sidebar-card__title">Powiadomienia e-mail</h3>
+      <p class="notify-header__subtitle">Przypomnienia o rezerwacjach</p>
+    </div>
+
+    <button
+      type="button"
+      role="switch"
+      class="toggle-switch"
+      [class.toggle-switch--on]="enabled()"
+      [attr.aria-checked]="enabled()"
+      (click)="enabledChange.emit(!enabled())"
+    >
+      <span class="toggle-switch__thumb"></span>
+    </button>
+  </div>
+
+  <div class="notify-body" [class.notify-body--disabled]="!enabled()">
+    <div class="notify-body__label">Czas przypomnienia przed wizytą:</div>
+
+    <div class="reminder-grid">
+      @for (opt of options(); track opt.hours) {
+        <button
+          type="button"
+          class="reminder-pill"
+          [class.reminder-pill--active]="selectedHours() === opt.hours"
+          [disabled]="!enabled()"
+          (click)="onSelectHours(opt.hours)"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+
+    <div class="notify-hint">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+      <span>
+        Wyślemy wiadomość {{ activeHint() }} wcześniej z podsumowaniem adresu,
+        godziny oraz wybranego barbera.
+      </span>
+    </div>
+  </div>
+</section>

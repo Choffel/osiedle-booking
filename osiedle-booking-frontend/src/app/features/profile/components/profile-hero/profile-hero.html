@@ -1,0 +1,51 @@
+<section class="profile-hero">
+  <div class="profile-hero__left">
+    @if (avatarUrl(); as url) {
+      <img class="profile-hero__avatar" [src]="url" [alt]="fullName()" />
+    } @else {
+      <div class="profile-hero__avatar profile-hero__avatar--initials">
+        {{ initials() }}
+      </div>
+    }
+
+    <div class="profile-hero__info">
+      <div class="profile-hero__name-row">
+        <h1 class="profile-hero__name">{{ fullName() }}</h1>
+        @if (isVerified()) {
+          <span class="profile-hero__verified" title="Zweryfikowane konto">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.9 2.1 3.6-.3 1.4 3.3 3.1 1.8-.8 3.5.8 3.5-3.1 1.8-1.4 3.3-3.6-.3L12 22l-2.9-2.1-3.6.3-1.4-3.3-3.1-1.8.8-3.5-.8-3.5 3.1-1.8 1.4-3.3 3.6.3L12 2zm-1.2 13.2l6-6-1.4-1.4-4.6 4.6-2.2-2.2-1.4 1.4 3.6 3.6z" />
+            </svg>
+          </span>
+        }
+      </div>
+
+      <div class="profile-hero__meta">
+        <span class="profile-hero__meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+          </svg>
+          {{ email() }}
+        </span>
+
+        <span class="profile-hero__meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          W Barberio od: {{ memberSince() }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="profile-hero__edit-btn" (click)="editProfile.emit()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+    <span>Edytuj profil</span>
+  </button>
+</section>
