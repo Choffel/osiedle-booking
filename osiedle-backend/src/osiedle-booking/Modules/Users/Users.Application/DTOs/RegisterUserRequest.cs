@@ -11,6 +11,6 @@ public record RegisterUserRequest(
     string LastName,
     [Required]
     [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Invalid email format")]
-    string Email,
-    string Password
+    string Email
+    //string Password
 );
