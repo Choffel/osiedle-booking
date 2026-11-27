@@ -21,4 +21,7 @@ public static class IdentityErrors
     
     public static Error FromIdentityResult( string description) =>
         Error.Validation("IdentityError", description);
+    
+    public static readonly Error InvalidOtp =
+        Error.Validation("Identity.InvalidOtp", "Invalid one-time password");
 }
