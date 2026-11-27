@@ -59,12 +59,12 @@ public class AuthService : IAuthService
      public async Task<Result<Guid>> RegisterAsync(RegisterUserRequest request, CancellationToken ct = default)
     {
         var identityResult = await _identityAccountService.CreateIdentityAsync(
-            request.Email,  request.Email, request.Password, ct);
+            request.Email,  request.Email,  ct);
 
         if (identityResult.IsFailure)
             return Result<Guid>.Failure(identityResult.Error); // TODO: обратить внимание на возвращаемый текст
         
-        var user = User.Create(UserId.From(identityResult.Value.Value), Name.Create(request.FirstName, request.LastName),  request.Email);
+        var user = User.Create(UserId.From(identityResult.Value.UserId), Name.Create(request.FirstName, request.LastName),  request.Email);
 
         _userRepository.Add(user);
         
@@ -76,11 +76,57 @@ public class AuthService : IAuthService
         var confirmationLink = CreateEmailConfirmationLink(request.Email, token.Value);
         await _notificationInternalApi.SendVerificationLinkAsync(request.Email, confirmationLink, ct);
 
-        _logger.LogInformation("Email confirmation link for user {UserId}: {Link}", user.Id, confirmationLink);
+        _logger.LogInformation($"User confirm code: {identityResult.Value.code}");
 
         await _unitOfWork.SaveChangesAsync(ct);
         
         return Result<Guid>.Success(user.Id.Value);
+    }
+     
+    public async Task<Result<Guid>> SendBookingOtpAsync(
+        SendBookingOtpRequest request,
+        CancellationToken ct = default)
+    {
+        var otpResult = await _identityAccountService.GetOrCreateAndGenerateOtpAsync(request.Email, ct);
+        if (otpResult.IsFailure)
+            return Result<Guid>.Failure(otpResult.Error);
+
+        var (userId, code, isNewUser) = otpResult.Value;
+
+        // Создаём доменного User только если это первый визит клиента
+        if (isNewUser)
+        {
+            var user = User.Create(
+                userId,
+                Name.Create(request.FirstName.Trim(), request.LastName.Trim()),
+                request.Email.Trim());
+
+            _userRepository.Add(user);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        // Отправляем 6-значный код на почту вместо длинной ссылки
+        await _notificationInternalApi.SendVerificationLinkAsync(request.Email, code, ct);
+
+        _logger.LogInformation("Booking OTP code for {Email}: {Code}", request.Email, code);
+
+        return Result<Guid>.Success(userId.Value);
+    }
+     
+    public async Task<Result<TokenResponseDto>> ConfirmAccountByOtpCode(VerifyOtpRequest request, CancellationToken ct = default)
+    {
+        var isOtpValid = await _identityAccountService.VerifyEmailConfirmationTokenAsync(request.Email, request.Code, ct);
+        if (isOtpValid.IsFailure)
+            return Result<TokenResponseDto>.Failure(IdentityErrors.InvalidOtp);
+        
+        var user = await _identityAccountService.FindByEmailAsync(request.Email, ct);
+        if (user.IsFailure)
+            return Result<TokenResponseDto>.Failure(IdentityErrors.NotFound);
+
+        var tokens = await _tokenService.GenerateTokensAsync(UserId.From(user.Value.Id),
+            user.Value.Email, user.Value.Roles, ct);
+        
+        return Result<TokenResponseDto>.Success(tokens.Value);
     }
 
     private string CreateEmailConfirmationLink(string email, string token)
