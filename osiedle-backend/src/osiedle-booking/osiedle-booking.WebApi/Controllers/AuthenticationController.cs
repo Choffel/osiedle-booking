@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using osiedle_booking.BuildingBlocks;
 using osiedle_booking.WebApi.Extensions;
 using Users.Application.Abstractions.Services.Identity;
 using Users.Application.DTOs;
@@ -23,10 +25,25 @@ public class AuthenticationController : ControllerBase
         return result.ToActionResult();
     }
 
+    [HttpPost("verify-otp")]
+    [AllowAnonymous]
+    public async Task<ActionResult<TokenResponseDto>> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken ct)
+    {
+        var result =  await _authService.ConfirmAccountByOtpCode(request, ct);
+        return result.ToActionResult();
+    }
+
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponseDto>> LoginAsync([FromBody] AuthRequest request, CancellationToken cancellationToken)
     {
         var result = await _authService.AuthenticateAsync(request, cancellationToken);
+        return result.ToActionResult();
+    }
+    
+    [HttpPost("booking-otp")]
+    public async Task<ActionResult<Guid>> SendBookingOtp([FromBody] SendBookingOtpRequest request, CancellationToken ct)
+    {
+        var result = await _authService.SendBookingOtpAsync(request, ct);
         return result.ToActionResult();
     }
 
