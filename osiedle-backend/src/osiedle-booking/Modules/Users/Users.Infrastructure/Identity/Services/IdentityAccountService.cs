@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using osiedle_booking.BuildingBlocks;
 using osiedle_booking.BuildingBlocks.ValueObjects;
 using Users.Application.Abstractions.Services.Identity;
+using Users.Application.DTOs;
 using Users.Application.DTOs.Identity;
 using Users.Application.Errors;
 using Users.Infrastructure.Identity.Models;
@@ -17,7 +18,9 @@ public class IdentityAccountService : IIdentityAccountService
         _userManager = userManager;
     }
     
-    public async Task<Result<UserId>> CreateIdentityAsync(string email, string userName, string password,
+    public async Task<Result<RegisterResponse>> CreateIdentityAsync(
+        string email,
+        string userName,
         CancellationToken ct = default)
     {
         var identityUser = new ApplicationUser
@@ -27,19 +30,86 @@ public class IdentityAccountService : IIdentityAccountService
             UserName = userName
         };
 
-        var result = await _userManager.CreateAsync(identityUser, password);
-        
-        if (result.Succeeded)
-            return Result<UserId>.Success(UserId.From(identityUser.Id));
+        var result = await _userManager.CreateAsync(identityUser);
 
-        var duplicateEmail = result.Errors.Any(error =>
+        if (!result.Succeeded)
+        {
+            var duplicateEmail = result.Errors.Any(error =>
+                string.Equals(error.Code, "DuplicateEmail", StringComparison.OrdinalIgnoreCase));
 
-            string.Equals(error.Code, "DuplicateEmail", StringComparison.OrdinalIgnoreCase));
+            if (duplicateEmail)
+                return Result<RegisterResponse>.Failure(IdentityErrors.DuplicateEmail);
 
-        return duplicateEmail
-            ? Result<UserId>.Failure(IdentityErrors.DuplicateEmail)
-            : Result<UserId>.Failure(IdentityErrors.FromIdentityResult(string.Join(", ",
-                result.Errors.Select(e => e.Description))));
+            var firstError = result.Errors.FirstOrDefault()?.Description ?? "Failed to create user.";
+            return Result<RegisterResponse>.Failure(Error.Validation("Identity.CreateFailed", firstError));
+        }
+
+        var code = await _userManager.GenerateTwoFactorTokenAsync(
+            identityUser,
+            TokenOptions.DefaultEmailProvider);
+
+        return Result<RegisterResponse>.Success(new RegisterResponse(UserId.From(identityUser.Id), code));
+    }
+
+    public async Task<Result> VerifyEmailConfirmationTokenAsync(string email, string code, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return Result.Failure(IdentityErrors.InvalidOtp);
+
+        // Используем VerifyTwoFactorTokenAsync в пару к GenerateTwoFactorTokenAsync
+        var isValid = await _userManager.VerifyTwoFactorTokenAsync(
+            user,
+            TokenOptions.DefaultEmailProvider,
+            code.Trim());
+
+        if (!isValid)
+            return Result.Failure(IdentityErrors.InvalidOtp);
+
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+        }
+
+        // Инвалидируем использованный код и сохраняем EmailConfirmed = true
+        await _userManager.UpdateSecurityStampAsync(user);
+
+        return Result.Success();
+    }
+    
+    public async Task<Result<BookingOtpResult>> GetOrCreateAndGenerateOtpAsync(
+        string email,
+        CancellationToken ct = default)
+    {
+        var normalizedEmail = email.Trim();
+        var identityUser = await _userManager.FindByEmailAsync(normalizedEmail);
+        var isNewUser = false;
+
+        if (identityUser is null)
+        {
+            identityUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                Email = normalizedEmail,
+                UserName = normalizedEmail
+            };
+
+            var createResult = await _userManager.CreateAsync(identityUser);
+            if (!createResult.Succeeded)
+            {
+                var firstError = createResult.Errors.FirstOrDefault()?.Description ?? "Failed to create identity user.";
+                return Result<BookingOtpResult>.Failure(Error.Validation("Identity.CreateFailed", firstError));
+            }
+
+            isNewUser = true;
+        }
+
+        var code = await _userManager.GenerateTwoFactorTokenAsync(
+            identityUser,
+            TokenOptions.DefaultEmailProvider);
+
+        return Result<BookingOtpResult>.Success(
+            new BookingOtpResult(UserId.From(identityUser.Id), code, isNewUser));
     }
     
     public async Task<Result<IdentityUserDto>> FindByEmailAsync(string email, CancellationToken ct = default)
