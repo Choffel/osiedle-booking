@@ -1,0 +1,171 @@
+<div class="otp-auth">
+  @if (errorMessage(); as error) {
+    <div class="otp-auth__alert" role="alert">{{ error }}</div>
+  }
+
+  @if (stage() === 'details') {
+    <!-- ЭТАП 1: Данные клиента (без пароля) -->
+    <div class="otp-auth__header">
+      <h2 class="otp-auth__title">Twoje dane kontaktowe</h2>
+      <p class="otp-auth__subtitle">
+        Wyślemy 6-cyfrowy kod potwierdzający na Twój adres e-mail. Bez zakładania hasła.
+      </p>
+    </div>
+
+    <form class="otp-auth__form" [formGroup]="detailsForm" (ngSubmit)="onRequestOtp()">
+      <div class="otp-auth__row">
+        <div class="otp-field">
+          <label class="otp-field__label" for="otp-first-name">
+            Imię <span>*</span>
+          </label>
+          <input
+            id="otp-first-name"
+            type="text"
+            class="otp-field__input"
+            placeholder="np. Jan"
+            autocomplete="given-name"
+            formControlName="firstName"
+          />
+          @if (detailsForm.controls.firstName.invalid && detailsForm.controls.firstName.touched) {
+            <span class="otp-field__error">Imię jest wymagane</span>
+          }
+        </div>
+
+        <div class="otp-field">
+          <label class="otp-field__label" for="otp-last-name">
+            Nazwisko <span>*</span>
+          </label>
+          <input
+            id="otp-last-name"
+            type="text"
+            class="otp-field__input"
+            placeholder="np. Kowalski"
+            autocomplete="family-name"
+            formControlName="lastName"
+          />
+          @if (detailsForm.controls.lastName.invalid && detailsForm.controls.lastName.touched) {
+            <span class="otp-field__error">Nazwisko jest wymagane</span>
+          }
+        </div>
+      </div>
+
+      <div class="otp-field">
+        <label class="otp-field__label" for="otp-email">
+          Adres e-mail <span>*</span>
+        </label>
+        <div class="otp-field__input-wrap">
+          <span class="otp-field__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </span>
+          <input
+            id="otp-email"
+            type="email"
+            class="otp-field__input otp-field__input--with-icon"
+            placeholder="jan.kowalski@example.com"
+            autocomplete="email"
+            formControlName="email"
+          />
+        </div>
+        @if (detailsForm.controls.email.invalid && detailsForm.controls.email.touched) {
+          @if (detailsForm.controls.email.hasError('required')) {
+            <span class="otp-field__error">Adres e-mail jest wymagany</span>
+          } @else {
+            <span class="otp-field__error">Wpisz poprawny adres e-mail</span>
+          }
+        }
+      </div>
+
+      <div class="otp-field">
+        <label class="otp-checkbox">
+          <input type="checkbox" class="otp-checkbox__input" formControlName="acceptTerms" />
+          <span class="otp-checkbox__text">
+            Akceptuję <a routerLink="/terms" target="_blank">Regulamin</a> oraz
+            <a routerLink="/privacy" target="_blank">Politykę prywatności</a> serwisu Barberio.
+          </span>
+        </label>
+        @if (detailsForm.controls.acceptTerms.invalid && detailsForm.controls.acceptTerms.touched) {
+          <span class="otp-field__error">Akceptacja regulaminu jest wymagana</span>
+        }
+      </div>
+
+      <button type="submit" class="otp-auth__submit" [disabled]="isLoading()">
+        <span>{{ isLoading() ? 'Wysyłanie kodu...' : 'Wyślij kod potwierdzający' }}</span>
+        @if (!isLoading()) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        }
+      </button>
+    </form>
+  } @else {
+    <!-- ЭТАП 2: Ввод 6-значного OTP кода -->
+    <div class="otp-auth__header">
+      <div class="otp-auth__sent-badge">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+        </svg>
+        <span>Wysłano na: <strong>{{ sentToEmail() }}</strong></span>
+        <button type="button" class="otp-auth__change-email" (click)="onEditDetails()">
+          Zmień
+        </button>
+      </div>
+
+      <h2 class="otp-auth__title">Wpisz kod z wiadomości e-mail</h2>
+      <p class="otp-auth__subtitle">
+        Podaj 6-cyfrowy kod weryfikacyjny, który wysłaliśmy na Twoją skrzynkę.
+      </p>
+    </div>
+
+    <form class="otp-auth__form" [formGroup]="codeForm" (ngSubmit)="onVerifyOtp()">
+      <div class="otp-field">
+        <label class="otp-field__label" for="otp-code-input">
+          Kod potwierdzający (6 cyfr) <span>*</span>
+        </label>
+        <input
+          id="otp-code-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          class="otp-field__input otp-field__input--code"
+          placeholder="000000"
+          formControlName="code"
+          (input)="onCodeInput($event)"
+        />
+        @if (codeForm.controls.code.invalid && codeForm.controls.code.touched) {
+          <span class="otp-field__error">Wpisz dokładnie 6 cyfr z wiadomości e-mail</span>
+        }
+      </div>
+
+      <button type="submit" class="otp-auth__submit" [disabled]="isLoading()">
+        <span>{{ isLoading() ? 'Weryfikacja...' : submitCodeLabel() }}</span>
+        @if (!isLoading()) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        }
+      </button>
+
+      <div class="otp-auth__resend">
+        <span>Nie dotarła wiadomość?</span>
+        @if (resendCooldown() > 0) {
+          <span class="otp-auth__cooldown">Wyślij ponownie za {{ resendCooldown() }} s</span>
+        } @else {
+          <button
+            type="button"
+            class="otp-auth__resend-btn"
+            [disabled]="isLoading()"
+            (click)="onResendOtp()"
+          >
+            Wyślij kod ponownie
+          </button>
+        }
+      </div>
+    </form>
+  }
+</div>

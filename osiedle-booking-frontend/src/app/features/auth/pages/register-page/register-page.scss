@@ -315,3 +315,12 @@
     transform: translateY(0) scale(1);
   }
 }
+
+.register-card--embedded {
+  width: 100%;
+}
+
+.register-form__actions--full .btn--primary {
+  width: 100%;
+  justify-content: center;
+}

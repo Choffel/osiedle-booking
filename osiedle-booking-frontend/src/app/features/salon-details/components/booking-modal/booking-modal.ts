@@ -1,12 +1,11 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, combineLatest, of, startWith, switchMap, tap } from 'rxjs';
 import { BusinessEmployeeDto, BusinessServiceItemDto } from '../../../../core/models/business.dto';
 import { AvailableSlotDto } from '../../../../core/models/booking.dto';
 import { BookingsService } from '../../../../core/services/bookings.service';
 import { AuthService } from '../../../auth/services/auth.service';
+import { BookingOtpAuthComponent } from '../../../auth/components/booking-otp-auth/booking-otp-auth';
 
 interface DayOption {
   readonly isoDate: string;
@@ -62,12 +61,11 @@ const MONTHS_GENITIVE = [
 @Component({
   selector: 'app-booking-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [BookingOtpAuthComponent],
   templateUrl: './booking-modal.html',
   styleUrl: './booking-modal.scss',
 })
 export class BookingModalComponent {
-  private readonly fb = inject(FormBuilder);
   private readonly bookingsService = inject(BookingsService);
   private readonly authService = inject(AuthService);
 
@@ -87,14 +85,8 @@ export class BookingModalComponent {
   readonly selectedSlot = signal<AvailableSlotDto | null>(null);
   readonly isLoadingSlots = signal<boolean>(true);
 
-  readonly showPassword = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
-
-  readonly loginForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
-  });
 
   private readonly rawSlots = toSignal(
     combineLatest([toObservable(this.service), toObservable(this.selectedDate)]).pipe(
@@ -186,7 +178,7 @@ export class BookingModalComponent {
 
     this.errorMessage.set(null);
 
-    if (localStorage.getItem('access_token')) {
+    if (this.isAuthenticated()) {
       this.submitBooking(slot);
       return;
     }
@@ -199,54 +191,11 @@ export class BookingModalComponent {
     this.step.set(1);
   }
 
-  onLoginAndBook(): void {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
+  onOtpVerified(): void {
     const slot = this.selectedSlot();
     if (!slot) return;
 
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
-
-    const credentials = this.loginForm.getRawValue();
-
-    this.authService
-      .login(credentials)
-      .pipe(
-        catchError((err) => {
-          this.errorMessage.set('Nieprawidłowy adres e-mail lub hasło.');
-          throw err;
-        }),
-        switchMap(() =>
-          this.bookingsService.createBooking({
-            businessId: this.businessId(),
-            staffId: this.service().employeeId,
-            serviceId: this.service().bookableServiceId,
-            startTime: slot.start,
-            endTime: slot.end,
-          }),
-        ),
-      )
-      .subscribe({
-        next: () => {
-          this.isSubmitting.set(false);
-          this.confirmSelection.emit({
-            service: this.service(),
-            slot,
-          });
-        },
-        error: (err) => {
-          this.isSubmitting.set(false);
-          if (!this.errorMessage()) {
-            this.errorMessage.set(
-              err?.error?.detail ?? 'Nie udało się zarezerwować wizyty. Spróbuj ponownie.',
-            );
-          }
-        },
-      });
+    this.submitBooking(slot);
   }
 
   private submitBooking(slot: AvailableSlotDto): void {
@@ -269,9 +218,11 @@ export class BookingModalComponent {
             slot,
           });
         },
-        error: () => {
+        error: (err) => {
           this.isSubmitting.set(false);
-          this.errorMessage.set('Nie udało się zarezerwować wizyty. Wybierz inny termin.');
+          this.errorMessage.set(
+            err?.error?.detail ?? 'Nie udało się zarezerwować wizyty. Wybierz inny termin.',
+          );
         },
       });
   }

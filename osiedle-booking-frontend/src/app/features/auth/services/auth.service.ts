@@ -38,6 +38,19 @@ export class AuthService {
       { responseType: 'text' },
     );
   }
+
+  requestBookingOtp(payload: BookingOtpRequestDto): Observable<string> {
+    return this.http.post('/api/Authentication/booking-otp', payload, {
+      responseType: 'text',
+    });
+  }
+
+  verifyBookingOtp(payload: VerifyOtpRequestDto): Observable<LoginResponse> {
+     return this.http.post<LoginResponse>('/api/Authentication/verify-otp', payload).pipe(      tap((response) => {
+        this.tokenService.saveTokens(response);
+      }),
+    );
+  }
 }
 
 export interface ApiErrorResponse {
@@ -45,4 +58,15 @@ export interface ApiErrorResponse {
   status?: number;
   detail?: string;
   code?: string;
+}
+
+export interface BookingOtpRequestDto {
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly email: string;
+}
+
+export interface VerifyOtpRequestDto {
+  readonly email: string;
+  readonly code: string;
 }

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiErrorResponse, AuthService } from '../../services/auth.service';
@@ -13,6 +13,10 @@ import { PasswordInputComponent } from '../../../../shared/components/password-i
 })
 export class RegisterPageComponent {
   private readonly authService = inject(AuthService);
+
+  readonly embedded = input<boolean>(false);
+  readonly submitLabel = input<string>('Dalej');
+  readonly registered = output<string>();
 
   readonly isLoading = signal(false);
   readonly serverError = signal<string | null>(null);
@@ -67,6 +71,12 @@ export class RegisterPageComponent {
       next: () => {
         this.isLoading.set(false);
         this.registeredEmail.set(payload.email);
+
+        if (this.embedded()) {
+          this.registered.emit(payload.email);
+          return;
+        }
+
         this.isRegistered.set(true);
       },
       error: (err: HttpErrorResponse) => {
